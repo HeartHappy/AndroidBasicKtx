@@ -15,14 +15,14 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
 
     inner class ViewHolder(val viewBinding: VB) : RecyclerView.ViewHolder(viewBinding.root)
 
-
+    private var onItemClickListener: OnItemClickListener<T>? = null
     private lateinit var viewBinding: VB
 
     abstract fun initViewBinding(parent: ViewGroup, viewType: Int): VB
 
     abstract fun VB.bindViewHolder(data: T, position: Int)
 
-    fun initData(list:List<T>) {
+    fun initData(list: List<T>) {
         if (list.isEmpty()) return
         notifyItemRangeRemoved(0, this.list.size)
         this.list.clear()
@@ -40,7 +40,7 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
         notifyItemRangeChanged(position, list.size)
     }
 
-    fun removeData(position: Int):T? {
+    fun removeData(position: Int): T? {
         if (position >= 0 && position < list.size) {
             val removeAt = this.list.removeAt(position)
             notifyItemRemoved(position)
@@ -50,7 +50,7 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
         return null
     }
 
-    fun removeAll(){
+    fun removeAll() {
         list.clear()
         notifyDataSetChanged()
     }
@@ -69,9 +69,13 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
         notifyItemRangeChanged(oldPosition, this.list.size)
     }
 
-    fun updateData(position: Int,data: T){
+    fun updateData(position: Int, data: T) {
         list[position] = data
         notifyItemChanged(position)
+    }
+
+    fun setOnItemClickListener(onItemClickListener: OnItemClickListener<T>?) {
+        this.onItemClickListener = onItemClickListener
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -83,6 +87,7 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
     override fun getItemCount(): Int = list.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.viewBinding.root.setOnClickListener { v -> onItemClickListener?.onItemClick(v, list[position], position) }
         holder.viewBinding.bindViewHolder(list[position], position)
     }
 }
