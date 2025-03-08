@@ -1,4 +1,4 @@
-package com.hearthappy.base
+package com.hearthappy.base.interfaces
 
 import android.view.View
 

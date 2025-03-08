@@ -13,6 +13,8 @@ import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentController
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
 
 /**
@@ -22,7 +24,12 @@ import androidx.viewbinding.ViewBinding
  */
 abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
     lateinit var viewBinding: VB
-
+    /**
+     * 获取ViewModel
+     */
+    fun <VM: ViewModel> getViewModel(c: Class<VM>, factory: ViewModelProvider.Factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application)): VM { //        ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+        return ViewModelProvider(this, factory).get(c)
+    }
     /** 等待对话框 */
 
     @SuppressLint("SourceLockedOrientationActivity")
