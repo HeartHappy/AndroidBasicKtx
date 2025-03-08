@@ -10,7 +10,7 @@ class MainViewModel : ViewModel() {
 
     fun getListData() {
         val listOf = arrayListOf<String>()
-        for (i in 0..30) {
+        for (i in 0..100) {
             listOf.add(i.toString())
         }
         _ldData.value = listOf

@@ -41,7 +41,8 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
 
     override fun ActivityMainBinding.initViewModelListener() {
         viewModel.ld.observe(this@MainActivity) {
-            mainAdapter.showEmptyView()
+            mainAdapter.initData(emptyList())
+            rvList.postDelayed({mainAdapter.initData(it)},5000)
         }
     }
 

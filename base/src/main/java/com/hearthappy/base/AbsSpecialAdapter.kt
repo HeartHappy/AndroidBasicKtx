@@ -3,28 +3,28 @@ package com.hearthappy.base
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
+import com.hearthappy.base.interfaces.IEmptyViewSupport
+import com.hearthappy.base.interfaces.IFooterSupport
+import com.hearthappy.base.interfaces.IHeaderSupport
 import com.hearthappy.base.interfaces.OnEmptyViewClickListener
 import com.hearthappy.base.interfaces.OnFooterClickListener
 import com.hearthappy.base.interfaces.OnHeaderClickListener
+import java.lang.reflect.Method
 
 
 /**
  * Created Date: 2025/3/7
  * @author ChenRui
- * ClassDescription：特殊适配，支持头尾布局
+ * ClassDescription：特殊适配，支持头、尾、空布局SpecialAdapter<ViewBinding类型,数据类型>()
+ * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport接口
  */
-abstract class AbsSpecialAdapter<VB : ViewBinding, HB : ViewBinding, FB : ViewBinding, EB : ViewBinding, T>(val isLoadHeader: Boolean = false, val isLoadFooter: Boolean = false, var isEmptyViewVisible: Boolean = false) : AbsBaseAdapter<VB, T>() {
-
-    open fun initHeaderBinding(parent: ViewGroup, viewType: Int): HB? = null
-    open fun initFooterBinding(parent: ViewGroup, viewType: Int): FB? = null
-    open fun initEmptyBinding(parent: ViewGroup, viewType: Int): EB? = null
-    open fun HB.bindHeaderViewHolder() {}
-    open fun FB.bindFooterViewHolder() {}
-    open fun EB.bindEmptyViewHolder() {}
+@Suppress("UNCHECKED_CAST")
+abstract class AbsSpecialAdapter<VB : ViewBinding,T> : AbsBaseAdapter<VB, T>() {
 
     private var onHeaderClickListener: OnHeaderClickListener? = null
     private var onFooterClickListener: OnFooterClickListener? = null
     private var onEmptyViewClickListener: OnEmptyViewClickListener? = null
+
     fun setOnHeaderClickListener(onHeaderClickListener: OnHeaderClickListener?) {
         this.onHeaderClickListener = onHeaderClickListener
     }
@@ -39,74 +39,67 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, HB : ViewBinding, FB : ViewBi
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when (viewType) {
-            TYPE_HEADER -> initHeaderBinding(parent, viewType)?.run { HeaderViewHolder(this) } ?: throw RuntimeException("Override the initHeaderBinding method or isLoadHeader is set to false")
-            TYPE_ITEM -> ItemViewHolder(initViewBinding(parent, viewType))
-            TYPE_EMPTY -> initEmptyBinding(parent, viewType)?.run { EmptyViewHolder(this) } ?: throw RuntimeException("Override the initEmptyBinding method or isEmptyViewVisible is set to false")
-            TYPE_FOOTER -> initFooterBinding(parent, viewType)?.run { FooterViewHolder(this) } ?: throw RuntimeException("Override the initFooterBinding method or isLoadFooter is set to false")
-            else -> ItemViewHolder(initViewBinding(parent, viewType))
+         when (viewType) {
+            TYPE_HEADER -> if (hasHeaderImpl()) return HeaderViewHolder((this as IHeaderSupport<ViewBinding>).initHeaderBinding(parent, viewType))
+            TYPE_EMPTY -> if (hasEmptyViewImpl())  return  EmptyViewHolder((this as IEmptyViewSupport<ViewBinding>).initEmptyBinding(parent, viewType))
+            TYPE_FOOTER -> if (hasFooterImpl()) return  FooterViewHolder((this as IFooterSupport<ViewBinding>).initFooterBinding(parent, viewType))
         }
+        return ItemViewHolder(initViewBinding(parent, viewType))
     }
 
-    @Suppress("UNCHECKED_CAST")
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val realPosition = getRealPosition(position)
         when (holder) {
-            is AbsSpecialAdapter<*, *, *, *, *>.HeaderViewHolder -> {
+            is AbsSpecialAdapter<*, *>.HeaderViewHolder -> {
                 holder.viewBinding.root.setOnClickListener { onHeaderClickListener?.onHeaderClick(it) }
-                (holder.viewBinding as HB).bindHeaderViewHolder()
+                callBindMethod(this, holder.viewBinding, "bindHeaderViewHolder")
             }
 
-            is AbsSpecialAdapter<*, *, *, *, *>.ItemViewHolder -> {
+            is AbsSpecialAdapter<*, *>.ItemViewHolder -> {
                 holder.viewBinding.root.setOnClickListener { onItemClickListener?.onItemClick(it, list[realPosition], realPosition) }
                 (holder.viewBinding as VB).bindViewHolder(list[realPosition], realPosition)
             }
 
-            is AbsSpecialAdapter<*, *, *, *, *>.EmptyViewHolder -> {
+            is AbsSpecialAdapter<*, *>.EmptyViewHolder -> {
                 holder.viewBinding.root.setOnClickListener { onEmptyViewClickListener?.onEmptyViewClick(it) }
-                (holder.viewBinding as EB).bindEmptyViewHolder()
+                callBindMethod(this, holder.viewBinding, "bindEmptyViewHolder")
             }
 
-            is AbsSpecialAdapter<*, *, *, *, *>.FooterViewHolder -> {
+            is AbsSpecialAdapter<*, *>.FooterViewHolder -> {
                 holder.viewBinding.root.setOnClickListener { onFooterClickListener?.onFooterClick(it) }
-                (holder.viewBinding as FB).bindFooterViewHolder()
+                callBindMethod(this, holder.viewBinding, "bindFooterViewHolder")
             }
-
             else -> Unit
         }
     }
 
     private fun getRealPosition(position: Int): Int {
-        return position - (if (isLoadHeader) 1 else 0)
+        return position - (if (hasHeaderImpl()) 1 else 0)
     }
 
     override fun getItemViewType(position: Int): Int {
         return when {
-            isEmptyViewVisible -> TYPE_EMPTY
-            isLoadHeader && position == 0 -> TYPE_HEADER
-            isLoadFooter && position == list.size + 1 -> TYPE_FOOTER
+            list.isEmpty() && hasEmptyViewImpl() -> TYPE_EMPTY
+            hasHeaderImpl() && position == 0 -> TYPE_HEADER
+            hasFooterImpl() && position == list.size + 1 -> TYPE_FOOTER
             else -> TYPE_ITEM
         }
     }
 
     override fun getItemCount(): Int {
-        val hfCount = (if (isLoadHeader) 1 else 0) + (if (isLoadFooter) 1 else 0)
-        return if (isEmptyViewVisible) {
+        val hfCount = (if (hasHeaderImpl()) 1 else 0) + (if (hasFooterImpl()) 1 else 0)
+        return if (list.isEmpty() && hasEmptyViewImpl()) {
             1
         } else {
             hfCount + list.size
         }
-
     }
 
-    fun showEmptyView() {
-        isEmptyViewVisible = true
-        notifyItemChanged(0)
-    }
 
     override fun initData(list: List<T>) {
-        if (list.isEmpty()) return
-        val headerOffset = if (isLoadHeader) 1 else 0
+        if (list.isEmpty())return
+        val headerOffset = if (hasHeaderImpl()) 1 else 0
         notifyItemRangeRemoved(headerOffset, this.list.size)
         this.list.clear()
         this.list.addAll(list)
@@ -116,32 +109,34 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, HB : ViewBinding, FB : ViewBi
     override fun insertData(data: T) {
         val position = this.list.size
         this.list.add(data)
-        val headerOffset = if (isLoadHeader) 1 else 0
+        val headerOffset = if (hasHeaderImpl()) 1 else 0
         notifyItemInserted(position + headerOffset)
     }
 
     override fun insertData(data: T, position: Int) {
         this.list.add(position, data)
-        val headerOffset = if (isLoadHeader) 1 else 0
+        val headerOffset = if (hasHeaderImpl()) 1 else 0
         notifyItemInserted(position + headerOffset)
     }
 
     override fun removeData(position: Int): T? {
-        val adjustedPosition = position - if (isLoadHeader) 1 else 0
+        val adjustedPosition = position - if (hasHeaderImpl()) 1 else 0
         if (adjustedPosition >= 0 && adjustedPosition < list.size) {
             val removedItem = this.list.removeAt(adjustedPosition)
-            notifyItemRemoved(adjustedPosition + if (isLoadHeader) 1 else 0)
-            notifyItemRangeChanged(adjustedPosition + if (isLoadHeader) 1 else 0, list.size - adjustedPosition)
+            notifyItemRemoved(adjustedPosition + if (hasHeaderImpl()) 1 else 0)
+            notifyItemRangeChanged(adjustedPosition + if (hasHeaderImpl()) 1 else 0, list.size - adjustedPosition)
             return removedItem
         }
         return null
     }
 
+
+
     override fun removeAll() {
         val size = list.size
         if (size > 0) {
             list.clear()
-            notifyItemRangeRemoved(if (isLoadHeader) 1 else 0, size)
+            notifyItemRangeRemoved(if (hasHeaderImpl()) 1 else 0, size)
         }
     }
 
@@ -149,14 +144,14 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, HB : ViewBinding, FB : ViewBi
         val oldPosition = this.list.size
         if (list.isEmpty()) return
         this.list.addAll(list)
-        val headerOffset = if (isLoadHeader) 1 else 0
+        val headerOffset = if (hasHeaderImpl()) 1 else 0
         notifyItemRangeChanged(oldPosition + headerOffset, this.list.size - oldPosition)
     }
 
     override fun addData(list: List<T>, position: Int) {
         if (list.isEmpty()) return
         this.list.addAll(position, list)
-        val headerOffset = if (isLoadHeader) 1 else 0
+        val headerOffset = if (hasHeaderImpl()) 1 else 0
         if (position == 0) {
             notifyItemRangeInserted(headerOffset, list.size)
         } else {
@@ -166,14 +161,28 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, HB : ViewBinding, FB : ViewBi
 
     override fun updateData(position: Int, data: T) {
         list[position] = data
-        notifyItemChanged(position + if (isLoadHeader) 1 else 0)
+        notifyItemChanged(position + if (hasHeaderImpl()) 1 else 0)
     }
-
 
     private inner class HeaderViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
     private inner class FooterViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
     private inner class EmptyViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
     private inner class ItemViewHolder(val viewBinding: VB) : RecyclerView.ViewHolder(viewBinding.root)
+
+    private fun callBindMethod(support: Any, viewBinding: ViewBinding, methodName: String) {
+        try {
+            val method: Method = support.javaClass.getMethod(methodName, viewBinding.javaClass)
+            method.invoke(support, viewBinding)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun hasHeaderImpl()=this is IHeaderSupport<*>
+
+    private fun hasFooterImpl()=this is IFooterSupport<*>
+
+    private fun hasEmptyViewImpl()=this is IEmptyViewSupport<*>
 
     companion object {
         const val TYPE_HEADER: Int = 0
