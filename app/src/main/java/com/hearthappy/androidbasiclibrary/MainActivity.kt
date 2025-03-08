@@ -42,6 +42,7 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
     override fun ActivityMainBinding.initViewModelListener() {
         viewModel.ld.observe(this@MainActivity) {
             mainAdapter.initData(emptyList())
+            Toast.makeText(this@MainActivity, "当前显示空布局,5秒后更新数据", Toast.LENGTH_SHORT).show()
             rvList.postDelayed({mainAdapter.initData(it)},5000)
         }
     }
