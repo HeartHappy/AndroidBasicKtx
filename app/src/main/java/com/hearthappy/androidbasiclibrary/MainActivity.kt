@@ -1,10 +1,13 @@
 package com.hearthappy.androidbasiclibrary
 
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hearthappy.androidbasiclibrary.databinding.ActivityMainBinding
 import com.hearthappy.base.AbsBaseActivity
+import com.hearthappy.base.ext.addFastListener
+import com.hearthappy.base.ext.addLastListener
 import com.hearthappy.base.interfaces.OnFooterClickListener
 import com.hearthappy.base.interfaces.OnHeaderClickListener
 import com.hearthappy.base.interfaces.OnItemClickListener
@@ -37,13 +40,28 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
                 Toast.makeText(this@MainActivity, "我是头部", Toast.LENGTH_SHORT).show()
             }
         })
+        btnInit.setOnClickListener {viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) }}
+        btnInset.setOnClickListener { mainAdapter.insertData(mainAdapter.list.size.toString()) }
+        btnAdd.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1)} }
+        btnRemove.setOnClickListener { mainAdapter.removeData(mainAdapter.list.size ) }
+        btnRemoveAll.setOnClickListener { mainAdapter.removeAll() }
+        rvList.addLastListener {
+            Log.d(TAG, "initListener: $it")
+           if(it) viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1) }
+        }
+        rvList.addFastListener { 
+            if(it){
+                viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) }
+                Toast.makeText(this@MainActivity, "刷新数据", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun ActivityMainBinding.initViewModelListener() {
         viewModel.ld.observe(this@MainActivity) {
-            mainAdapter.initData(emptyList())
-            Toast.makeText(this@MainActivity, "当前显示空布局,5秒后更新数据", Toast.LENGTH_SHORT).show()
-            rvList.postDelayed({mainAdapter.initData(it)},5000)
+            mainAdapter.initData(it)
+//            Toast.makeText(this@MainActivity, "当前显示空布局,5秒后更新数据", Toast.LENGTH_SHORT).show()
+//            rvList.postDelayed({mainAdapter.initData(emptyList())},5000)
         }
     }
 
@@ -52,5 +70,8 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         rvList.layoutManager = LinearLayoutManager(this@MainActivity)
         mainAdapter = MainAdapter(this@MainActivity)
         rvList.adapter = mainAdapter
+    }
+    companion object{
+        private const val TAG = "MainActivity"
     }
 }

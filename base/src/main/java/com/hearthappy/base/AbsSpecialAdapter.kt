@@ -15,12 +15,13 @@ import java.lang.reflect.Method
 /**
  * Created Date: 2025/3/7
  * @author ChenRui
- * ClassDescription：特殊适配，支持头、尾、空布局SpecialAdapter<ViewBinding类型,数据类型>()
+ * ClassDescription：特殊适配，支持头、尾、空布局AbsSpecialAdapter<ViewBinding类型,数据类型>()
  * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport接口
  */
 @Suppress("UNCHECKED_CAST")
 abstract class AbsSpecialAdapter<VB : ViewBinding,T> : AbsBaseAdapter<VB, T>() {
 
+    private var shouldShowEmptyView:Boolean=false
     private var onHeaderClickListener: OnHeaderClickListener? = null
     private var onFooterClickListener: OnFooterClickListener? = null
     private var onEmptyViewClickListener: OnEmptyViewClickListener? = null
@@ -80,7 +81,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding,T> : AbsBaseAdapter<VB, T>() {
 
     override fun getItemViewType(position: Int): Int {
         return when {
-            list.isEmpty() && hasEmptyViewImpl() -> TYPE_EMPTY
+            shouldShowEmptyView && hasEmptyViewImpl() -> TYPE_EMPTY
             hasHeaderImpl() && position == 0 -> TYPE_HEADER
             hasFooterImpl() && position == list.size + 1 -> TYPE_FOOTER
             else -> TYPE_ITEM
@@ -89,7 +90,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding,T> : AbsBaseAdapter<VB, T>() {
 
     override fun getItemCount(): Int {
         val hfCount = (if (hasHeaderImpl()) 1 else 0) + (if (hasFooterImpl()) 1 else 0)
-        return if (list.isEmpty() && hasEmptyViewImpl()) {
+        return if (shouldShowEmptyView && hasEmptyViewImpl()) {
             1
         } else {
             hfCount + list.size
@@ -98,31 +99,34 @@ abstract class AbsSpecialAdapter<VB : ViewBinding,T> : AbsBaseAdapter<VB, T>() {
 
 
     override fun initData(list: List<T>) {
-        if (list.isEmpty())return
         val headerOffset = if (hasHeaderImpl()) 1 else 0
         notifyItemRangeRemoved(headerOffset, this.list.size)
         this.list.clear()
         this.list.addAll(list)
-        notifyItemRangeChanged(headerOffset, list.size)
+        shouldShowEmptyView=list.isEmpty()
+        notifyItemRangeChanged(headerOffset, if(shouldShowEmptyView) 1 else list.size)
     }
 
     override fun insertData(data: T) {
         val position = this.list.size
         this.list.add(data)
         val headerOffset = if (hasHeaderImpl()) 1 else 0
+        shouldShowEmptyView = false
         notifyItemInserted(position + headerOffset)
     }
 
     override fun insertData(data: T, position: Int) {
         this.list.add(position, data)
         val headerOffset = if (hasHeaderImpl()) 1 else 0
+        shouldShowEmptyView = false
         notifyItemInserted(position + headerOffset)
     }
 
     override fun removeData(position: Int): T? {
         val adjustedPosition = position - if (hasHeaderImpl()) 1 else 0
         if (adjustedPosition >= 0 && adjustedPosition < list.size) {
-            val removedItem = this.list.removeAt(adjustedPosition)
+            val removedItem = list.removeAt(adjustedPosition)
+            shouldShowEmptyView = list.isEmpty()
             notifyItemRemoved(adjustedPosition + if (hasHeaderImpl()) 1 else 0)
             notifyItemRangeChanged(adjustedPosition + if (hasHeaderImpl()) 1 else 0, list.size - adjustedPosition)
             return removedItem
@@ -137,19 +141,36 @@ abstract class AbsSpecialAdapter<VB : ViewBinding,T> : AbsBaseAdapter<VB, T>() {
         if (size > 0) {
             list.clear()
             notifyItemRangeRemoved(if (hasHeaderImpl()) 1 else 0, size)
+            // 如果有头部和底部布局，移除头尾布局
+            if (hasHeaderImpl()) {
+                notifyItemRemoved(0)
+            }
+            if (hasFooterImpl()) {
+                notifyItemRemoved( (if (hasFooterImpl()) 1 else 0))
+            }
+            shouldShowEmptyView = true
+            notifyItemChanged(if(hasEmptyViewImpl())1 else 0)
         }
     }
 
     override fun addData(list: List<T>) {
         val oldPosition = this.list.size
-        if (list.isEmpty()) return
+        if (list.isEmpty()){
+            shouldShowEmptyView = this.list.isEmpty()
+        }else{
+            shouldShowEmptyView = false
+        }
         this.list.addAll(list)
         val headerOffset = if (hasHeaderImpl()) 1 else 0
         notifyItemRangeChanged(oldPosition + headerOffset, this.list.size - oldPosition)
     }
 
     override fun addData(list: List<T>, position: Int) {
-        if (list.isEmpty()) return
+        if (list.isEmpty()){
+            shouldShowEmptyView = this.list.isEmpty()
+        } else {
+            shouldShowEmptyView = false
+        }
         this.list.addAll(position, list)
         val headerOffset = if (hasHeaderImpl()) 1 else 0
         if (position == 0) {
@@ -161,6 +182,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding,T> : AbsBaseAdapter<VB, T>() {
 
     override fun updateData(position: Int, data: T) {
         list[position] = data
+        shouldShowEmptyView = false
         notifyItemChanged(position + if (hasHeaderImpl()) 1 else 0)
     }
 

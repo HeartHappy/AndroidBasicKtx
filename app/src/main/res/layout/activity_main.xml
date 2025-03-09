@@ -10,9 +10,46 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvList"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnRemoveAll"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btnInit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Init"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <Button
+        android:id="@+id/btnAdd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add"
+        app:layout_constraintBottom_toTopOf="@+id/btnInit" />
+
+    <Button
+        android:id="@+id/btnRemove"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Remove"
+        app:layout_constraintBottom_toTopOf="@+id/btnAdd" />
+
+    <Button
+        android:id="@+id/btnInset"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Inset"
+        app:layout_constraintBottom_toTopOf="@+id/btnRemove" />
+
+    <Button
+        android:id="@+id/btnRemoveAll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="RemoveAll"
+        app:layout_constraintBottom_toTopOf="@+id/btnInset" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
