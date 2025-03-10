@@ -32,7 +32,7 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         })
         mainAdapter.setOnItemClickListener(object : OnItemClickListener<String> {
             override fun onItemClick(view: View, data: String, position: Int) {
-                Toast.makeText(this@MainActivity, "我是Item:$data", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "我是Item:$data,position:$position", Toast.LENGTH_SHORT).show()
             }
         })
         mainAdapter.setOnHeaderClickListener(object : OnHeaderClickListener {
@@ -40,17 +40,17 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
                 Toast.makeText(this@MainActivity, "我是头部", Toast.LENGTH_SHORT).show()
             }
         })
-        btnInit.setOnClickListener {viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) }}
+        btnInit.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) } }
         btnInset.setOnClickListener { mainAdapter.insertData(mainAdapter.list.size.toString()) }
-        btnAdd.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1)} }
-        btnRemove.setOnClickListener { mainAdapter.removeData(mainAdapter.list.size ) }
+        btnAdd.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1) } }
+        btnRemove.setOnClickListener { mainAdapter.removeData(mainAdapter.list.size - 1) }
         btnRemoveAll.setOnClickListener { mainAdapter.removeAll() }
         rvList.addLastListener {
-            Log.d(TAG, "initListener: $it")
-           if(it) viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1) }
+            if (it) viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1) }
+            Toast.makeText(this@MainActivity, "加载更多", Toast.LENGTH_SHORT).show()
         }
-        rvList.addFastListener { 
-            if(it){
+        rvList.addFastListener {
+            if (it) {
                 viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) }
                 Toast.makeText(this@MainActivity, "刷新数据", Toast.LENGTH_SHORT).show()
             }
@@ -60,8 +60,6 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
     override fun ActivityMainBinding.initViewModelListener() {
         viewModel.ld.observe(this@MainActivity) {
             mainAdapter.initData(it)
-//            Toast.makeText(this@MainActivity, "当前显示空布局,5秒后更新数据", Toast.LENGTH_SHORT).show()
-//            rvList.postDelayed({mainAdapter.initData(emptyList())},5000)
         }
     }
 
@@ -71,7 +69,8 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         mainAdapter = MainAdapter(this@MainActivity)
         rvList.adapter = mainAdapter
     }
-    companion object{
+
+    companion object {
         private const val TAG = "MainActivity"
     }
 }

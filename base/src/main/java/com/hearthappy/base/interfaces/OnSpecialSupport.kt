@@ -7,8 +7,7 @@ import androidx.viewbinding.ViewBinding
  * Created Date: 3/8/25
  * @author ChenRui
  * ClassDescription：特殊适配器的扩展接口
- */
-// 头部布局接口
+ */ // 头部布局接口
 interface IHeaderSupport<HB : ViewBinding> {
     fun initHeaderBinding(parent: ViewGroup, viewType: Int): HB
     fun HB.bindHeaderViewHolder()
@@ -24,4 +23,10 @@ interface IFooterSupport<FB : ViewBinding> {
 interface IEmptyViewSupport<EB : ViewBinding> {
     fun initEmptyBinding(parent: ViewGroup, viewType: Int): EB
     fun EB.bindEmptyViewHolder()
+}
+
+interface IInsetItemSupper<IB : ViewBinding> {
+    fun initInsetItemBinding(parent: ViewGroup, viewType: Int): IB
+    fun IB.bindInsetViewHolder()
+    fun insetItemPosition(): Int // 插入布局的位置，返回值必须：大于0，且<=list.size
 }
