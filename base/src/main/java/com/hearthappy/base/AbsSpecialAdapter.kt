@@ -31,8 +31,16 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var onInsetItemClickListener: OnInsetItemClickListener? = null
     private var headerOffset = 0
     private var footerOffset = 0
-    private var insetItemOffset = 0
-    private var insetItemPosition = -1
+//    private var insetItemOffset = 0
+//    private var insetItemPosition = -1
+    private var insetItemPositions:List<Int> = listOf()
+    private var insetItemLayouts:List<IInsetItemSupper<*>> = listOf()
+    fun setInsetItemLayout(insetItemLayout: List<IInsetItemSupper<*>>,insetItemPositions:List<Int>) {
+        this.insetItemLayouts = insetItemLayout
+        this.insetItemPositions=insetItemPositions
+
+    }
+
     fun setOnHeaderClickListener(onHeaderClickListener: OnHeaderClickListener?) {
         this.onHeaderClickListener = onHeaderClickListener
     }
@@ -54,15 +62,16 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
      * @param insetItemPosition Int P:-1：不插入 || P >=list.size：插入到item列表最后一条 || -1< P <list.size：插入到指定位置 .默认：-1
      */
     fun setInsetItemPosition(insetItemPosition: Int = NOT_INSERTED) {
-        val oldInsetPosition = this.insetItemPosition
+        // TODO:  偏移量需要重新计算
+//        val oldInsetPosition = this.insetItemPosition
         if (insetItemPosition <= NOT_INSERTED) {
-            insetItemOffset = 0
-            notifyItemRemoved(oldInsetPosition)
+//            insetItemOffset = 0
+//            notifyItemRemoved(oldInsetPosition)
         } else {
             notifyItemInserted(insetItemPosition)
         }
-        this.insetItemPosition = insetItemPosition
-        notifyItemRangeChanged(oldInsetPosition, getItemSpecialCount())
+//        this.insetItemPosition = insetItemPosition
+//        notifyItemRangeChanged(oldInsetPosition, getItemSpecialCount())
     }
 
 
@@ -111,19 +120,26 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
 
     private fun getRealPosition(position: Int): Int {
-        return position - headerOffset - if (hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && position > insetItemPosition) insetItemOffset else 0
+        return position - headerOffset - insetItemLayouts.size
     }
 
     private fun getVirtualPosition(realPosition: Int): Int {
-        return realPosition + headerOffset + if (hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && realPosition >= insetItemPosition) +insetItemOffset else 0
+        return realPosition + headerOffset + insetItemLayouts.size
     }
 
     override fun getItemViewType(position: Int): Int {
+        insetItemPositions.forEach {
+            if (it == position - headerOffset ) {
+                return position - headerOffset
+            }
+        }
+
         return when {
             hasEmptyViewImpl() && shouldShowEmptyView -> TYPE_EMPTY
             hasHeaderImpl() && position == TYPE_HEADER -> TYPE_HEADER
-            hasFooterImpl() && position == headerOffset + list.size + insetItemOffset -> TYPE_FOOTER
-            hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && insetItemPosition.convertInsetItemPosition() == position - headerOffset -> TYPE_INSET_ITEM
+            // TODO:  偏移量需要重新计算
+//            hasFooterImpl() && position == headerOffset + list.size + insetItemOffset -> TYPE_FOOTER
+//            hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && insetItemPosition.convertInsetItemPosition() == position - headerOffset -> TYPE_INSET_ITEM
             else -> TYPE_ITEM
         }
     }
@@ -131,8 +147,9 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     override fun getItemCount(): Int {
         headerOffset = if (hasHeaderImpl()) 1 else 0
         footerOffset = if (hasFooterImpl()) 1 else 0
-        insetItemPosition = if (hasInsetItemImpl()) insetItemPosition.convertInsetItemPosition() else -1
-        insetItemOffset = if (hasInsetItemImpl() && insetItemPosition != NOT_INSERTED) 1 else 0
+//        insetItemPosition = if (hasInsetItemImpl()) insetItemPosition.convertInsetItemPosition() else -1
+        // TODO:  偏移量需要重新计算
+//        insetItemOffset = insetItemLayouts.size
         return if (shouldShowEmptyView && hasEmptyViewImpl()) 1 else getItemSpecialCount()
     }
 
@@ -242,13 +259,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private fun hasHeaderImpl() = this is IHeaderSupport<*>
     private fun hasFooterImpl() = this is IFooterSupport<*>
     private fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
-    private fun hasInsetItemImpl() = this is IInsetItemSupper<*,*>
+    private fun hasInsetItemImpl() = this is IInsetItemSupper<*>
 
-    private fun getIInsetItemSupper() = this as IInsetItemSupper<ViewBinding,*>
+    private fun getIInsetItemSupper() = this as IInsetItemSupper<ViewBinding>
     private fun getIHeaderSupport() = this as IHeaderSupport<ViewBinding>
     private fun getIFooterSupport() = this as IFooterSupport<ViewBinding>
     private fun getIEmptyViewSupport() = this as IEmptyViewSupport<ViewBinding>
-    private fun getItemSpecialCount() = list.size + headerOffset + insetItemOffset + footerOffset
+    private fun getItemSpecialCount() = list.size + headerOffset + insetItemLayouts.size + footerOffset
 
     private fun Int.convertInsetItemPosition(): Int {
         return if (this > list.size) list.size else this
