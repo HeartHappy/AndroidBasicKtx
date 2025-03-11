@@ -1,6 +1,5 @@
 package com.hearthappy.androidbasiclibrary
 
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -40,9 +39,14 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
                 Toast.makeText(this@MainActivity, "我是头部", Toast.LENGTH_SHORT).show()
             }
         })
+
+
         btnInit.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) } }
-        btnInset.setOnClickListener { mainAdapter.insertData(mainAdapter.list.size.toString()) }
+        btnInset.setOnClickListener { mainAdapter.insertData("插入数据:${mainAdapter.list.size}") }
+        btnInsetTo0.setOnClickListener { mainAdapter.insertData("插入到0数据:${mainAdapter.list.size}", 0) }
+        btnMove.setOnClickListener { mainAdapter.moveData(0, 8) }
         btnAdd.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1) } }
+        btnAddTo0.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1, 0) } }
         btnRemove.setOnClickListener { mainAdapter.removeData(mainAdapter.list.size - 1) }
         btnRemoveAll.setOnClickListener { mainAdapter.removeAll() }
         rvList.addLastListener {

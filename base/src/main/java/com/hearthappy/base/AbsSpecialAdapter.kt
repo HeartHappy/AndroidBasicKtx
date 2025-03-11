@@ -12,6 +12,7 @@ import com.hearthappy.base.interfaces.OnEmptyViewClickListener
 import com.hearthappy.base.interfaces.OnFooterClickListener
 import com.hearthappy.base.interfaces.OnHeaderClickListener
 import java.lang.reflect.Method
+import java.util.Collections
 
 
 /**
@@ -47,10 +48,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
-            TYPE_HEADER -> if (hasHeaderImpl()) return HeaderViewHolder((this as IHeaderSupport<ViewBinding>).initHeaderBinding(parent, viewType))
-            TYPE_EMPTY -> if (hasEmptyViewImpl()) return EmptyViewHolder((this as IEmptyViewSupport<ViewBinding>).initEmptyBinding(parent, viewType))
-            TYPE_FOOTER -> if (hasFooterImpl()) return FooterViewHolder((this as IFooterSupport<ViewBinding>).initFooterBinding(parent, viewType))
-            TYPE_INSET_ITEM -> if (hasInsetItemImpl()) return InsetItemViewHolder((this as IInsetItemSupper<ViewBinding>).initInsetItemBinding(parent, viewType))
+            TYPE_HEADER -> if (hasHeaderImpl()) return HeaderViewHolder(getIHeaderSupport().initHeaderBinding(parent, viewType))
+            TYPE_EMPTY -> if (hasEmptyViewImpl()) return EmptyViewHolder(getIEmptyViewSupport().initEmptyBinding(parent, viewType))
+            TYPE_FOOTER -> if (hasFooterImpl()) return FooterViewHolder(getIFooterSupport().initFooterBinding(parent, viewType))
+            TYPE_INSET_ITEM -> if (hasInsetItemImpl()) return InsetItemViewHolder(getIInsetItemSupper().initInsetItemBinding(parent, viewType))
         }
         return ItemViewHolder(initViewBinding(parent, viewType))
     }
@@ -64,8 +65,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             }
 
             is AbsSpecialAdapter<*, *>.ItemViewHolder -> {
-                val realPosition = getItemRealPosition(position)
-                Log.d(TAG, "onBindViewHolder: position:$position,realPosition:$realPosition")
+                val realPosition = getRealPosition(position)
                 holder.viewBinding.root.setOnClickListener { onItemClickListener?.onItemClick(it, list[realPosition], realPosition) }
                 (holder.viewBinding as VB).bindViewHolder(list[realPosition], realPosition)
             }
@@ -88,37 +88,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         }
     }
 
+
     private fun getRealPosition(position: Int): Int {
-        var realPosition = position
-        if (hasHeaderImpl()) realPosition--
-        if (hasInsetItemImpl()) {
-            val insetIndex = (this as IInsetItemSupper<*>).insetItemPosition()
-            Log.d(TAG, "getRealPosition: realPosition$realPosition,insetIndex:$insetIndex")
-            if (realPosition > insetIndex - 1) realPosition--
-        }
-        return if (realPosition >= 0) realPosition else 0
+        return position - (if (hasHeaderImpl()) 1 else 0) - if (hasInsetItemImpl() && position > insetItemPosition) insetItemOffset else 0
     }
 
-    private fun getItemRealPosition(position: Int): Int {
-        var realPosition = position // 处理头部布局的偏移量
-        if (hasHeaderImpl()) {
-            realPosition--
-        }
-
-        // 获取插入布局的位置
-        val insetItemPosition = getIInsetItemSupper().insetItemPosition()
-        if (insetItemPosition != -1) {
-            if (position >= insetItemPosition + (if (hasHeaderImpl()) 1 else 0)) {
-                realPosition--
-                Log.d(TAG, "getItemRealPosition: $realPosition")
-            }
-        }
-
-        // 处理尾部布局的情况，如果当前是尾部布局，直接返回 -1 表示无效索引
-        if (hasFooterImpl() && position == itemCount - 1) {
-            realPosition--
-        }
-        return realPosition
+    private fun getVirtualPosition(realPosition: Int): Int {
+        return realPosition + headerOffset + if (realPosition >= insetItemPosition) +insetItemOffset else 0
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -126,7 +102,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             hasEmptyViewImpl() && shouldShowEmptyView -> TYPE_EMPTY
             hasHeaderImpl() && position == 0 -> TYPE_HEADER
             hasFooterImpl() && position == headerOffset + list.size + insetItemOffset -> TYPE_FOOTER
-            hasInsetItemImpl() && getIInsetItemSupper().insetItemPosition() == position -> TYPE_INSET_ITEM
+            hasInsetItemImpl() && getIInsetItemSupper().insetItemPosition().convertInsetItemPosition() == position - headerOffset -> TYPE_INSET_ITEM
             else -> TYPE_ITEM
         }
     }
@@ -134,8 +110,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     override fun getItemCount(): Int {
         headerOffset = if (hasHeaderImpl()) 1 else 0
         footerOffset = if (hasFooterImpl()) 1 else 0
-        insetItemPosition = getIInsetItemSupper().insetItemPosition()
-        insetItemOffset = if (hasInsetItemImpl() && insetItemPosition != -1 && list.size > insetItemOffset) 1 else 0
+        insetItemPosition = if (hasInsetItemImpl()) getIInsetItemSupper().insetItemPosition().convertInsetItemPosition() else -1
+        insetItemOffset = if (hasInsetItemImpl() && insetItemPosition != -1) 1 else 0
         return if (shouldShowEmptyView && hasEmptyViewImpl()) {
             1
         } else {
@@ -145,42 +121,41 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
 
     override fun initData(list: List<T>) {
-        val headerOffset = if (hasHeaderImpl()) 1 else 0
         notifyItemRangeRemoved(headerOffset, this.list.size)
         this.list.clear()
         this.list.addAll(list)
         shouldShowEmptyView = list.isEmpty()
-        notifyItemRangeChanged(0, if (shouldShowEmptyView) 1 else list.size + headerOffset + insetItemOffset + footerOffset)
+        notifyItemRangeChanged(0, if (shouldShowEmptyView) 1 else getItemSpecialCount())
     }
 
     override fun insertData(data: T) {
         val position = this.list.size
+        val virtualPosition = getVirtualPosition(position)
         this.list.add(data)
         shouldShowEmptyView = false
-        Log.d(TAG, "insertData: ${list.size}")
-        Log.d(TAG, "insertData 刷新: ${position + headerOffset + insetItemOffset}")
-        notifyItemInserted(position + headerOffset + insetItemOffset)
+        if (list.size == 1) { //首次插入一条时，将头布局和插入布局刷新出来
+            notifyItemRangeChanged(0, getItemSpecialCount())
+        } else {
+            notifyItemInserted(virtualPosition)
+            notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
+        }
     }
 
     override fun insertData(data: T, position: Int) {
         this.list.add(position, data)
+        val virtualPosition = getVirtualPosition(position)
         shouldShowEmptyView = false
-        if (insetItemPosition != -1) {
-            if (position >= insetItemPosition) {
-                notifyItemInserted(position + headerOffset + insetItemOffset)
-                return
-            }
-        }
-        notifyItemInserted(position + headerOffset + insetItemOffset)
+        notifyItemInserted(virtualPosition)
+        notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
     }
 
     override fun removeData(position: Int): T? {
-        val virtualPosition = position + headerOffset + if (position + headerOffset >= insetItemPosition) insetItemOffset else 0
+        val virtualPosition = getVirtualPosition(position)
         if (position >= 0 && position < list.size) {
             val removedItem = list.removeAt(position)
             shouldShowEmptyView = list.isEmpty()
-            Log.d(TAG, "removeData: $virtualPosition,${list}")
-            notifyItemRemoved(virtualPosition) //            notifyItemRangeChanged(virtualPosition, list.size + headerOffset + insetItemOffset)
+            notifyItemRemoved(virtualPosition)
+            notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
             return removedItem
         }
         return null
@@ -191,8 +166,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         val size = list.size
         if (size > 0) {
             list.clear()
-            val headerOffset = if (hasHeaderImpl()) 1 else 0
-            val footerOffset = if (hasFooterImpl()) 1 else 0 // 如果有头部和底部布局，移除头尾布局
             if (hasFooterImpl()) notifyItemRemoved(footerOffset)
             notifyItemRangeRemoved(headerOffset, size)
             if (hasHeaderImpl()) notifyItemRemoved(0)
@@ -209,7 +182,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             shouldShowEmptyView = false
         }
         this.list.addAll(list)
-        val headerOffset = if (hasHeaderImpl()) 1 else 0
         notifyItemRangeChanged(oldPosition + headerOffset, this.list.size - oldPosition)
     }
 
@@ -228,10 +200,21 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         }
     }
 
-    override fun updateData(position: Int, data: T) {
+    override fun updateData(data: T, position: Int) {
+        if (position >= list.size) return
         list[position] = data
         shouldShowEmptyView = false
-        notifyItemChanged(position + if (hasHeaderImpl()) 1 else 0)
+        val virtualPosition = getVirtualPosition(position)
+        notifyItemChanged(virtualPosition)
+    }
+
+    override fun moveData(fromPosition: Int, toPosition: Int) {
+        if (fromPosition == toPosition) return
+        Collections.swap(list, fromPosition, toPosition)
+        val virtualFromPosition = getVirtualPosition(fromPosition)
+        val virtualToPosition = getVirtualPosition(toPosition)
+        notifyItemMoved(virtualFromPosition, virtualToPosition)
+        notifyItemRangeChanged(virtualFromPosition, virtualToPosition)
     }
 
     private inner class HeaderViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
@@ -257,6 +240,24 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private fun hasInsetItemImpl() = this is IInsetItemSupper<*>
 
     private fun getIInsetItemSupper() = this as IInsetItemSupper<ViewBinding>
+
+    private fun getIHeaderSupport() = this as IHeaderSupport<ViewBinding>
+
+    private fun getIFooterSupport() = this as IFooterSupport<ViewBinding>
+
+    private fun getIEmptyViewSupport() = this as IEmptyViewSupport<ViewBinding>
+
+    private fun getItemSpecialCount() = list.size + headerOffset + insetItemOffset
+
+    private fun Int.convertInsetItemPosition(): Int {
+        return if (this == -1) this else {
+            if (this > list.size) {
+                list.size
+            } else {
+                this
+            }
+        }
+    }
 
     companion object {
         private const val TAG = "AbsSpecialAdapter"

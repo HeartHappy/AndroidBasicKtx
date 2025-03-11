@@ -18,38 +18,60 @@
 
     <Button
         android:id="@+id/btnInit"
+        style="@style/style_button"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:text="Init"
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <Button
         android:id="@+id/btnAdd"
+        style="@style/style_button"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:text="Add"
         app:layout_constraintBottom_toTopOf="@+id/btnInit" />
 
     <Button
-        android:id="@+id/btnRemove"
+        android:id="@+id/btnAddTo0"
+        style="@style/style_button"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Remove"
+        android:text="Add To 0"
         app:layout_constraintBottom_toTopOf="@+id/btnAdd" />
+
 
     <Button
         android:id="@+id/btnInset"
+        style="@style/style_button"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:text="Inset"
-        app:layout_constraintBottom_toTopOf="@+id/btnRemove" />
+        app:layout_constraintBottom_toTopOf="@+id/btnAddTo0" />
+
+    <Button
+        android:id="@+id/btnInsetTo0"
+        style="@style/style_button"
+        android:layout_width="match_parent"
+        android:text="Inset TO 0"
+        app:layout_constraintBottom_toTopOf="@+id/btnInset" />
+
+    <Button
+        android:id="@+id/btnMove"
+        style="@style/style_button"
+        android:layout_width="match_parent"
+        android:text="Move 0 and 8"
+        app:layout_constraintBottom_toTopOf="@+id/btnInsetTo0" />
+
+    <Button
+        android:id="@+id/btnRemove"
+        style="@style/style_button"
+        android:layout_width="match_parent"
+        android:text="Remove"
+        app:layout_constraintBottom_toTopOf="@+id/btnMove" />
 
     <Button
         android:id="@+id/btnRemoveAll"
+        style="@style/style_button"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:text="RemoveAll"
-        app:layout_constraintBottom_toTopOf="@+id/btnInset" />
+        app:layout_constraintBottom_toTopOf="@+id/btnRemove" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

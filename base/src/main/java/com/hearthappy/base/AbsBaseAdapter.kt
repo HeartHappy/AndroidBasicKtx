@@ -4,6 +4,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.base.interfaces.OnItemClickListener
+import java.util.Collections
 
 
 /**
@@ -73,9 +74,16 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
         notifyItemRangeChanged(oldPosition, this.list.size)
     }
 
-    open fun updateData(position: Int, data: T) {
+    open fun updateData(data: T, position: Int) {
         list[position] = data
         notifyItemChanged(position)
+    }
+
+    open fun moveData(fromPosition: Int, toPosition: Int) {
+        if (fromPosition == toPosition) return
+        Collections.swap(list, fromPosition, toPosition)
+        notifyItemMoved(fromPosition, toPosition)
+        notifyItemRangeChanged(fromPosition, toPosition)
     }
 
     fun setOnItemClickListener(onItemClickListener: OnItemClickListener<T>?) {
@@ -93,6 +101,7 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
                 holder.viewBinding.root.setOnClickListener { v -> onItemClickListener?.onItemClick(v, list[position], position) }
                 (holder.viewBinding as VB).bindViewHolder(list[position], position)
             }
+
             else -> Unit
         }
     }
