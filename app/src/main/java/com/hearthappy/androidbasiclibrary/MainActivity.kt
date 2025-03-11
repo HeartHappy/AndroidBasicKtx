@@ -49,6 +49,15 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         btnAddTo0.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1, 0) } }
         btnRemove.setOnClickListener { mainAdapter.removeData(mainAdapter.list.size - 1) }
         btnRemoveAll.setOnClickListener { mainAdapter.removeAll() }
+        btnInsetLayout.setOnClickListener {
+            btnInsetLayout.isActivated = !btnInsetLayout.isActivated
+            if (btnInsetLayout.isActivated) {
+                mainAdapter.setInsetItemPosition(3)
+            } else {
+                mainAdapter.setInsetItemPosition()
+            }
+        }
+
         rvList.addLastListener {
             if (it) viewModel.ld.value?.let { it1 -> mainAdapter.addData(it1) }
             Toast.makeText(this@MainActivity, "加载更多", Toast.LENGTH_SHORT).show()
@@ -72,9 +81,5 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         rvList.layoutManager = LinearLayoutManager(this@MainActivity)
         mainAdapter = MainAdapter(this@MainActivity)
         rvList.adapter = mainAdapter
-    }
-
-    companion object {
-        private const val TAG = "MainActivity"
     }
 }

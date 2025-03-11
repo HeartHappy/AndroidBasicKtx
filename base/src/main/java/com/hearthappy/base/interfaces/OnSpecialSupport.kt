@@ -25,10 +25,7 @@ interface IEmptyViewSupport<EB : ViewBinding> {
     fun EB.bindEmptyViewHolder()
 }
 
-interface IInsetItemSupper<IB : ViewBinding> {
+interface IInsetItemSupper<IB : ViewBinding, IT> {
     fun initInsetItemBinding(parent: ViewGroup, viewType: Int): IB
-    fun IB.bindInsetViewHolder()
-
-    // 插入布局的Position，返回值：P:-1：不插入，P >=list.size：插入到item列表最后一条，-1< P <list.size：插入到指定位置
-    fun insetItemPosition(): Int
+    fun IB.bindInsetViewHolder(data: IT)
 }

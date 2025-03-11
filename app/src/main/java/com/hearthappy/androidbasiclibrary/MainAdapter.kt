@@ -19,7 +19,7 @@ import com.hearthappy.base.interfaces.IInsetItemSupper
  * @author ChenRui
  * ClassDescription：头、尾布局， 则AbsSpecialAdapter<ViewBinding类型,数据类型>()
  */
-class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding>,IInsetItemSupper<ItemInsetViewBinding> {
+class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding>, IInsetItemSupper<ItemInsetViewBinding, String> {
     override fun initViewBinding(parent: ViewGroup, viewType: Int): ItemListBinding {
         return ItemListBinding.inflate(LayoutInflater.from(context), parent, false)
     }
@@ -53,13 +53,12 @@ class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBind
     }
 
     override fun initInsetItemBinding(parent: ViewGroup, viewType: Int): ItemInsetViewBinding {
-        return ItemInsetViewBinding.inflate(LayoutInflater.from(context),parent,false)
+        return ItemInsetViewBinding.inflate(LayoutInflater.from(context), parent, false)
     }
 
-    override fun insetItemPosition(): Int {
-        return 5
+    override fun ItemInsetViewBinding.bindInsetViewHolder(data: String) {
+        tvEmptyDefault.text = data
     }
 
-    override fun ItemInsetViewBinding.bindInsetViewHolder() {
-    }
+
 }
