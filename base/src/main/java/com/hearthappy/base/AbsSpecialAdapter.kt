@@ -1,6 +1,5 @@
 package com.hearthappy.base
 
-import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
@@ -166,9 +165,9 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         val size = list.size
         if (size > 0) {
             list.clear()
-            if (hasFooterImpl()) notifyItemRemoved(footerOffset)
-            notifyItemRangeRemoved(headerOffset, size)
             if (hasHeaderImpl()) notifyItemRemoved(0)
+            notifyItemRangeRemoved(headerOffset, size)
+            if (hasFooterImpl()) notifyItemRemoved(footerOffset)
             shouldShowEmptyView = true
             notifyItemChanged(if (hasEmptyViewImpl()) 1 else 0)
         }
