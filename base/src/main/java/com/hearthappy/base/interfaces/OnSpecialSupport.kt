@@ -27,5 +27,5 @@ interface IEmptyViewSupport<EB : ViewBinding> {
 
 interface IInsetItemSupper<IB : ViewBinding> {
     fun initInsetItemBinding(parent: ViewGroup, viewType: Int): IB
-    fun IB.bindInsetViewHolder():Int
+    fun IB.bindInsetViewHolder()
 }

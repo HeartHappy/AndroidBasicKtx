@@ -19,7 +19,7 @@ import com.hearthappy.base.interfaces.IInsetItemSupper
  * @author ChenRui
  * ClassDescription：头、尾布局， 则AbsSpecialAdapter<ViewBinding类型,数据类型>()
  */
-class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding>, IInsetItemSupper<ItemInsetViewBinding, String> {
+class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
     override fun initViewBinding(parent: ViewGroup, viewType: Int): ItemListBinding {
         return ItemListBinding.inflate(LayoutInflater.from(context), parent, false)
     }
@@ -52,13 +52,13 @@ class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBind
         ivEmptyDefault.setImageResource(R.mipmap.nd_default)
     }
 
-    override fun initInsetItemBinding(parent: ViewGroup, viewType: Int): ItemInsetViewBinding {
-        return ItemInsetViewBinding.inflate(LayoutInflater.from(context), parent, false)
-    }
-
-    override fun ItemInsetViewBinding.bindInsetViewHolder(data: String) {
-        tvEmptyDefault.text = data
-    }
+//    override fun initInsetItemBinding(parent: ViewGroup, viewType: Int): ItemInsetViewBinding {
+//        return ItemInsetViewBinding.inflate(LayoutInflater.from(context), parent, false)
+//    }
+//
+//    override fun ItemInsetViewBinding.bindInsetViewHolder(data: String) {
+//        tvEmptyDefault.text = data
+//    }
 
 
 }

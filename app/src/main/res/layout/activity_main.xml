@@ -11,53 +11,25 @@
         android:id="@+id/rvList"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/btnRemoveAll"
+        app:layout_constraintBottom_toTopOf="@+id/btnInsetLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btnInit"
+        android:id="@+id/btnInsetLayout"
         style="@style/style_button"
         android:layout_width="match_parent"
-        android:text="@string/init"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        android:text="@string/inset_layout_or_remove_layout"
+        app:layout_constraintBottom_toTopOf="@+id/btnRemoveAll" />
 
     <Button
-        android:id="@+id/btnAdd"
+        android:id="@+id/btnRemoveAll"
         style="@style/style_button"
         android:layout_width="match_parent"
-        android:text="@string/add"
-        app:layout_constraintBottom_toTopOf="@+id/btnInit" />
+        android:text="@string/remove_all"
+        app:layout_constraintBottom_toTopOf="@+id/btnRemove" />
 
-    <Button
-        android:id="@+id/btnAddTo0"
-        style="@style/style_button"
-        android:layout_width="match_parent"
-        android:text="@string/add_to_0"
-        app:layout_constraintBottom_toTopOf="@+id/btnAdd" />
-
-
-    <Button
-        android:id="@+id/btnInset"
-        style="@style/style_button"
-        android:layout_width="match_parent"
-        android:text="@string/inset"
-        app:layout_constraintBottom_toTopOf="@+id/btnAddTo0" />
-
-    <Button
-        android:id="@+id/btnInsetTo0"
-        style="@style/style_button"
-        android:layout_width="match_parent"
-        android:text="@string/inset_to_0"
-        app:layout_constraintBottom_toTopOf="@+id/btnInset" />
-
-    <Button
-        android:id="@+id/btnMove"
-        style="@style/style_button"
-        android:layout_width="match_parent"
-        android:text="@string/move_0_and_8"
-        app:layout_constraintBottom_toTopOf="@+id/btnInsetTo0" />
 
     <Button
         android:id="@+id/btnRemove"
@@ -67,18 +39,46 @@
         app:layout_constraintBottom_toTopOf="@+id/btnMove" />
 
     <Button
-        android:id="@+id/btnRemoveAll"
+        android:id="@+id/btnMove"
         style="@style/style_button"
         android:layout_width="match_parent"
-        android:text="@string/remove_all"
-        app:layout_constraintBottom_toTopOf="@+id/btnRemove" />
+        android:text="@string/move_0_and_8"
+        app:layout_constraintBottom_toTopOf="@+id/btnInsetTo0" />
 
     <Button
-        android:id="@+id/btnInsetLayout"
+        android:id="@+id/btnInsetTo0"
         style="@style/style_button"
         android:layout_width="match_parent"
-        android:text="@string/inset_layout_or_remove_layout"
-        app:layout_constraintBottom_toTopOf="@+id/btnRemove" />
+        android:text="@string/inset_to_0"
+        app:layout_constraintBottom_toTopOf="@+id/btnInset" />
+
+    <Button
+        android:id="@+id/btnInset"
+        style="@style/style_button"
+        android:layout_width="match_parent"
+        android:text="@string/inset"
+        app:layout_constraintBottom_toTopOf="@+id/btnAddTo0" />
+
+    <Button
+        android:id="@+id/btnAddTo0"
+        style="@style/style_button"
+        android:layout_width="match_parent"
+        android:text="@string/add_to_0"
+        app:layout_constraintBottom_toTopOf="@+id/btnAdd" />
+
+    <Button
+        android:id="@+id/btnAdd"
+        style="@style/style_button"
+        android:layout_width="match_parent"
+        android:text="@string/add"
+        app:layout_constraintBottom_toTopOf="@+id/btnInit" />
+
+    <Button
+        android:id="@+id/btnInit"
+        style="@style/style_button"
+        android:layout_width="match_parent"
+        android:text="@string/init"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

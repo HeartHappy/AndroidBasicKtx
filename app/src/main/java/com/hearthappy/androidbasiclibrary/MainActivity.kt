@@ -1,5 +1,6 @@
 package com.hearthappy.androidbasiclibrary
 
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -52,9 +53,9 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         btnInsetLayout.setOnClickListener {
             btnInsetLayout.isActivated = !btnInsetLayout.isActivated
             if (btnInsetLayout.isActivated) {
-                mainAdapter.setInsetItemPosition(3)
+                mainAdapter.setInsetItemLayout(listOf(InsetItemImpl(this@MainActivity),InsetItemImpl(this@MainActivity),InsetItemImpl(this@MainActivity)),3,7,9)
             } else {
-                mainAdapter.setInsetItemPosition()
+                mainAdapter.setInsetItemLayout(emptyList())
             }
         }
 
@@ -72,7 +73,10 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
 
     override fun ActivityMainBinding.initViewModelListener() {
         viewModel.ld.observe(this@MainActivity) {
+//            mainAdapter.setInsetItemLayout(listOf(InsetItemImpl(this@MainActivity)),3)
             mainAdapter.initData(it)
+
+            Log.d("TAG", "initViewModelListener:${mainAdapter.itemCount} ")
         }
     }
 

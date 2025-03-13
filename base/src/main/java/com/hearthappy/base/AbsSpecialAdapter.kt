@@ -1,5 +1,6 @@
 package com.hearthappy.base
 
+import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
@@ -31,14 +32,35 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var onInsetItemClickListener: OnInsetItemClickListener? = null
     private var headerOffset = 0
     private var footerOffset = 0
-//    private var insetItemOffset = 0
-//    private var insetItemPosition = -1
-    private var insetItemPositions:List<Int> = listOf()
-    private var insetItemLayouts:List<IInsetItemSupper<*>> = listOf()
-    fun setInsetItemLayout(insetItemLayout: List<IInsetItemSupper<*>>,insetItemPositions:List<Int>) {
-        this.insetItemLayouts = insetItemLayout
-        this.insetItemPositions=insetItemPositions
 
+    private var insetItemPositions: List<Int> = listOf()
+    private var insetItemLayouts: List<IInsetItemSupper<*>> = listOf()
+    private var insetItemMap = mutableMapOf<Int, IInsetItemSupper<*>>()
+    private var creatorCount = 0
+    private var insetTransformMap = mutableMapOf<Int, Int>() //原索引，推算的索引
+
+    /**
+     * 设置插入布局
+     * @param insetItemLayout List<IInsetItemSupper<*>> 插入布局的接口实现集合
+     * @param insetItemPositions IntArray inset position
+     * position range:P:-1：不插入 || P >=list.size：插入到item列表最后一条 || -1< P <list.size：插入到指定位置 ,传入空则不插入
+     */
+    fun setInsetItemLayout(insetItemLayout: List<IInsetItemSupper<*>>, vararg insetItemPositions: Int) {
+        this.insetItemLayouts = insetItemLayout
+        val insetList = insetItemPositions.toList()
+        val transformList = transformList(insetList)
+        if (this.insetItemPositions.isNotEmpty() && insetItemPositions.isEmpty() && insetItemLayouts.isEmpty()) { //清理插入布局
+            this.insetItemPositions.forEach { if (it >= 0 && it < list.size) notifyItemRemoved(getVirtualPosition(it)) }
+        } else {
+            insetItemPositions.forEachIndexed { index, it ->
+                val transformPosition = transformList[index]
+                insetTransformMap[transformPosition] = it
+                insetItemMap[transformPosition] = insetItemLayouts[index]
+                notifyItemInserted(transformPosition)
+            }
+        }
+        this.insetItemPositions = insetList
+        notifyItemRangeChanged(headerOffset, getItemSpecialCount())
     }
 
     fun setOnHeaderClickListener(onHeaderClickListener: OnHeaderClickListener?) {
@@ -57,30 +79,20 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         this.onInsetItemClickListener = onInsetItemClickListener
     }
 
-    /**
-     * 插入布局的Position
-     * @param insetItemPosition Int P:-1：不插入 || P >=list.size：插入到item列表最后一条 || -1< P <list.size：插入到指定位置 .默认：-1
-     */
-    fun setInsetItemPosition(insetItemPosition: Int = NOT_INSERTED) {
-        // TODO:  偏移量需要重新计算
-//        val oldInsetPosition = this.insetItemPosition
-        if (insetItemPosition <= NOT_INSERTED) {
-//            insetItemOffset = 0
-//            notifyItemRemoved(oldInsetPosition)
-        } else {
-            notifyItemInserted(insetItemPosition)
-        }
-//        this.insetItemPosition = insetItemPosition
-//        notifyItemRangeChanged(oldInsetPosition, getItemSpecialCount())
-    }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
             TYPE_HEADER -> if (hasHeaderImpl()) return HeaderViewHolder(getIHeaderSupport().initHeaderBinding(parent, viewType))
             TYPE_EMPTY -> if (hasEmptyViewImpl()) return EmptyViewHolder(getIEmptyViewSupport().initEmptyBinding(parent, viewType))
             TYPE_FOOTER -> if (hasFooterImpl()) return FooterViewHolder(getIFooterSupport().initFooterBinding(parent, viewType))
-            TYPE_INSET_ITEM -> if (hasInsetItemImpl()) return InsetItemViewHolder(getIInsetItemSupper().initInsetItemBinding(parent, viewType))
+            TYPE_INSET_ITEM -> {
+                val insetItem = insetItemLayouts[creatorCount]
+                creatorCount++
+                if (creatorCount >= insetItemLayouts.size) {
+                    creatorCount--
+                }
+                return InsetItemViewHolder(insetItem.initInsetItemBinding(parent, viewType))
+            }
         }
         return ItemViewHolder(initViewBinding(parent, viewType))
     }
@@ -88,6 +100,11 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
+            is AbsSpecialAdapter<*, *>.EmptyViewHolder -> {
+                holder.viewBinding.root.setOnClickListener { onEmptyViewClickListener?.onEmptyViewClick(it) }
+                callBindMethod(this, holder.viewBinding, "bindEmptyViewHolder")
+            }
+
             is AbsSpecialAdapter<*, *>.HeaderViewHolder -> {
                 holder.viewBinding.root.setOnClickListener { onHeaderClickListener?.onHeaderClick(it) }
                 callBindMethod(this, holder.viewBinding, "bindHeaderViewHolder")
@@ -95,23 +112,24 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
             is AbsSpecialAdapter<*, *>.ItemViewHolder -> {
                 val realPosition = getRealPosition(position)
-                holder.viewBinding.root.setOnClickListener { onItemClickListener?.onItemClick(it, list[realPosition], realPosition) }
+                holder.viewBinding.root.setOnClickListener {
+                    Log.d(TAG, "onBindViewHolder ItemViewHolder: $position,$realPosition")
+                    onItemClickListener?.onItemClick(it, list[realPosition], realPosition)
+                }
                 (holder.viewBinding as VB).bindViewHolder(list[realPosition], realPosition)
             }
 
-            is AbsSpecialAdapter<*, *>.EmptyViewHolder -> {
-                holder.viewBinding.root.setOnClickListener { onEmptyViewClickListener?.onEmptyViewClick(it) }
-                callBindMethod(this, holder.viewBinding, "bindEmptyViewHolder")
+            is AbsSpecialAdapter<*, *>.InsetItemViewHolder -> {
+                holder.viewBinding.root.setOnClickListener {
+                    Log.d(TAG, "onBindViewHolder InsetItemViewHolder: $position")
+                    onInsetItemClickListener?.onInsetItemClick(it)
+                }
+                insetItemMap[position]?.let { callBindMethod(it, holder.viewBinding, "bindInsetViewHolder") }
             }
 
             is AbsSpecialAdapter<*, *>.FooterViewHolder -> {
                 holder.viewBinding.root.setOnClickListener { onFooterClickListener?.onFooterClick(it) }
                 callBindMethod(this, holder.viewBinding, "bindFooterViewHolder")
-            }
-
-            is AbsSpecialAdapter<*, *>.InsetItemViewHolder -> {
-                holder.viewBinding.root.setOnClickListener { onInsetItemClickListener?.onInsetItemClick(it) }
-                callBindMethod(this, holder.viewBinding, "bindInsetViewHolder")
             }
 
             else -> Unit
@@ -120,26 +138,42 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
 
     private fun getRealPosition(position: Int): Int {
-        return position - headerOffset - insetItemLayouts.size
+        var realPosition = position - headerOffset
+        for (insetPosition in insetItemPositions) {
+            if (insetPosition > realPosition) {
+                break
+            }
+            realPosition--
+        }
+        return realPosition
     }
 
     private fun getVirtualPosition(realPosition: Int): Int {
-        return realPosition + headerOffset + insetItemLayouts.size
+        var virtualPosition = realPosition + headerOffset
+        for (insetPosition in insetItemPositions) {
+            if (insetPosition > realPosition) {
+                break
+            }
+            virtualPosition++
+        }
+        return virtualPosition
     }
 
-    override fun getItemViewType(position: Int): Int {
-        insetItemPositions.forEach {
-            if (it == position - headerOffset ) {
-                return position - headerOffset
-            }
+    fun transformList(inputList: List<Int>): List<Int> {
+        return inputList.mapIndexed { index, value -> // index 从 0 开始，所以要加 1 得到从 1 开始的位置
+            value + (index + 1)
         }
+    }
 
+    override fun getItemViewType(position: Int): Int { // 计算累积的插入布局偏移量
         return when {
             hasEmptyViewImpl() && shouldShowEmptyView -> TYPE_EMPTY
             hasHeaderImpl() && position == TYPE_HEADER -> TYPE_HEADER
-            // TODO:  偏移量需要重新计算
-//            hasFooterImpl() && position == headerOffset + list.size + insetItemOffset -> TYPE_FOOTER
-//            hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && insetItemPosition.convertInsetItemPosition() == position - headerOffset -> TYPE_INSET_ITEM
+            hasFooterImpl() && position == headerOffset + list.size + insetItemLayouts.size -> TYPE_FOOTER //            hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && insetItemPosition.convertInsetItemPosition() == position - headerOffset -> TYPE_INSET_ITEM
+            insetItemLayouts.isNotEmpty() && insetItemPositions.any { it != NOT_INSERTED && it.convertInsetItemPosition() == insetTransformMap[position] } -> { //                ++insetItemOffset
+                TYPE_INSET_ITEM
+            }
+
             else -> TYPE_ITEM
         }
     }
@@ -147,15 +181,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     override fun getItemCount(): Int {
         headerOffset = if (hasHeaderImpl()) 1 else 0
         footerOffset = if (hasFooterImpl()) 1 else 0
-//        insetItemPosition = if (hasInsetItemImpl()) insetItemPosition.convertInsetItemPosition() else -1
-        // TODO:  偏移量需要重新计算
-//        insetItemOffset = insetItemLayouts.size
         return if (shouldShowEmptyView && hasEmptyViewImpl()) 1 else getItemSpecialCount()
     }
 
 
     override fun initData(list: List<T>) {
         if (this.list.isNotEmpty()) this.list.clear()
+        notifyItemRangeRemoved(0,getItemSpecialCount())
         this.list.addAll(list)
         shouldShowEmptyView = list.isEmpty()
         notifyItemRangeChanged(0, if (shouldShowEmptyView) 1 else getItemSpecialCount())
@@ -272,6 +304,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     }
 
     companion object {
+        private const val TAG = "AbsSpecialAdapter"
         const val TYPE_HEADER: Int = 0x00
         const val TYPE_ITEM: Int = 0x01
         const val TYPE_EMPTY: Int = 0x02
