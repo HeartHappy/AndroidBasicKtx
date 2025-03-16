@@ -97,7 +97,7 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is AbsBaseAdapter<*, *>.ViewHolder -> {
-                holder.viewBinding.root.setOnClickListener { v -> onItemClickListener?.onItemClick(v, list[position], position) }
+                holder.viewBinding.root.setOnClickListener { v -> onItemClickListener?.onItemClick(v, list[position], position, position) }
                 (holder.viewBinding as VB).bindViewHolder(list[position], position)
             }
 

@@ -6,13 +6,11 @@ import android.view.ViewGroup
 import com.hearthappy.androidbasiclibrary.databinding.ItemEmptyViewBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemHeaderBinding
-import com.hearthappy.androidbasiclibrary.databinding.ItemInsetViewBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemListBinding
 import com.hearthappy.base.AbsSpecialAdapter
 import com.hearthappy.base.interfaces.IEmptyViewSupport
 import com.hearthappy.base.interfaces.IFooterSupport
 import com.hearthappy.base.interfaces.IHeaderSupport
-import com.hearthappy.base.interfaces.IInsetItemSupper
 
 /**
  * Created Date: 2025/3/8
@@ -51,14 +49,6 @@ class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBind
     override fun ItemEmptyViewBinding.bindEmptyViewHolder() {
         ivEmptyDefault.setImageResource(R.mipmap.nd_default)
     }
-
-//    override fun initInsetItemBinding(parent: ViewGroup, viewType: Int): ItemInsetViewBinding {
-//        return ItemInsetViewBinding.inflate(LayoutInflater.from(context), parent, false)
-//    }
-//
-//    override fun ItemInsetViewBinding.bindInsetViewHolder(data: String) {
-//        tvEmptyDefault.text = data
-//    }
 
 
 }

@@ -4,6 +4,6 @@ import android.view.View
 
 interface OnHeaderClickListener {
 
-    fun onHeaderClick(view: View)
+    fun onHeaderClick(view: View, position: Int)
 
 }

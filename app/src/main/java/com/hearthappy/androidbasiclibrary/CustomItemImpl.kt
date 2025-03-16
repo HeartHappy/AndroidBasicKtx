@@ -1,23 +1,21 @@
 package com.hearthappy.androidbasiclibrary
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.hearthappy.androidbasiclibrary.databinding.ItemInsetViewBinding
-import com.hearthappy.base.interfaces.IInsetItemSupper
+import com.hearthappy.base.interfaces.ICustomItemSupper
 
-class InsetItemImpl(val context: Context):IInsetItemSupper<ItemInsetViewBinding> {
-    override fun initInsetItemBinding(parent: ViewGroup, viewType: Int): ItemInsetViewBinding {
+class CustomItemImpl(val context: Context):ICustomItemSupper<ItemInsetViewBinding> {
+    override fun initCustomItemBinding(parent: ViewGroup, viewType: Int): ItemInsetViewBinding {
         return ItemInsetViewBinding.inflate(LayoutInflater.from(context), parent, false)
     }
 
-    override fun ItemInsetViewBinding.bindInsetViewHolder() {
+    override fun ItemInsetViewBinding.bindCustomViewHolder(position:Int) {
         ivEmptyDefault.text="我是插入的布局"
         ivEmptyDefault.setTextColor(ContextCompat.getColor(context,R.color.blue))
-        ivEmptyDefault.setOnClickListener {
-            Toast.makeText(context, "我是插入布局", Toast.LENGTH_SHORT).show()
-        }
+        Log.d("TAG", "bindCustomViewHolder: $position")
     }
 }

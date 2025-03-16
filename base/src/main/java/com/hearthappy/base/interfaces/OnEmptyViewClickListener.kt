@@ -4,6 +4,6 @@ import android.view.View
 
 interface OnEmptyViewClickListener {
 
-    fun onEmptyViewClick(view: View)
+    fun onEmptyViewClick(view: View, position: Int)
 
 }

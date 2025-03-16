@@ -26,7 +26,7 @@ interface IEmptyViewSupport<EB : ViewBinding> {
 }
 
 //插入自定义布局
-interface IInsetItemSupper<IB : ViewBinding> {
-    fun initInsetItemBinding(parent: ViewGroup, viewType: Int): IB
-    fun IB.bindInsetViewHolder()
+interface ICustomItemSupper<CB : ViewBinding> {
+    fun initCustomItemBinding(parent: ViewGroup, viewType: Int): CB
+    fun CB.bindCustomViewHolder(position:Int)
 }
