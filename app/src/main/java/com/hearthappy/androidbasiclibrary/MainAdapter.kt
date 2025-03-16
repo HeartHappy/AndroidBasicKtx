@@ -25,7 +25,7 @@ class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBind
     }
 
     override fun ItemListBinding.bindViewHolder(data: String, position: Int) {
-        tvTitle.text = data
+        tvTitle.text = data.plus(position)
     }
 
     override fun initHeaderBinding(parent: ViewGroup, viewType: Int): ItemHeaderBinding {

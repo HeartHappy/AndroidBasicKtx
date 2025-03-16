@@ -11,7 +11,7 @@ class MainViewModel : ViewModel() {
     fun getListData() {
         val listOf = arrayListOf<String>()
         for (i in 0..10) {
-            listOf.add(i.toString())
+            listOf.add("is data:$i-")
         }
         _ldData.value = listOf
     }

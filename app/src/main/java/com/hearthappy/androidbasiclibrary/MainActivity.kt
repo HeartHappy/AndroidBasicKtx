@@ -53,9 +53,11 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         btnInsetLayout.setOnClickListener {
             btnInsetLayout.isActivated = !btnInsetLayout.isActivated
             if (btnInsetLayout.isActivated) {
-                mainAdapter.insetItemLayout(listOf(InsetItemImpl(this@MainActivity),InsetItemImpl2(this@MainActivity),InsetItemImpl3(this@MainActivity)),3,7,9)
+                mainAdapter.insetItemLayout(listOf(InsetItemImpl(this@MainActivity),InsetItemImpl2(this@MainActivity),InsetItemImpl3(this@MainActivity)),3,7,9)//4,9,12
             } else {
-                mainAdapter.removeAllItemLayout()
+//                mainAdapter.removeItemLayout(3,7)
+                mainAdapter.addItemLayout(listOf(InsetItemImpl3(this@MainActivity)),10)
+//                mainAdapter.insetItemLayout(listOf(InsetItemImpl(this@MainActivity),InsetItemImpl2(this@MainActivity),InsetItemImpl3(this@MainActivity)),3,7,9)//4,9,1
             }
         }
 
@@ -73,10 +75,7 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
 
     override fun ActivityMainBinding.initViewModelListener() {
         viewModel.ld.observe(this@MainActivity) {
-//            mainAdapter.setInsetItemLayout(listOf(InsetItemImpl(this@MainActivity)),3)
             mainAdapter.initData(it)
-
-            Log.d("TAG", "initViewModelListener:${mainAdapter.itemCount} ")
         }
     }
 

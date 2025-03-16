@@ -1,6 +1,5 @@
 package com.hearthappy.base
 
-import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
@@ -19,7 +18,7 @@ import java.util.Collections
 /**
  * Created Date: 2025/3/7
  * @author ChenRui
- * ClassDescription：特殊适配，支持头、尾、空布局AbsSpecialAdapter<ViewBinding类型,数据类型>()
+ * ClassDescription：特殊适配，支持头、尾、空布局，以及插入自定义布局。AbsSpecialAdapter<ViewBinding类型,数据类型>()
  * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport接口
  */
 @Suppress("UNCHECKED_CAST") abstract class AbsSpecialAdapter<VB : ViewBinding, T> :
@@ -49,11 +48,7 @@ import java.util.Collections
         if (insetItemLayouts.size != insetItemPositions.size) throw RuntimeException("The number of layout and insertion positions is not equal")
 
         if (insetItemPositions.isEmpty() || insetItemLayouts.isEmpty()) return
-//        val filterLayouts = insetItemLayouts.filter { it !in this.insetItemLayouts }
-//        if (filterLayouts.isEmpty()) return
-//        val filterPositions = insetItemPositions.filter { it !in this.insetItemPositions }
-//        if (filterPositions.isEmpty()) return
-//        Log.d(TAG, "insetItemLayout: ${filterPositions.toList()}")
+        removeAllItemLayout()
         // 添加新的布局元素
         this.insetItemLayouts = insetItemLayouts.toMutableList()
         // 添加新的插入位置元素
@@ -66,19 +61,28 @@ import java.util.Collections
             insetItemSupperMap[transformPosition] = this.insetItemLayouts[index]
             notifyItemInserted(transformPosition)
         }
-        val itemSpecialCount = getItemSpecialCount()
-        Log.d(TAG, "insetItemLayout: $itemSpecialCount")
-        notifyItemRangeChanged(headerOffset, itemSpecialCount)
+        notifyItemRangeChanged(headerOffset, getItemSpecialCount())
     }
+
+    fun addItemLayout(insetItemLayouts: List<IInsetItemSupper<*>>, vararg insetItemPositions: Int) {
+        if (insetItemLayouts.size != insetItemPositions.size) throw RuntimeException("The number of layout and insertion positions is not equal")
+        if (insetItemPositions.isEmpty() || insetItemLayouts.isEmpty()) return
+        val newLayouts = this.insetItemLayouts.toMutableList()
+        val newInsetPositions = this.insetItemPositions.toMutableList()
+        newLayouts.addAll(insetItemLayouts)
+        newInsetPositions.addAll(insetItemPositions.toList())
+        notifyInsetLayoutsChanged(newLayouts, newInsetPositions)
+    }
+
 
     fun removeItemLayout(vararg position: Int) {
         if (insetTransformMap.isNotEmpty() && position.isNotEmpty()) {
-            removeEntries(insetTransformMap, position.toSet()) {
-                notifyItemRemoved(it)
-                notifyItemRangeChanged(headerOffset, getItemSpecialCount())
-            }
+            removeEntries(insetTransformMap, position.toSet()) {notifyItemRemoved(it)}
+            notifyItemRangeChanged(headerOffset, getItemSpecialCount())
+            notifyInsetLayoutsChanged(insetItemLayouts.toMutableList(), insetTransformMap.values.map { it })
         }
     }
+
 
     fun removeAllItemLayout() {
         if (insetTransformMap.isNotEmpty()) {
@@ -87,26 +91,6 @@ import java.util.Collections
         }
     }
 
-    private fun removeEntries(map: MutableMap<Int, Int>, keysToRemove: Set<Int>, block: (Int) -> Unit) {
-        // 遍历 keysToRemove 集合
-        val iterator = map.iterator()
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            if (keysToRemove.contains(entry.value)) {
-                iterator.remove()
-                val itemSupper = insetItemSupperMap.get(entry.key)
-                val indexOf = insetItemLayouts.indexOf(itemSupper)
-                if (indexOf == -1) break
-                insetItemLayouts.remove(itemSupper)
-                insetItemPositions.removeAt(indexOf)
-                insetItemSupperMap.remove(entry.key)
-                if (creatorCount > 0) {
-                    creatorCount--
-                }
-                block(entry.key)
-            }
-        }
-    }
 
     fun setOnHeaderClickListener(onHeaderClickListener: OnHeaderClickListener?) {
         this.onHeaderClickListener = onHeaderClickListener
@@ -156,19 +140,13 @@ import java.util.Collections
             }
 
             is AbsSpecialAdapter<*, *>.ItemViewHolder -> {
-                val realPosition = getItemRealPosition(position)
-                holder.viewBinding.root.setOnClickListener {
-                    Log.d(TAG, "onBindViewHolder ItemViewHolder: $position,$realPosition")
-                    onItemClickListener?.onItemClick(it, list[realPosition], realPosition)
-                }
-                (holder.viewBinding as VB).bindViewHolder(list[realPosition], realPosition)
+                val listPosition = getItemListPosition(position)
+                holder.viewBinding.root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition], listPosition) }
+                (holder.viewBinding as VB).bindViewHolder(list[listPosition], listPosition)
             }
 
             is AbsSpecialAdapter<*, *>.InsetItemViewHolder -> {
-                holder.viewBinding.root.setOnClickListener {
-                    Log.d(TAG, "onBindViewHolder InsetItemViewHolder: $position")
-                    onInsetItemClickListener?.onInsetItemClick(it)
-                }
+                holder.viewBinding.root.setOnClickListener { onInsetItemClickListener?.onInsetItemClick(it) }
                 insetItemSupperMap[position]?.let { callBindMethod(it, holder.viewBinding, "bindInsetViewHolder") }
             }
 
@@ -182,7 +160,7 @@ import java.util.Collections
     }
 
 
-    private fun getItemRealPosition(position: Int): Int {
+    private fun getItemListPosition(position: Int): Int {
         var realPosition = position - headerOffset
         for (map in insetTransformMap) {
             if (map.value > realPosition) break
@@ -200,11 +178,12 @@ import java.util.Collections
         return virtualPosition
     }
 
-    private fun transformList(inputList: List<Int>): List<Int> {
-        return inputList.mapIndexed { index, value -> // index 从 0 开始，所以要加 1 得到从 1 开始的位置
-            value + (index + 1)
-        }
-    }
+    /**
+     * 插入index后推算显示位置，index 从 0 开始，所以要加 1 得到从 1 开始的位置
+     * @param inputList List<Int>
+     * @return List<Int>
+     */
+    private fun transformList(inputList: List<Int>): List<Int> = inputList.mapIndexed { index, value -> value + (index + 1) }
 
     override fun getItemViewType(position: Int): Int { // 计算累积的插入布局偏移量
         return when {
@@ -313,6 +292,42 @@ import java.util.Collections
         notifyItemMoved(virtualFromPosition, virtualToPosition)
         notifyItemRangeChanged(virtualFromPosition, virtualToPosition)
     }
+
+    /**
+     *
+     * @param map MutableMap<Int, Int> 需要删除的键值对: key:推算的索引，value:原索引
+     * @param keysToRemove Set<Int> 原索引
+     * @param block Function1<Int, Unit>
+     */
+    private fun removeEntries(map: MutableMap<Int, Int>, keysToRemove: Set<Int>, block: (Int) -> Unit) {
+
+        // 移除指定的键
+        val iterator = map.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            //查找原索引
+            if (keysToRemove.contains(entry.value)) {
+                iterator.remove()
+                val itemSupper = insetItemSupperMap[entry.key]
+                val indexOf = insetItemLayouts.indexOf(itemSupper)
+                if (indexOf == -1) break
+                insetItemLayouts.remove(itemSupper)
+                insetItemPositions.removeAt(indexOf)
+                //移除推算的索引，布局接口实现
+                insetItemSupperMap.remove(entry.key)
+                if (creatorCount > 0) {
+                    creatorCount--
+                }
+                block(entry.key)
+            }
+        }
+    }
+
+    private fun notifyInsetLayoutsChanged(newLayouts: List<IInsetItemSupper<*>>, newInsetPosition: List<Int>) {
+        removeAllItemLayout()
+        insetItemLayout(newLayouts, *newInsetPosition.toIntArray())
+    }
+
 
     private fun clearAll() {
         if (list.isNotEmpty()) list.clear()
