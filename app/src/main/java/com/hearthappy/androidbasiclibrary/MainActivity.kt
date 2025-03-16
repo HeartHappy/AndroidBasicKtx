@@ -42,7 +42,7 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         })
 
 
-        btnInit.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) } }
+        btnInit.setOnClickListener { viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) }}
         btnInset.setOnClickListener { mainAdapter.insertData("插入数据:${mainAdapter.list.size}") }
         btnInsetTo0.setOnClickListener { mainAdapter.insertData("插入到0数据:${mainAdapter.list.size}", 0) }
         btnMove.setOnClickListener { mainAdapter.moveData(0, 8) }
@@ -53,9 +53,9 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         btnInsetLayout.setOnClickListener {
             btnInsetLayout.isActivated = !btnInsetLayout.isActivated
             if (btnInsetLayout.isActivated) {
-                mainAdapter.setInsetItemLayout(listOf(InsetItemImpl(this@MainActivity),InsetItemImpl(this@MainActivity),InsetItemImpl(this@MainActivity)),3,7,9)
+                mainAdapter.insetItemLayout(listOf(InsetItemImpl(this@MainActivity),InsetItemImpl2(this@MainActivity),InsetItemImpl3(this@MainActivity)),3,7,9)
             } else {
-                mainAdapter.setInsetItemLayout(emptyList())
+                mainAdapter.removeAllItemLayout()
             }
         }
 

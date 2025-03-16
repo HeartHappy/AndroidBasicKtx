@@ -11,7 +11,6 @@
         android:gravity="center"
         android:paddingVertical="8dp"
         android:text="我是插入的布局"
-        android:textColor="@color/blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

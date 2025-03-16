@@ -8,16 +8,16 @@ import androidx.core.content.ContextCompat
 import com.hearthappy.androidbasiclibrary.databinding.ItemInsetViewBinding
 import com.hearthappy.base.interfaces.IInsetItemSupper
 
-class InsetItemImpl(val context: Context):IInsetItemSupper<ItemInsetViewBinding> {
+class InsetItemImpl2(val context: Context):IInsetItemSupper<ItemInsetViewBinding> {
     override fun initInsetItemBinding(parent: ViewGroup, viewType: Int): ItemInsetViewBinding {
         return ItemInsetViewBinding.inflate(LayoutInflater.from(context), parent, false)
     }
 
     override fun ItemInsetViewBinding.bindInsetViewHolder() {
-        ivEmptyDefault.text="我是插入的布局"
-        ivEmptyDefault.setTextColor(ContextCompat.getColor(context,R.color.blue))
+        ivEmptyDefault.text="我是插入的布局2"
+        ivEmptyDefault.setTextColor(ContextCompat.getColor(context,R.color.yellow))
         ivEmptyDefault.setOnClickListener {
-            Toast.makeText(context, "我是插入布局", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "我是插入布局2", Toast.LENGTH_SHORT).show()
         }
     }
 }
