@@ -21,8 +21,8 @@ import java.util.Collections
  * ClassDescription：特殊适配，支持头、尾、空布局，以及插入自定义布局。AbsSpecialAdapter<ViewBinding类型,数据类型>()
  * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport接口
  */
-@Suppress("UNCHECKED_CAST") abstract class AbsSpecialAdapter<VB : ViewBinding, T> :
-    AbsBaseAdapter<VB, T>() {
+@Suppress("UNCHECKED_CAST")
+abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() {
 
     private var shouldShowEmptyView: Boolean = false
     private var onHeaderClickListener: OnHeaderClickListener? = null
@@ -35,7 +35,7 @@ import java.util.Collections
 
     private var customItemPositions: MutableList<Int> = mutableListOf()
     private var customItemLayouts: MutableList<ICustomItemSupper<*>> = mutableListOf()
-    private var customItemSupperMap = mutableMapOf<Int, ICustomItemSupper<*>>()//推算的索引，布局接口实现
+    private var customItemSupperMap = mutableMapOf<Int, ICustomItemSupper<*>>() //推算的索引，布局接口实现
     private var customTransformMap = mutableMapOf<Int, Int>() //推算的索引,原索引
 
     /**
@@ -46,17 +46,17 @@ import java.util.Collections
      */
     fun setCustomItemLayout(customItemLayouts: List<ICustomItemSupper<*>>, vararg customItemPositions: Int) {
         if (customItemLayouts.size != customItemPositions.size) throw RuntimeException("The number of layout and insertion positions is not equal")
-
         if (customItemPositions.isEmpty() || customItemLayouts.isEmpty()) return
         removeAllCustomItemLayout()
-        // 添加新的布局元素
-        this.customItemLayouts = customItemLayouts.toMutableList()
-        // 添加新的插入位置元素
-        this.customItemPositions = customItemPositions.toMutableList()
+        notifyCustomLayoutChanged(customItemLayouts, customItemPositions)
+    }
+
+    private fun notifyCustomLayoutChanged(customItemLayouts: List<ICustomItemSupper<*>>, customItemPositions: IntArray) { // 添加新的布局元素
+        this.customItemLayouts = customItemLayouts.toMutableList() // 添加新的插入位置元素
+        this.customItemPositions = customItemPositions.map { it.convertInsetItemPosition() }.toMutableList()
         val transformResult = transformList(this.customItemPositions.toList())
         this.customItemPositions.forEachIndexed { index, insetPosition ->
             val transformPosition = transformResult[index]
-
             customTransformMap[transformPosition] = insetPosition
             customItemSupperMap[transformPosition] = this.customItemLayouts[index]
             notifyItemInserted(transformPosition)
@@ -184,7 +184,7 @@ import java.util.Collections
      * @param inputList List<Int>
      * @return List<Int>
      */
-    private fun transformList(inputList: List<Int>): List<Int> = inputList.mapIndexed { index, value -> value + (index + 1) }
+    private fun transformList(inputList: List<Int>): List<Int> = inputList.mapIndexed { index, value -> value + index + (if (hasHeaderImpl()) 1 else 0) }
 
     override fun getItemViewType(position: Int): Int { // 计算累积的插入布局偏移量
         return when {
@@ -300,20 +300,17 @@ import java.util.Collections
      * @param keysToRemove Set<Int> 原索引
      * @param block Function1<Int, Unit>
      */
-    private fun removeEntries(map: MutableMap<Int, Int>, keysToRemove: Set<Int>, block: (Int) -> Unit) {
-        // 移除指定的键
+    private fun removeEntries(map: MutableMap<Int, Int>, keysToRemove: Set<Int>, block: (Int) -> Unit) { // 移除指定的键
         val iterator = map.iterator()
         while (iterator.hasNext()) {
-            val entry = iterator.next()
-            //查找原索引
+            val entry = iterator.next() //查找原索引
             if (keysToRemove.contains(entry.value)) {
                 iterator.remove()
                 val itemSupper = customItemSupperMap[entry.key]
                 val indexOf = customItemLayouts.indexOf(itemSupper)
                 if (indexOf == -1) break
                 customItemLayouts.remove(itemSupper)
-                customItemPositions.removeAt(indexOf)
-                //移除推算的索引，布局接口实现
+                customItemPositions.removeAt(indexOf) //移除推算的索引，布局接口实现
                 customItemSupperMap.remove(entry.key)
                 if (creatorCount > 0) {
                     creatorCount--
@@ -338,20 +335,15 @@ import java.util.Collections
         creatorCount = 0
     }
 
-    private inner class HeaderViewHolder(val viewBinding: ViewBinding) :
-        RecyclerView.ViewHolder(viewBinding.root)
+    private inner class HeaderViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
-    private inner class FooterViewHolder(val viewBinding: ViewBinding) :
-        RecyclerView.ViewHolder(viewBinding.root)
+    private inner class FooterViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
-    private inner class EmptyViewHolder(val viewBinding: ViewBinding) :
-        RecyclerView.ViewHolder(viewBinding.root)
+    private inner class EmptyViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
-    private inner class CustomItemViewHolder(val viewBinding: ViewBinding) :
-        RecyclerView.ViewHolder(viewBinding.root)
+    private inner class CustomItemViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
-    private inner class ItemViewHolder(val viewBinding: VB) :
-        RecyclerView.ViewHolder(viewBinding.root)
+    private inner class ItemViewHolder(val viewBinding: VB) : RecyclerView.ViewHolder(viewBinding.root)
 
     private fun callBindMethod(support: Any, viewBinding: ViewBinding, methodName: String) {
         try {
