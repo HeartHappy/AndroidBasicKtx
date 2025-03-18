@@ -58,14 +58,11 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         btnRemoveAll.setOnClickListener { mainAdapter.removeAll() }
         btnInsetLayout.setOnClickListener {
             btnInsetLayout.isActivated = !btnInsetLayout.isActivated
-            if (btnInsetLayout.isActivated) {
-//                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@MainActivity)/*, CustomItemImpl2(this@MainActivity), CustomItemImpl3(this@MainActivity)*/), 3/*, 7, 9*/)//4,9,12
-                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@MainActivity), CustomItemImpl2(this@MainActivity), CustomItemImpl3(this@MainActivity)), 3, 7, 9)//4,9,12
-            } else {
-//                mainAdapter.removeAllCustomItemLayout()
-                mainAdapter.removeCustomItemLayout(3,7)
-//                mainAdapter.addCustomItemLayout(listOf(CustomItemImpl3(this@MainActivity)), 10)
-//                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@MainActivity),CustomItemImpl2(this@MainActivity),CustomItemImpl3(this@MainActivity)),3,7,9)//4,9,1
+            if (btnInsetLayout.isActivated) { //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@MainActivity)/*, CustomItemImpl2(this@MainActivity), CustomItemImpl3(this@MainActivity)*/), 3/*, 7, 9*/)//4,9,12
+                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@MainActivity), CustomItemImpl2(this@MainActivity), CustomItemImpl3(this@MainActivity)), 3, 7, 9) //4,9,12
+            } else { //                mainAdapter.removeAllCustomItemLayout()
+                mainAdapter.removeCustomItemLayout(3, 7) //                mainAdapter.addCustomItemLayout(listOf(CustomItemImpl3(this@MainActivity)), 10)
+                //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@MainActivity),CustomItemImpl2(this@MainActivity),CustomItemImpl3(this@MainActivity)),3,7,9)//4,9,1
             }
         }
 
@@ -75,16 +72,14 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         }
         rvList.addFastListener {
             if (it) {
-                viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) }
-//                Toast.makeText(this@MainActivity,"itemCount:${mainAdapter.itemCount},inset:${mainAdapter.customTransformMap.size},${mainAdapter.customItemLayouts.size}", Toast.LENGTH_SHORT).show()
+                viewModel.ld.value?.let { it1 -> mainAdapter.initData(it1) } //                Toast.makeText(this@MainActivity,"itemCount:${mainAdapter.itemCount},inset:${mainAdapter.customTransformMap.size},${mainAdapter.customItemLayouts.size}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     override fun ActivityMainBinding.initViewModelListener() {
         viewModel.ld.observe(this@MainActivity) {
-            mainAdapter.initData(it)
-//            mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@MainActivity)), 7)//4,9,12
+            mainAdapter.initData(it) //            mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@MainActivity)), 7)//4,9,12
         }
     }
 
