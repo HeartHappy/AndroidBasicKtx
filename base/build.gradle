@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'maven-publish'
     id 'signing'
+    id 'io.github.jeadyx.sonatype-uploader' version '2.8' // 可根据实际情况选择版本
 }
 group("com.hearthappy")
 version(libraryVersion)
@@ -27,13 +28,11 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                groupId = 'com.hearthappy'
+                groupId = 'io.github.hearthappy'
                 artifactId = 'android-basic-ktx'
                 version = libraryVersion
-                afterEvaluate {
-                    from components.release
-                }
-                artifact("$buildDir/outputs/aar/android-basic-ktx-release-${libraryVersion}.aar")
+                from components.release
+//                artifact("$buildDir/repo/io/github/hearthappy/android-basic-ktx/1.0.0/android-basic-ktx-1.0.0.aar")
                 artifacts {
                     archives(javadocJar)
                     archives(sourceJar)
@@ -54,7 +53,7 @@ afterEvaluate {
                         developer {
                             id = 'HeartHappy'
                             name = 'এ᭄白ຼ龙້໌ᮨꦿ'
-                            email = '1151087058@qq.com'
+                            email = '1096885636@qq.com'
                         }
                     }
 
@@ -69,23 +68,34 @@ afterEvaluate {
         }
         repositories {
             maven {
-                url = uri('https://oss.sonatype.org/service/local/staging/deploy/maven2/')
-                credentials {
-                    username = project.properties['sonatypeUsername']
-                    password = project.properties['sonatypePassword']
-                }
+                //生成本地仓库地址
+                url = uri("$buildDir/repo")
+//                name = 'sonatype'
+//                url = uri('https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/')
+//                credentials {
+//                    username = project.properties['sonatypeUsername']
+//                    password = project.properties['sonatypePassword']
+//                }
             }
         }
 
     }
-    signing {
-//        useGpgCmd() // 使用 GPG 命令行工具
-        sign(publishing.publications.release)
-//        required { project.hasProperty('signing.keyId') }
-//        signatory {
-//            keyId = 'E2F6C173'
-//            secretKeyRingFile = file('D:\\Backup\\Documents\\io.github.hearthappy_0xE2F6C173_public.asc') // 指向你的私钥文件
+
+//    sonatypeUploader {
+////        def outputDir = file("$buildDirbuild/repo/io/github/hearthappy/android-basic-ktx")
+//        //"$buildDir/outputs/aar/android-basic-ktx-release-${libraryVersion}.aar"
+//        repositoryPath = layout.buildDirectory.dir("repo").get().asFile.path
+//
+//        tokenName = project.properties['sonatypeUsername']
+//        tokenPasswd = project.properties['sonatypePassword']
+//        signing {
+//            it.keyId = project.properties['signing.keyId']
+//            it.keyPasswd = project.properties['signing.password']
+//            it.secretKeyPath = project.properties['signing.secretKeyRingFile']
 //        }
+//    }
+    signing {
+        sign(publishing.publications.release)
     }
 }
 
