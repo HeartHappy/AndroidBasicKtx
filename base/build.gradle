@@ -4,7 +4,7 @@ plugins {
     id 'maven-publish'
 }
 group("com.hearthappy")
-version("1.0.0")
+version(libraryVersion)
 
 task javadoc(type: Javadoc) {
     source = android.sourceSets.main.java.sourceFiles
@@ -26,32 +26,70 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                from components.release
                 groupId = 'com.hearthappy'
                 artifactId = 'android-basic-ktx'
-                version = '1.0.0'
-                artifacts {
-                    archives(javadocJar)
-                    archives(sourceJar)
+                version = libraryVersion
+                afterEvaluate {
+                    from components.release
+                }
+//                artifact("$buildDir/outputs/aar/android-basic-ktx-release-${libraryVersion}.aar")
+//                artifacts {
+//                    archives(javadocJar)
+//                    archives(sourceJar)
+//                }
+                pom {
+                    name = 'android-basic-ktx'
+                    description = 'Android basic framework packaging and extension library'
+                    url = 'https://github.com/HeartHappy/AndroidBasicKtx'
+
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'HeartHappy'
+                            name = 'এ᭄白ຼ龙້໌ᮨꦿ'
+                            email = '1151087058@qq.com'
+                        }
+                    }
+
+                    scm {
+                        connection = 'scm:git:https://github.com/HeartHappy/AndroidBasicKtx.git'
+                        developerConnection = 'scm:git:ssh://github.com/HeartHappy/AndroidBasicKtx.git'
+                        url = 'https://github.com/HeartHappy/AndroidBasicKtx'
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                credentials {
+                    username = project.properties['sonatypeUsername']
+                    password = project.properties['sonatypePassword']
                 }
             }
         }
     }
 }
+
 android {
     namespace 'com.hearthappy.androidbasicktx'
     compileSdk 31
 
     defaultConfig {
         minSdk 21
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -62,8 +100,15 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    buildFeatures{
+    buildFeatures {
         viewBinding true
+    }
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            // 定义新的文件名，这里以库名、版本名和构建类型为例
+            def newName = "android-basic-ktx-${variant.buildType.name}-${libraryVersion}.aar"
+            outputFileName = newName
+        }
     }
 }
 

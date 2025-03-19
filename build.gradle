@@ -1,4 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+// 根目录 build.gradle
+buildscript {
+    ext {
+        // 定义全局版本号
+        libraryVersion = "1.0.0"
+    }
+}
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
