@@ -2,6 +2,7 @@ plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
     id 'maven-publish'
+    id 'signing'
 }
 group("com.hearthappy")
 version(libraryVersion)
@@ -32,11 +33,11 @@ afterEvaluate {
                 afterEvaluate {
                     from components.release
                 }
-//                artifact("$buildDir/outputs/aar/android-basic-ktx-release-${libraryVersion}.aar")
-//                artifacts {
-//                    archives(javadocJar)
-//                    archives(sourceJar)
-//                }
+                artifact("$buildDir/outputs/aar/android-basic-ktx-release-${libraryVersion}.aar")
+                artifacts {
+                    archives(javadocJar)
+                    archives(sourceJar)
+                }
                 pom {
                     name = 'android-basic-ktx'
                     description = 'Android basic framework packaging and extension library'
@@ -58,22 +59,33 @@ afterEvaluate {
                     }
 
                     scm {
-                        connection = 'scm:git:https://github.com/HeartHappy/AndroidBasicKtx.git'
-                        developerConnection = 'scm:git:ssh://github.com/HeartHappy/AndroidBasicKtx.git'
+                        connection = 'https://github.com/HeartHappy/AndroidBasicKtx'
+                        developerConnection = 'https://github.com/HeartHappy/AndroidBasicKtx.git'
                         url = 'https://github.com/HeartHappy/AndroidBasicKtx'
                     }
                 }
             }
+
         }
         repositories {
             maven {
-                url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                url = uri('https://oss.sonatype.org/service/local/staging/deploy/maven2/')
                 credentials {
                     username = project.properties['sonatypeUsername']
                     password = project.properties['sonatypePassword']
                 }
             }
         }
+
+    }
+    signing {
+//        useGpgCmd() // 使用 GPG 命令行工具
+        sign(publishing.publications.release)
+//        required { project.hasProperty('signing.keyId') }
+//        signatory {
+//            keyId = 'E2F6C173'
+//            secretKeyRingFile = file('D:\\Backup\\Documents\\io.github.hearthappy_0xE2F6C173_public.asc') // 指向你的私钥文件
+//        }
     }
 }
 
