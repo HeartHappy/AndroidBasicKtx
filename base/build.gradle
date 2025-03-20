@@ -3,27 +3,31 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'maven-publish'
     id 'signing'
-    id 'io.github.jeadyx.sonatype-uploader' version '2.8' // 可根据实际情况选择版本
 }
 group("com.hearthappy")
 version(libraryVersion)
 
-task javadoc(type: Javadoc) {
+tasks.register('javadoc', Javadoc) {
     source = android.sourceSets.main.java.sourceFiles
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
+tasks.register('javadocJar', Jar) {
+    dependsOn javadoc
     archiveClassifier.set("javadoc")
     from javadoc.destinationDir
 }
 
-
-task sourceJar(type: Jar) {
+tasks.register('sourceJar', Jar) {
     from android.sourceSets.main.java.srcDirs
     archiveClassifier.set("sources")
 }
-
+// 定义一个任务，用于将本地目录压缩成 ZIP 文件
+tasks.register('zipRepo', Zip) {
+    from "$buildDir/repo"
+    archiveFileName = 'io.zip'
+    destinationDirectory = file(buildDir)
+}
 afterEvaluate {
     publishing {
         publications {
@@ -31,11 +35,14 @@ afterEvaluate {
                 groupId = 'io.github.hearthappy'
                 artifactId = 'android-basic-ktx'
                 version = libraryVersion
+
+                //afterEvaluate：闭包后在按照类型打包发布
+
                 from components.release
 //                artifact("$buildDir/repo/io/github/hearthappy/android-basic-ktx/1.0.0/android-basic-ktx-1.0.0.aar")
                 artifacts {
-                    archives(javadocJar)
-                    archives(sourceJar)
+                    archives(tasks.named('javadocJar'))
+                    archives(tasks.named('sourceJar'))
                 }
                 pom {
                     name = 'android-basic-ktx'
@@ -58,8 +65,8 @@ afterEvaluate {
                     }
 
                     scm {
-                        connection = 'https://github.com/HeartHappy/AndroidBasicKtx'
-                        developerConnection = 'https://github.com/HeartHappy/AndroidBasicKtx.git'
+                        connection = 'scm:git://github.com/HeartHappy/AndroidBasicKtx'
+                        developerConnection = 'scm:git:ssh://github.com/HeartHappy/AndroidBasicKtx'
                         url = 'https://github.com/HeartHappy/AndroidBasicKtx'
                     }
                 }
@@ -68,10 +75,10 @@ afterEvaluate {
         }
         repositories {
             maven {
-                //生成本地仓库地址
+                //打包推送到本地仓库地址
                 url = uri("$buildDir/repo")
-//                name = 'sonatype'
-//                url = uri('https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/')
+                //推送远程仓库需要认证
+//                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
 //                credentials {
 //                    username = project.properties['sonatypeUsername']
 //                    password = project.properties['sonatypePassword']
@@ -80,24 +87,19 @@ afterEvaluate {
         }
 
     }
-
-//    sonatypeUploader {
-////        def outputDir = file("$buildDirbuild/repo/io/github/hearthappy/android-basic-ktx")
-//        //"$buildDir/outputs/aar/android-basic-ktx-release-${libraryVersion}.aar"
-//        repositoryPath = layout.buildDirectory.dir("repo").get().asFile.path
-//
-//        tokenName = project.properties['sonatypeUsername']
-//        tokenPasswd = project.properties['sonatypePassword']
-//        signing {
-//            it.keyId = project.properties['signing.keyId']
-//            it.keyPasswd = project.properties['signing.password']
-//            it.secretKeyPath = project.properties['signing.secretKeyRingFile']
-//        }
-//    }
     signing {
+        //gpg签名认证
         sign(publishing.publications.release)
     }
+    // 设置 zipRepo 任务依赖于发布任务
+    tasks.named('zipRepo') { dependsOn(publishReleasePublicationToMavenRepository) }
+
+    // 确保发布任务完成后总是执行 zipRepo 任务，即使发布任务失败
+    tasks.named('publishReleasePublicationToMavenRepository') {
+        finalizedBy(tasks.named('zipRepo'))
+    }
 }
+
 
 android {
     namespace 'com.hearthappy.androidbasicktx'
