@@ -21,6 +21,7 @@ import java.util.Collections
  * ClassDescription：特殊适配，支持头、尾、空布局，以及插入自定义布局。AbsSpecialAdapter<ViewBinding类型,数据类型>()
  * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport接口
  */
+
 @Suppress("UNCHECKED_CAST")
 abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() {
 
@@ -387,4 +388,5 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         const val BIND_CUSTOM = "bindCustomViewHolder"
         const val NOT_INSERTED = 0xFFFFFFFF.toInt()
     }
+
 }
