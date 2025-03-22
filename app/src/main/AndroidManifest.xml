@@ -13,6 +13,12 @@
         android:theme="@style/Theme.AndroidBasicLibrary"
         tools:targetApi="31">
         <activity
+            android:name=".example2.Example2Activity"
+            android:exported="false" />
+        <activity
+            android:name=".example1.Example1Activity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

@@ -38,6 +38,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var customItemLayouts: MutableList<ICustomItemSupper<*>> = mutableListOf()
     private var customItemSupperMap = mutableMapOf<Int, ICustomItemSupper<*>>() //推算的索引，布局接口实现
     private var customTransformMap = mutableMapOf<Int, Int>() //推算的索引,原索引
+    private lateinit var transformPositions: List<Int> //返回推算的索引集合
 
     /**
      * 设置插入布局
@@ -295,6 +296,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         notifyItemRangeChanged(virtualFromPosition, virtualToPosition)
     }
 
+    fun getCustomPositions(): List<Int> {
+        if (!::transformPositions.isInitialized) {
+            transformPositions = customTransformMap.keys.toList()
+        }
+        return transformPositions
+    }
+
     /**
      *
      * @param map MutableMap<Int, Int> 需要删除的键值对: key:推算的索引，value:原索引
@@ -364,12 +372,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         }
     }
 
-    private fun hasHeaderImpl() = this is IHeaderSupport<*>
-    private fun hasFooterImpl() = this is IFooterSupport<*>
-    private fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
-    private fun hasInsetItemImpl() = this is ICustomItemSupper<*>
+    fun hasHeaderImpl() = this is IHeaderSupport<*>
+    fun hasFooterImpl() = this is IFooterSupport<*>
+    fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
 
-    private fun getIInsetItemSupper() = this as ICustomItemSupper<ViewBinding>
     private fun getIHeaderSupport() = this as IHeaderSupport<ViewBinding>
     private fun getIFooterSupport() = this as IFooterSupport<ViewBinding>
     private fun getIEmptyViewSupport() = this as IEmptyViewSupport<ViewBinding>

@@ -1,8 +1,9 @@
-package com.hearthappy.androidbasiclibrary
+package com.hearthappy.androidbasiclibrary.example1
 
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import com.hearthappy.androidbasiclibrary.R
 import com.hearthappy.androidbasiclibrary.databinding.ItemEmptyViewBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemHeaderBinding
@@ -17,13 +18,13 @@ import com.hearthappy.base.interfaces.IHeaderSupport
  * @author ChenRui
  * ClassDescription：头、尾布局， 则AbsSpecialAdapter<ViewBinding类型,数据类型>()
  */
-class MainAdapter(private val context: Context) : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
+class Example1Adapter(private val context: Context) : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
     override fun initViewBinding(parent: ViewGroup, viewType: Int): ItemListBinding {
         return ItemListBinding.inflate(LayoutInflater.from(context), parent, false)
     }
 
     override fun ItemListBinding.bindViewHolder(data: String, position: Int) {
-        tvTitle.text = data.plus(position)
+        tvTitle.text = data.plus("listPosition:$position")
     }
 
     override fun initHeaderBinding(parent: ViewGroup, viewType: Int): ItemHeaderBinding {

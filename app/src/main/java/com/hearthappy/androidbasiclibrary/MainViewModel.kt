@@ -10,9 +10,7 @@ class MainViewModel : ViewModel() {
 
     fun getListData() {
         val listOf = arrayListOf<String>()
-        for (i in 0..10) {
-            listOf.add("is data:$i-")
-        }
+        repeat(100000) { listOf.add("is data:") }
         _ldData.value = listOf
     }
 }
