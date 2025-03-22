@@ -1,9 +1,12 @@
 package com.hearthappy.base
 
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.base.interfaces.OnItemClickListener
+import java.lang.reflect.InvocationTargetException
 import java.util.Collections
 
 
@@ -19,7 +22,7 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
 
     internal var onItemClickListener: OnItemClickListener<T>? = null
 
-    abstract fun initViewBinding(parent: ViewGroup, viewType: Int): VB
+    open fun initViewBinding(parent: ViewGroup, viewType: Int): VB? = null
 
 
     abstract fun VB.bindViewHolder(data: T, position: Int)
@@ -89,7 +92,7 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
         this.onItemClickListener = onItemClickListener
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = ViewHolder(initViewBinding(parent, viewType))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = ViewHolder(initViewBinding(parent, viewType)?:byViewBinding(LayoutInflater.from(parent.context),parent))
 
     override fun getItemCount(): Int = list.size
 
@@ -103,5 +106,22 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
 
             else -> Unit
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    internal fun byViewBinding(inflater: LayoutInflater, container: ViewGroup?): VB {
+        val type = javaClass.genericSuperclass
+        if (type is java.lang.reflect.ParameterizedType) {
+            val clazz = type.actualTypeArguments[0] as Class<VB>
+            try {
+                val inflateMethod = clazz.getMethod("inflate", LayoutInflater::class.java, ViewGroup::class.java, Boolean::class.java)
+                return inflateMethod.invoke(null, inflater, container, false) as VB
+            } catch (e: IllegalAccessException) {
+                Log.e("AbsBaseFragment", "IllegalAccessException: ${e.message}", e)
+            } catch (e: InvocationTargetException) {
+                Log.e("AbsBaseFragment", "InvocationTargetException: ${e.message}", e)
+            }
+        }
+        throw IllegalArgumentException("Failed to get ViewBinding instance.")
     }
 }

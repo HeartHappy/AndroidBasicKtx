@@ -16,9 +16,6 @@ import com.hearthappy.base.interfaces.OnItemClickListener
 class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
     private lateinit var viewModel: MainViewModel
     private lateinit var example1Adapter: Example1Adapter
-    override fun initViewBinding(): ActivityExample1Binding {
-        return ActivityExample1Binding.inflate(layoutInflater)
-    }
 
 
     override fun ActivityExample1Binding.initViewModelListener() {
@@ -30,7 +27,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
     override fun ActivityExample1Binding.initView() {
         viewModel = getViewModel(MainViewModel::class.java)
         rvList.layoutManager = LinearLayoutManager(this@Example1Activity)
-        example1Adapter = Example1Adapter(this@Example1Activity)
+        example1Adapter = Example1Adapter()
         rvList.adapter = example1Adapter
     }
 

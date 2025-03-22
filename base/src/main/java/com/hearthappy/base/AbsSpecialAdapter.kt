@@ -1,8 +1,10 @@
 package com.hearthappy.base
 
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
+import com.hearthappy.base.ext.findInterfaceInflate
 import com.hearthappy.base.interfaces.ICustomItemSupper
 import com.hearthappy.base.interfaces.IEmptyViewSupport
 import com.hearthappy.base.interfaces.IFooterSupport
@@ -113,19 +115,19 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
-            TYPE_HEADER -> if (hasHeaderImpl()) return HeaderViewHolder(getIHeaderSupport().initHeaderBinding(parent, viewType))
-            TYPE_EMPTY -> if (hasEmptyViewImpl()) return EmptyViewHolder(getIEmptyViewSupport().initEmptyBinding(parent, viewType))
-            TYPE_FOOTER -> if (hasFooterImpl()) return FooterViewHolder(getIFooterSupport().initFooterBinding(parent, viewType))
+            TYPE_HEADER -> if (hasHeaderImpl()) return HeaderViewHolder(getIHeaderSupport().javaClass.findInterfaceInflate(parent, IHeaderSupport::class.java))
+            TYPE_EMPTY -> if (hasEmptyViewImpl()) return EmptyViewHolder(getIEmptyViewSupport().javaClass.findInterfaceInflate(parent, IEmptyViewSupport::class.java))
+            TYPE_FOOTER -> if (hasFooterImpl()) return FooterViewHolder(getIFooterSupport().javaClass.findInterfaceInflate(parent, IFooterSupport::class.java))
             TYPE_INSET_ITEM -> {
                 val insetItem = customItemLayouts[creatorCount]
                 creatorCount++
                 if (creatorCount >= customItemLayouts.size) {
                     creatorCount--
                 }
-                return CustomItemViewHolder(insetItem.initCustomItemBinding(parent, viewType))
+                return CustomItemViewHolder(insetItem.javaClass.findInterfaceInflate(parent, ICustomItemSupper::class.java))
             }
         }
-        return ItemViewHolder(initViewBinding(parent, viewType))
+        return ItemViewHolder(initViewBinding(parent, viewType) ?: byViewBinding(LayoutInflater.from(parent.context), parent))
     }
 
 
@@ -374,8 +376,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     fun hasHeaderImpl() = this is IHeaderSupport<*>
     fun hasFooterImpl() = this is IFooterSupport<*>
-    fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
-
+    private fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
     private fun getIHeaderSupport() = this as IHeaderSupport<ViewBinding>
     private fun getIFooterSupport() = this as IFooterSupport<ViewBinding>
     private fun getIEmptyViewSupport() = this as IEmptyViewSupport<ViewBinding>

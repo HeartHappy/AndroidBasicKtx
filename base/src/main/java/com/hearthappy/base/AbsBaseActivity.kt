@@ -1,12 +1,12 @@
 package com.hearthappy.base
 
-import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
@@ -16,6 +16,8 @@ import androidx.fragment.app.FragmentController
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
+import com.hearthappy.base.ext.findActivityInflate
+import java.lang.reflect.InvocationTargetException
 
 /**
  * Created Date: 2024/11/25
@@ -23,20 +25,22 @@ import androidx.viewbinding.ViewBinding
  * ClassDescription： Activity基类
  */
 abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
-    lateinit var viewBinding: VB
+
+    protected lateinit var viewBinding: VB
+
+
     /**
      * 获取ViewModel
      */
-    fun <VM: ViewModel> getViewModel(c: Class<VM>, factory: ViewModelProvider.Factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application)): VM { //        ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+    fun <VM : ViewModel> getViewModel(c: Class<VM>, factory: ViewModelProvider.Factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application)): VM { //        ViewModelProvider.AndroidViewModelFactory.getInstance(application)
         return ViewModelProvider(this, factory).get(c)
     }
+
     /** 等待对话框 */
 
-    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState) //        AdaptScreenUtils.adaptWidth(resources, 750)
-        //        setLightMode()
-        viewBinding = initViewBinding()
+        super.onCreate(savedInstanceState)
+        viewBinding = initViewBinding() ?: findActivityInflate()
         setContentView(viewBinding.root)
         viewBinding.apply {
             initView()
@@ -45,9 +49,6 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
             initData()
         }
         window.addFlags(WindowManager.LayoutParams.FLAGS_CHANGED)
-
-
-
         if (openGrayscaleSwitch()) openGrayscale()
     }
 
@@ -65,7 +66,9 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
         window.decorView.setLayerType(View.LAYER_TYPE_HARDWARE, paint)
     }
 
-    abstract fun initViewBinding(): VB
+
+
+    open fun initViewBinding(): VB? = null
 
     abstract fun VB.initView()
     abstract fun VB.initViewModelListener()

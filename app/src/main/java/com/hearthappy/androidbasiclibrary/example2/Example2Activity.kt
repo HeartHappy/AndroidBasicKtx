@@ -17,9 +17,6 @@ import com.hearthappy.base.interfaces.OnItemClickListener
 class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
     private lateinit var viewModel: MainViewModel
     private lateinit var example2Adapter: Example2Adapter
-    override fun initViewBinding(): ActivityExample2Binding {
-        return ActivityExample2Binding.inflate(layoutInflater)
-    }
 
 
     override fun ActivityExample2Binding.initViewModelListener() {
@@ -31,7 +28,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
 
     override fun ActivityExample2Binding.initView() {
         viewModel = getViewModel(MainViewModel::class.java)
-        example2Adapter = Example2Adapter(this@Example2Activity)
+        example2Adapter = Example2Adapter()
         val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, LinearLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager.apply { bindSpecialAdapter(example2Adapter) }
 

@@ -10,9 +10,6 @@ import com.hearthappy.androidbasiclibrary.databinding.ItemInsetViewBinding
 import com.hearthappy.base.interfaces.ICustomItemSupper
 
 class CustomItemImpl2(val context: Context):ICustomItemSupper<ItemInsetViewBinding> {
-    override fun initCustomItemBinding(parent: ViewGroup, viewType: Int): ItemInsetViewBinding {
-        return ItemInsetViewBinding.inflate(LayoutInflater.from(context), parent, false)
-    }
 
     override fun ItemInsetViewBinding.bindCustomViewHolder(position:Int) {
         ivEmptyDefault.text="我是插入的布局2"

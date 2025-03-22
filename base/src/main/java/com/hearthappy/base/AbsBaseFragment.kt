@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
+import com.hearthappy.base.ext.findFragmentInflate
 
 
 /**
@@ -20,11 +21,11 @@ abstract class AbsBaseFragment<VB : ViewBinding> : Fragment() {
 
 
     private var _binding: VB? = null
-    val viewBinding get() = _binding!!
+    protected val viewBinding get() = _binding!!
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        _binding = initViewBinding(inflater, container)
+        _binding = initViewBinding(inflater, container) ?: findFragmentInflate(inflater, container)
         return viewBinding.root
     }
 
@@ -39,22 +40,16 @@ abstract class AbsBaseFragment<VB : ViewBinding> : Fragment() {
         }
     }
 
-    abstract fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): VB
 
-    /**
-     * 初始化页面相关配置
-     */
+    open fun initViewBinding(inflater: LayoutInflater, container: ViewGroup?): VB? = null
+
     abstract fun VB.initView(savedInstanceState: Bundle?)
+
+    abstract fun VB.initData()
 
     abstract fun VB.initListener()
 
     abstract fun VB.initViewModelListener()
-
-
-    /**
-     * 初始化数据
-     */
-    abstract fun VB.initData()
 
 
     fun startActivity(clazz: Class<*>) {

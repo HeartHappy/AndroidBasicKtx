@@ -7,13 +7,8 @@ import com.hearthappy.base.AbsBaseActivity
 
 class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
 
-
-    override fun initViewBinding(): ActivityMainBinding {
-        return ActivityMainBinding.inflate(layoutInflater)
-    }
-
     override fun ActivityMainBinding.initData() {
-
+        viewBinding.apply { }
     }
 
     override fun ActivityMainBinding.initListener() {

@@ -21,9 +21,9 @@ lifecycleVersion = "2.5.0"
 lifecycleProcess = "2.8.7"
 kotlinBom = "1.8.0"
 appVersion="1.0.0"
+dataStoreVersion = "1.0.0"
 
 [libraries]
-
 android-basic-ktx = { module = "io.github.hearthappy:android-basic-ktx", version.ref = "androidBasicKtxVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 
@@ -51,6 +51,8 @@ com-github-bumptech-glide-glide = { group = "com.github.bumptech.glide", name = 
 squareup-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "converterGsonVersion" }
 kotlin-bom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlinBom" }
 
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "dataStoreVersion" }
+datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "dataStoreVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
