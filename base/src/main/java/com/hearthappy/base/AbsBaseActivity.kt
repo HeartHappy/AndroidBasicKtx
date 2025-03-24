@@ -163,12 +163,12 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
         this.ivlIcon.setOnClickListener { leftIconListener?.let { it() } ?: finishAfterTransition() }
         this.tvTitle.text = title
         if (isBlack) {
-            val colorBlack = ContextCompat.getColor(this@AbsBaseActivity, R.color.black)
+            val colorBlack = ContextCompat.getColor(this@AbsBaseActivity, R.color.color_base_black)
             ivlIcon.setColorFilter(colorBlack)
             ivrIcon.setColorFilter(colorBlack)
             tvTitle.setTextColor(colorBlack)
         } else {
-            val colorWhite = ContextCompat.getColor(this@AbsBaseActivity, R.color.white)
+            val colorWhite = ContextCompat.getColor(this@AbsBaseActivity, R.color.color_base_white)
             tvTitle.setTextColor(colorWhite)
             ivlIcon.setColorFilter(colorWhite)
             ivrIcon.setColorFilter(colorWhite)

@@ -28,7 +28,7 @@
 
     <style name="Theme.TranslucentBar" parent="ThemeOverlay.PrimaryPalette.Purple">
         <item name="android:elevation">0dp</item>
-        <item name="android:background">@color/translucent</item>
+        <item name="android:background">@color/color_base_translucent</item>
     </style>
 
     <style name="style_icon_size" parent="style_card_selectable">

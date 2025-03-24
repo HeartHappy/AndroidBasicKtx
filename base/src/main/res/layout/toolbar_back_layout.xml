@@ -5,7 +5,7 @@
     android:id="@+id/appbar"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/translucent"
+    android:background="@color/color_base_translucent"
     android:theme="@style/Theme.TranslucentBar">
 
     <androidx.appcompat.widget.Toolbar
@@ -36,7 +36,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginLeft="10dp"
             android:gravity="center"
-            android:textColor="@color/white"
+            android:textColor="@color/color_base_white"
             android:textSize="18sp" />
 
 
@@ -46,7 +46,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:textColor="@color/white"
+            android:textColor="@color/color_base_white"
             android:textSize="16sp"
             tools:ignore="SpUsage" />
 
@@ -66,7 +66,7 @@
             android:layout_gravity="end|center_vertical"
             android:layout_marginEnd="10dp"
             android:layout_marginRight="10dp"
-            android:textColor="@color/white"
+            android:textColor="@color/color_base_white"
             android:textSize="18sp"
             android:visibility="gone"
             tools:ignore="RtlHardcoded,SpUsage" />
