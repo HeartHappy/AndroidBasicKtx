@@ -1,4 +1,4 @@
-package com.hearthappy.base.utils
+package com.hearthappy.base.tools
 
 
 import android.os.Build
@@ -8,7 +8,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-object TimeUtil {
+object TimeTools {
     const val BUTTON_CLICK_TRAN = 500L
     const val MINUTE_MILLIS = 60000L
     const val HOUR_MILLIS = 3600000L

@@ -18,7 +18,6 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         btnExample2.setOnClickListener {
             startActivity(Example2Activity::class.java)
         }
-
     }
 
     override fun ActivityMainBinding.initViewModelListener() {
@@ -26,6 +25,5 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
     }
 
     override fun ActivityMainBinding.initView() {
-
     }
 }

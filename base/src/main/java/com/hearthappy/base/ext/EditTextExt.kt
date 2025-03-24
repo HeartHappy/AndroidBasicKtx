@@ -1,6 +1,7 @@
 package com.hearthappy.base.ext
 
 import android.text.InputFilter
+import android.text.InputType
 import android.widget.EditText
 import android.widget.Toast
 
@@ -15,4 +16,15 @@ fun EditText.limitText(limitLength: Int = 100, prefix: String = "输入字符不
     }
 
     setFilters(arrayOf(filter))
+}
+
+fun EditText.enablePasswordToggle(isPasswordVisible: Boolean = false, visibilityBlock: () -> Unit = {}, hideBlock: () -> Unit = {}) {
+    inputType = if (isPasswordVisible) {
+        visibilityBlock()
+        InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+    } else {
+        hideBlock()
+        InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+    }
+    setSelection(text.length)
 }

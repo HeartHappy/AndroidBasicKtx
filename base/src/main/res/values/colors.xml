@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="translucent">#00000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+<!--    <color name="purple_200">#FFBB86FC</color>-->
+<!--    <color name="purple_500">#FF6200EE</color>-->
+<!--    <color name="purple_700">#FF3700B3</color>-->
+<!--    <color name="teal_200">#FF03DAC5</color>-->
+<!--    <color name="teal_700">#FF018786</color>-->
+
+<!--    <color name="black">#FF000000</color>-->
+<!--    <color name="blackLight_37">#252626</color>-->
+<!--    <color name="blackLight_65">#414141</color>-->
+<!--    <color name="white">#FFFFFFFF</color>-->
+<!--    <color name="red">#F44336</color>-->
+<!--    <color name="red_warn">#FDD5D2</color>-->
+<!--    <color name="gray">#EF6C6666</color>-->
+<!--    <color name="gray_line">#EFC8C4C4</color>-->
+<!--    <color name="gray_1">#EFF8F7F7</color>-->
+<!--    <color name="gray_2">#EFEDEDED</color>-->
+<!--    <color name="green">#9954BCBD</color>-->
+<!--    <color name="green1">#4BC550</color>-->
+<!--    <color name="green_select">#52A856</color>-->
+<!--    <color name="use_blue">#007bff</color>-->
+<!--    <color name="logo_blue">#1296db</color>-->
+<!--    <color name="used_gray">#6c757d</color>-->
+<!--    <color name="translucent">#00000000</color>-->
+<!--    <color name="purple">#D95EEE</color>-->
+<!--    <color name="purple_50">#80C97DD6</color>-->
+
+
+<!--    <integer-array name="loading_colors">-->
+<!--        <item>@color/logo_blue</item>-->
+<!--        <item>@color/logo_blue</item>-->
+<!--        <item>@color/logo_blue</item>-->
+<!--    </integer-array>-->
+
+<!--    <integer-array name="logo_colors">-->
+<!--        <item>@color/logo_blue</item>-->
+<!--        <item>@color/logo_blue</item>-->
+<!--        <item>@color/logo_blue</item>-->
+<!--        <item>@color/logo_blue</item>-->
+<!--        <item>@color/gray</item>-->
+<!--        <item>@color/gray</item>-->
+<!--        <item>@color/black</item>-->
+<!--        <item>@color/black</item>-->
+<!--    </integer-array>-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!--白色透明度-->
+    <color name="translucent_white_05">#f2ffffff</color>
+    <color name="translucent_white_10">#e6ffffff</color>
+    <color name="translucent_white_15">#d9ffffff</color>
+    <color name="translucent_white_20">#ccffffff</color>
+    <color name="translucent_white_25">#bfffffff</color>
+    <color name="translucent_white_30">#b3ffffff</color>
+    <color name="translucent_white_35">#a6ffffff</color>
+    <color name="translucent_white_40">#99ffffff</color>
+    <color name="translucent_white_45">#8cffffff</color>
+    <color name="translucent_white_50">#80ffffff</color>
+    <color name="translucent_white_55">#73ffffff</color>
+    <color name="translucent_white_60">#66ffffff</color>
+    <color name="translucent_white_65">#59ffffff</color>
+    <color name="translucent_white_70">#4dffffff</color>
+    <color name="translucent_white_75">#40ffffff</color>
+    <color name="translucent_white_80">#33ffffff</color>
+    <color name="translucent_white_90">#26ffffff</color>
+    <color name="translucent_white_95">#0dffffff</color>
+
+    <!--黑色透明度-->
+    <color name="translucent_black_05">#f2000000</color>
+    <color name="translucent_black_10">#e6000000</color>
+    <color name="translucent_black_15">#d9000000</color>
+    <color name="translucent_black_20">#cc000000</color>
+    <color name="translucent_black_25">#bf000000</color>
+    <color name="translucent_black_30">#b3000000</color>
+    <color name="translucent_black_35">#a6000000</color>
+    <color name="translucent_black_40">#99000000</color>
+    <color name="translucent_black_45">#8c000000</color>
+    <color name="translucent_black_50">#80000000</color>
+    <color name="translucent_black_55">#73000000</color>
+    <color name="translucent_black_60">#66000000</color>
+    <color name="translucent_black_65">#59000000</color>
+    <color name="translucent_black_70">#4d000000</color>
+    <color name="translucent_black_75">#40000000</color>
+    <color name="translucent_black_80">#33000000</color>
+    <color name="translucent_black_90">#26000000</color>
+    <color name="translucent_black_95">#0d000000</color>
+</resources>

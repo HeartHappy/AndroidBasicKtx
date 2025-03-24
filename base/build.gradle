@@ -144,4 +144,5 @@ dependencies {
     implementation libs.material
     implementation libs.datastore.preferences
     implementation libs.datastore.preferences.core
+    implementation 'com.github.JessYanCoding:AndroidAutoSize:v1.2.1'
 }
