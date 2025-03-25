@@ -12,6 +12,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import android.widget.PopupWindow
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -35,7 +36,7 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
 
     protected lateinit var viewBinding: VB
     private var alertDialog: AlertDialog? = null
-    private lateinit var loadingDialog: LoadingPopupWindow
+    private var loadingDialog: PopupWindow? = null
 
     /**
      * 获取ViewModel
@@ -100,14 +101,15 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
         }
     }
 
-    open fun showLoadingDialog(parentView: View, loadingPopupWindow: LoadingPopupWindow = LoadingPopupWindow(this)) {
+    open fun showLoadingDialog(parentView: View, loadingPopupWindow: PopupWindow? = LoadingPopupWindow(this)) {
         loadingDialog = loadingPopupWindow
-        loadingDialog.showAtLocation(parentView, Gravity.CENTER, 0, 0)
+        loadingDialog?.showAtLocation(parentView, Gravity.CENTER, 0, 0)
     }
 
     open fun dismissLoadingDialog() {
-        if (::loadingDialog.isInitialized && loadingDialog.isShowing) {
-            loadingDialog.dismiss()
+        loadingDialog?.apply {
+            if (isShowing) dismiss()
+            loadingDialog = null
         }
     }
 
@@ -159,7 +161,7 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    fun ToolbarBackLayoutBinding.init(isBlack: Boolean = true,title: String?, @DrawableRes rightIcon: Int? = null, leftIconListener: (() -> Unit)? = null, rightIconListener: () -> Unit = {}) {
+    fun ToolbarBackLayoutBinding.init(isBlack: Boolean = true, title: String?, @DrawableRes rightIcon: Int? = null, leftIconListener: (() -> Unit)? = null, rightIconListener: () -> Unit = {}) {
         this.ivlIcon.setOnClickListener { leftIconListener?.let { it() } ?: finishAfterTransition() }
         this.tvTitle.text = title
         if (isBlack) {

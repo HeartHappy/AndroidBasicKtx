@@ -36,3 +36,20 @@ fun Int.formatNumber(formatType: FormatType, locale: Locale = Locale.getDefault(
         }
     }
 }
+
+/**
+ * 数量转换
+ * @receiver Int
+ * @param hintText String 赞、评论等提示文字
+ * @param limitNumber Int 超过99时显示99+
+ * @return String 显示的文字
+ */
+fun Int.showTextOrNumber(hintText: String, limitNumber: Int = 99): String {
+    return if (this == 0) {
+        hintText
+    } else if (this > limitNumber) {
+        limitNumber.toString().plus("+")
+    } else {
+        this.toString()
+    }
+}
