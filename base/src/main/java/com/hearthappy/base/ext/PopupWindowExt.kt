@@ -40,13 +40,15 @@ var pwMap: MutableMap<String, PopupWindow>? = null
  *      10、支持自定义弹窗位置。分别支持：1、相对某个View位置，2、相对整个屏幕位置
  *      11、支持使用场景：Activity、Fragment
  */
-inline fun <VB : ViewBinding> Activity.popupWindow(key: String = "default", viewBinding: VB, width: Int = 0, height: Int = 0, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
-                                                   backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade()): PopupWindow {
+inline fun <VB : ViewBinding> Activity.popupWindow(viewBinding: VB, width: Int = 0, height: Int = 0, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
+                                            backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), key: String = "default"): PopupWindow {
     return handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim)
 }
 
-inline fun <VB : ViewBinding> Fragment.popupWindow(key: String = "default", viewBinding: VB, width: Int = 0, height: Int = 0, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
-                                                   backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade()): PopupWindow {
+inline fun <VB : ViewBinding> Fragment.popupWindow(
+    viewBinding: VB, width: Int = 0, height: Int = 0, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
+    backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), key: String = "default",
+): PopupWindow {
     return requireActivity().handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim)
 }
 

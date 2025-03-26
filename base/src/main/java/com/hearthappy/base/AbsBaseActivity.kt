@@ -3,7 +3,6 @@ package com.hearthappy.base
 import android.app.ActivityOptions
 import android.content.ComponentName
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
@@ -49,7 +48,6 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = Color.TRANSPARENT
         viewBinding = initViewBinding() ?: findActivityInflate()
         setContentView(viewBinding.root)
         viewBinding.apply {
@@ -79,11 +77,11 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
     fun showDialogHint(title: String, text: String, themeId: Int = android.R.style.Theme_Material_Dialog, confirm: () -> Unit, cancel: () -> Unit) {
         val builder = AlertDialog.Builder(this, themeId)
         builder.apply {
-            setPositiveButton(R.string.ok) { dialog, id ->
+            setPositiveButton(R.string.ok) { _, _ ->
                 dismissDialog()
                 confirm()
             }
-            setNegativeButton(R.string.cancel) { dialog, id ->
+            setNegativeButton(R.string.cancel) { _, _ ->
                 dismissDialog()
                 cancel()
             }
@@ -138,6 +136,19 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
         startActivity(Intent.makeRestartActivityTask(ComponentName(this, clazz)))
     }
 
+    fun startActivityCarryCoordinates(clazz: Class<*>, coordinates: Pair<Float, Float>) {
+        startActivity(Intent(this, clazz).apply {
+            putExtra(CENTER_X, coordinates.first)
+            putExtra(CENTER_Y, coordinates.second)
+        })
+    }
+
+    fun getCarryCoordinates(): Pair<Float, Float> {
+        val centerX = intent.getFloatExtra(CENTER_X, 0F)
+        val centerY = intent.getFloatExtra(CENTER_Y, 0F)
+        return Pair(centerX, centerY)
+    }
+
     fun initNavController() { //获取mFragments成员变量
         val mFragmentsField = FragmentActivity::class.java.getDeclaredField("mFragments").apply {
             isAccessible = true
@@ -186,5 +197,10 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
         super.onDestroy()
         dismissDialog()
         dismissLoadingDialog()
+    }
+
+    companion object {
+        const val CENTER_X = "CENTER_X"
+        const val CENTER_Y = "CENTER_Y"
     }
 }

@@ -9,6 +9,8 @@ import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl
 import com.hearthappy.base.AbsBaseActivity
 import com.hearthappy.base.ext.bindSpecialAdapter
+import com.hearthappy.base.ext.createActivityCircularReveal
+import com.hearthappy.base.ext.disappearCircularReveal
 import com.hearthappy.base.interfaces.OnCustomItemClickListener
 import com.hearthappy.base.interfaces.OnFooterClickListener
 import com.hearthappy.base.interfaces.OnHeaderClickListener
@@ -27,11 +29,12 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
     }
 
     override fun ActivityExample2Binding.initView() {
+        val coordinates = getCarryCoordinates()
+        createActivityCircularReveal(500, coordinates.first.toInt(), coordinates.second.toInt())
         viewModel = getViewModel(MainViewModel::class.java)
         example2Adapter = Example2Adapter()
         val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, LinearLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager.apply { bindSpecialAdapter(example2Adapter) }
-
         rvList.adapter = example2Adapter
     }
 
@@ -48,6 +51,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         })
         example2Adapter.setOnHeaderClickListener(object : OnHeaderClickListener {
             override fun onHeaderClick(view: View, position: Int) {
+                disappearCircularReveal(500)
                 Toast.makeText(this@Example2Activity, "我是头部", Toast.LENGTH_SHORT).show()
             }
         })
@@ -62,4 +66,6 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
     override fun ActivityExample2Binding.initData() {
         viewModel.getListData()
     }
+
+
 }

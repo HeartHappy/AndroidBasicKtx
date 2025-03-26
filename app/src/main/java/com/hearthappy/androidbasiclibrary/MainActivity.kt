@@ -4,11 +4,11 @@ import com.hearthappy.androidbasiclibrary.databinding.ActivityMainBinding
 import com.hearthappy.androidbasiclibrary.example1.Example1Activity
 import com.hearthappy.androidbasiclibrary.example2.Example2Activity
 import com.hearthappy.base.AbsBaseActivity
+import com.hearthappy.base.ext.findViewCoordinates
 
 class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
 
     override fun ActivityMainBinding.initData() {
-        viewBinding.apply { }
     }
 
     override fun ActivityMainBinding.initListener() {
@@ -16,7 +16,8 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
             startActivity(Example1Activity::class.java)
         }
         btnExample2.setOnClickListener {
-            startActivity(Example2Activity::class.java)
+            val coordinates = it.findViewCoordinates()
+            startActivityCarryCoordinates(Example2Activity::class.java, coordinates)
         }
     }
 
@@ -26,4 +27,5 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
 
     override fun ActivityMainBinding.initView() {
     }
+
 }

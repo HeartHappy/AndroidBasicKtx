@@ -74,28 +74,10 @@ internal object LocationTools {
         criteria.powerRequirement=Criteria.POWER_LOW
         val bestProvider = lm.getBestProvider(criteria, true)
         bestProvider?.let {
-            lm.requestLocationUpdates(it, 0, 0f,object :LocationListener {
-                override fun onLocationChanged(location: Location) {
-                    val locationAddress = getAddressByLocation(context, location)
-                    Log.d("TAG", "onLocationChanged: $locationAddress")
-                    locationAddress?.let { it1 -> block(it1) }
-                }
-
-                override fun onProviderDisabled(provider: String) {
-                    super.onProviderDisabled(provider)
-                    Log.d("TAG", "onProviderDisabled: ")
-                }
-
-                override fun onProviderEnabled(provider: String) {
-                    super.onProviderEnabled(provider)
-                    Log.d("TAG", "onProviderEnabled: ")
-                }
-
-                override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
-                    super.onStatusChanged(provider, status, extras)
-                    Log.d("TAG", "onStatusChanged: ")
-                }
-            })
+            lm.requestLocationUpdates(it, 0, 0f) { location ->
+                val locationAddress = getAddressByLocation(context, location)
+                locationAddress?.let { it1 -> block(it1) }
+            }
         }
 
     }

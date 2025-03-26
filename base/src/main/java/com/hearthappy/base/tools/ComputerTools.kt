@@ -15,18 +15,6 @@ object ComputerTools {
         return ceil((count.toDouble()/pageSize)).toInt()
     }
 
-    /**
-     * 点赞数量转换
-     * @param likesCount Int
-     * @return String
-     */
-    fun formatLikesCount(likesCount: Int): String {
-        return when {
-            likesCount < 1000 -> likesCount.toString()
-            likesCount < 10000 -> String.format("%.1fK", likesCount / 1000.0)
-            else -> String.format("%.1f万", likesCount / 10000.0)
-        }
-    }
 
     /**
      * 计算图片宽高。高于1920则除以2

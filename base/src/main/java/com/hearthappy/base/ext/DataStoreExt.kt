@@ -1,4 +1,4 @@
-package com.hearthappy.base.ext
+/*package com.hearthappy.base.ext
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -42,4 +42,4 @@ suspend inline fun <reified R : Any> DataStore<Preferences>.readMultiple(vararg 
         }
     }.toTypedArray()
     block(array)
-}
+}*/
