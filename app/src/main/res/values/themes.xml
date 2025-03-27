@@ -6,4 +6,5 @@
     </style>
 
     <style name="AndroidBasicKtxTheme" parent="Base.Theme.AndroidBasicLibrary" />
+
 </resources>

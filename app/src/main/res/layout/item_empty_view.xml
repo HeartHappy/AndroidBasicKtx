@@ -8,6 +8,7 @@
         android:id="@+id/ivEmptyDefault"
         android:layout_width="160dp"
         android:layout_height="160dp"
+        android:src="@mipmap/nd_default"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

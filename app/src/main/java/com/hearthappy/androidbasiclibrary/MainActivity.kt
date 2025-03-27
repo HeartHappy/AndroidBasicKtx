@@ -1,5 +1,6 @@
 package com.hearthappy.androidbasiclibrary
 
+import android.util.Log
 import com.hearthappy.androidbasiclibrary.databinding.ActivityMainBinding
 import com.hearthappy.androidbasiclibrary.example1.Example1Activity
 import com.hearthappy.androidbasiclibrary.example2.Example2Activity
