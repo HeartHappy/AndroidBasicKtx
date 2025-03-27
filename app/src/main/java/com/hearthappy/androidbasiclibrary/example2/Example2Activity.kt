@@ -1,16 +1,20 @@
 package com.hearthappy.androidbasiclibrary.example2
 
+import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
+import com.hearthappy.androidbasiclibrary.databinding.ItemEmptyViewBinding
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl
 import com.hearthappy.base.AbsBaseActivity
 import com.hearthappy.base.ext.bindSpecialAdapter
 import com.hearthappy.base.ext.createActivityCircularReveal
 import com.hearthappy.base.ext.disappearCircularReveal
+import com.hearthappy.base.ext.popupWindow
+import com.hearthappy.base.ext.showLocation
 import com.hearthappy.base.interfaces.OnCustomItemClickListener
 import com.hearthappy.base.interfaces.OnFooterClickListener
 import com.hearthappy.base.interfaces.OnHeaderClickListener
@@ -36,6 +40,13 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, LinearLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager.apply { bindSpecialAdapter(example2Adapter) }
         rvList.adapter = example2Adapter
+
+        root.postDelayed({
+            popupWindow(viewBinding = ItemEmptyViewBinding.inflate(layoutInflater), width = 200, height = 200, viewEventListener = {
+
+            }, backgroundBlackAlpha = 1f).showLocation(root, Gravity.CENTER)
+
+        }, 1000)
     }
 
     override fun ActivityExample2Binding.initListener() {

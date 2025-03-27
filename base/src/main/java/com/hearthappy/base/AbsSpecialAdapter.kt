@@ -212,7 +212,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
      * @param list List<T>
      */
     override fun initData(list: List<T>) {
-        if (this.list.isNotEmpty() && this.list.size != list.size || customTransformMap.isNotEmpty()) removeAll()
+        if (this.list.isNotEmpty() || customTransformMap.isNotEmpty()) {
+            removeAllCustomItemLayout()
+            clearAll()
+        }
         this.list.addAll(list)
         shouldShowEmptyView = list.isEmpty()
         notifyItemRangeChanged(0, if (shouldShowEmptyView) 1 else getItemSpecialCount())
@@ -393,7 +396,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         const val BIND_FOOTER = "bindFooterViewHolder"
         const val BIND_EMPTY = "bindEmptyViewHolder"
         const val BIND_CUSTOM = "bindCustomViewHolder"
-        const val NOT_INSERTED = 0xFFFFFFFF.toInt()
     }
 
 }

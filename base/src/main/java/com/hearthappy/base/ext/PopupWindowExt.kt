@@ -1,8 +1,6 @@
 package com.hearthappy.base.ext
 
 import android.app.Activity
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.transition.Fade
 import android.transition.Transition
@@ -41,19 +39,19 @@ var pwMap: MutableMap<String, PopupWindow>? = null
  *      11、支持使用场景：Activity、Fragment
  */
 fun <VB : ViewBinding> Activity.popupWindow(viewBinding: VB, width: Int = 0, height: Int = 0, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
-                                            backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), key: String = "default"): PopupWindow {
-    return handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim)
+                                            backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
+    return handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim, windowType)
 }
 
 fun <VB : ViewBinding> Fragment.popupWindow(
     viewBinding: VB, width: Int = 0, height: Int = 0, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
-    backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), key: String = "default",
+    backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default",
 ): PopupWindow {
-    return requireActivity().handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim)
+    return requireActivity().handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim, windowType)
 }
 
 fun <VB : ViewBinding> Activity.handlerPopupWindow(key: String, viewBinding: VB, width: Int, height: Int, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean, isOutsideTouchable: Boolean, //点击布局外是否消失，true：消失
-                                                          backgroundBlackAlpha: Float, anim: Transition = Fade()): PopupWindow {
+                                                   backgroundBlackAlpha: Float, anim: Transition = Fade(), windowType: Int): PopupWindow {
     if (pwMap == null) {
         pwMap = mutableMapOf()
     }
@@ -62,15 +60,13 @@ fun <VB : ViewBinding> Activity.handlerPopupWindow(key: String, viewBinding: VB,
     }
 
     //创建PopupWindow
-    val resultPopup = object : PopupWindow(viewBinding.root, width, height, focusable) {
+    return object : PopupWindow(viewBinding.root, width, height, focusable) {
         override fun dismiss() {
             super.dismiss()
             pwMap?.remove(key)
             setBackgroundBlackAlpha(1f)
         }
-    }
-
-    resultPopup.apply { //事件绑定
+    }.run {
         viewEventListener(this, viewBinding)
 
         //初始化PopupWindow属性
@@ -82,12 +78,13 @@ fun <VB : ViewBinding> Activity.handlerPopupWindow(key: String, viewBinding: VB,
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.enterTransition = anim
             this.exitTransition = anim
+            windowLayoutType = windowType
         }
-        this.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)) //背景黑
+        this.setBackgroundDrawable(null) //背景黑
         setBackgroundBlackAlpha(backgroundBlackAlpha)
+        pwMap?.put(key, this)
+        this
     }
-    pwMap?.put(key, resultPopup)
-    return resultPopup
 }
 
 
