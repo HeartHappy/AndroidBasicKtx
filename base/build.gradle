@@ -115,6 +115,8 @@ android {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 应用提供给依赖项目的混淆规则
+            consumerProguardFiles 'consumer-rules.pro'
         }
     }
     compileOptions {

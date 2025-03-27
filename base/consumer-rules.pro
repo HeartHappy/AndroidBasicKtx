@@ -1,0 +1,1 @@
+-keep class * extends androidx.viewbinding.ViewBinding { *; }
