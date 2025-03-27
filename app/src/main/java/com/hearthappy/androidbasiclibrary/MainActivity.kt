@@ -27,6 +27,7 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
     }
 
     override fun ActivityMainBinding.initView() {
+
     }
 
 }
