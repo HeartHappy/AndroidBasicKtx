@@ -2,8 +2,10 @@ package com.hearthappy.base.ext
 
 import android.view.MotionEvent
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
-import kotlin.time.Duration
+import androidx.viewbinding.ViewBinding
+import com.hearthappy.base.AbsSpecialAdapter
 
 fun RecyclerView.addFastListener(duration: Long = 500L, block: (Boolean) -> Unit) {
     var isAtTop = false
@@ -12,8 +14,7 @@ fun RecyclerView.addFastListener(duration: Long = 500L, block: (Boolean) -> Unit
             super.onScrolled(recyclerView, dx, dy)
             val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
             if (layoutManager != null) {
-                val fastVisibleItemPosition =
-                    layoutManager.findFirstCompletelyVisibleItemPosition() // 检查是否滚动到顶部
+                val fastVisibleItemPosition = layoutManager.findFirstCompletelyVisibleItemPosition() // 检查是否滚动到顶部
                 isAtTop = fastVisibleItemPosition == 0
             }
         }
@@ -39,9 +40,7 @@ fun RecyclerView.addLastListener(duration: Long = 500L, block: (Boolean) -> Unit
 
 }
 
-fun RecyclerView.addOnTouchListener(
-    duration: Long, isTopOrBottomBlock: () -> Boolean, block: (Boolean) -> Unit
-) {
+fun RecyclerView.addOnTouchListener(duration: Long, isTopOrBottomBlock: () -> Boolean, block: (Boolean) -> Unit) {
     var isDragging = false
     var touchDownTime = 0L
     addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
@@ -69,4 +68,37 @@ fun RecyclerView.addOnTouchListener(
 
         override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {}
     })
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <T : ViewBinding> RecyclerView.findFooterViewBinding(block: T.() -> Unit) {
+    when (adapter) {
+        is AbsSpecialAdapter<*, *> -> {
+            val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
+            val footerPosition = absSpecialAdapter.getFooterPosition()
+            if (footerPosition != -1) {
+                val footerViewHolder = findViewHolderForAdapterPosition(footerPosition) as AbsSpecialAdapter<*, *>.FooterViewHolder
+                block(footerViewHolder.viewBinding as T)
+            }
+        }
+
+        else -> Unit
+    }
+
+}
+
+fun RecyclerView.getFirstCompletelyVisiblePosition(): Int {
+    val layoutManager = layoutManager as? LinearLayoutManager
+    return layoutManager?.findFirstCompletelyVisibleItemPosition() ?: RecyclerView.NO_POSITION
+}
+
+fun RecyclerView.smoothScroller(targetPosition: Int, duration: Int = 200) { // 获取 RecyclerView 的 LayoutManager
+    val layoutManager = layoutManager as? LinearLayoutManager
+    val smoothScroller = object : LinearSmoothScroller(context) {
+        override fun calculateTimeForScrolling(dx: Int): Int {
+            return duration
+        }
+    }
+    smoothScroller.targetPosition = targetPosition
+    layoutManager?.startSmoothScroll(smoothScroller)
 }

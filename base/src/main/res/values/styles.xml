@@ -6,8 +6,6 @@
         <item name="colorPrimaryDark">#CD75F3</item>
     </style>
 
-
-
     <!--dialog样式-->
     <style name="dialog" parent="@android:style/Theme.Dialog">
         <item name="android:windowFrame">@null</item>
@@ -24,16 +22,6 @@
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:foreground">?attr/selectableItemBackground</item>
-    </style>
-
-    <style name="Theme.TranslucentBar" parent="ThemeOverlay.PrimaryPalette.Purple">
-        <item name="android:elevation">0dp</item>
-        <item name="android:background">@color/color_base_translucent</item>
-    </style>
-
-    <style name="style_icon_size" parent="style_card_selectable">
-        <item name="android:layout_width">24dp</item>
-        <item name="android:layout_height">24dp</item>
     </style>
 
 

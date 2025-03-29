@@ -5,9 +5,13 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample1Binding
+import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.base.AbsBaseActivity
 import com.hearthappy.base.ext.addFastListener
 import com.hearthappy.base.ext.addLastListener
+import com.hearthappy.base.ext.findFooterViewBinding
+import com.hearthappy.base.ext.getFirstCompletelyVisiblePosition
+import com.hearthappy.base.ext.smoothScroller
 import com.hearthappy.base.interfaces.OnCustomItemClickListener
 import com.hearthappy.base.interfaces.OnFooterClickListener
 import com.hearthappy.base.interfaces.OnHeaderClickListener
@@ -68,14 +72,24 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
             if (btnInsetLayout.isActivated) { //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity)/*, CustomItemImpl2(this@Example1Activity), CustomItemImpl3(this@Example1Activity)*/), 3/*, 7, 9*/)//4,9,12
                 example1Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity), CustomItemImpl2(this@Example1Activity), CustomItemImpl3(this@Example1Activity)), 3, 7, 9) //4,9,12
             } else { //                mainAdapter.removeAllCustomItemLayout()
-                example1Adapter.removeCustomItemLayout(3, 7,9) //                mainAdapter.addCustomItemLayout(listOf(CustomItemImpl3(this@Example1Activity)), 10)
+                example1Adapter.removeCustomItemLayout(3, 7, 9) //                mainAdapter.addCustomItemLayout(listOf(CustomItemImpl3(this@Example1Activity)), 10)
                 //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity),CustomItemImpl2(this@Example1Activity),CustomItemImpl3(this@Example1Activity)),3,7,9)//4,9,1
             }
         }
-
-        rvList.addLastListener {
-            if (it) viewModel.ld.value?.let { it1 -> example1Adapter.addData(it1) }
-            Toast.makeText(this@Example1Activity, "加载更多", Toast.LENGTH_SHORT).show()
+        var count = 1
+        rvList.addLastListener(50) {
+            if (count < 3) {
+                if (it) viewModel.ld.value?.let { it1 -> example1Adapter.addData(it1) }
+                count++
+            } else {
+                rvList.findFooterViewBinding<ItemFooterBinding> {
+                    tvFooter.text = "没有更多数据了"
+                    tvFooter.postDelayed({
+                        val visiblePosition = rvList.getFirstCompletelyVisiblePosition()
+                        rvList.smoothScroller(visiblePosition - 1)
+                    }, 1000)
+                }
+            }
         }
         rvList.addFastListener {
             if (it) {
@@ -87,5 +101,6 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
     override fun ActivityExample1Binding.initData() {
         viewModel.getListData()
     }
+
 
 }

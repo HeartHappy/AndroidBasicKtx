@@ -27,7 +27,7 @@ class Example1Adapter : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSup
 
 
     override fun ItemFooterBinding.bindFooterViewHolder() {
-        tvFooter.text = "我是尾部"
+        tvFooter.text = "继续上拉，加载更多..."
     }
 
     override fun ItemEmptyViewBinding.bindEmptyViewHolder() {

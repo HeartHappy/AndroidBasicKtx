@@ -12,19 +12,17 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.PopupWindow
-import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentController
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.androidbasicktx.R
-import com.hearthappy.androidbasicktx.databinding.ToolbarBackLayoutBinding
 import com.hearthappy.base.ext.findActivityInflate
 import com.hearthappy.base.widget.LoadingPopupWindow
+
 
 /**
  * Created Date: 2024/11/25
@@ -172,24 +170,11 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    fun ToolbarBackLayoutBinding.init(isBlack: Boolean = true, title: String?, @DrawableRes rightIcon: Int? = null, leftIconListener: (() -> Unit)? = null, rightIconListener: () -> Unit = {}) {
-        this.ivlIcon.setOnClickListener { leftIconListener?.let { it() } ?: finishAfterTransition() }
-        this.tvTitle.text = title
-        if (isBlack) {
-            val colorBlack = ContextCompat.getColor(this@AbsBaseActivity, R.color.color_base_black)
-            ivlIcon.setColorFilter(colorBlack)
-            ivrIcon.setColorFilter(colorBlack)
-            tvTitle.setTextColor(colorBlack)
-        } else {
-            val colorWhite = ContextCompat.getColor(this@AbsBaseActivity, R.color.color_base_white)
-            tvTitle.setTextColor(colorWhite)
-            ivlIcon.setColorFilter(colorWhite)
-            ivrIcon.setColorFilter(colorWhite)
-        }
-        rightIcon?.let {
-            this.ivrIcon.setImageResource(it)
-            this.ivrIcon.visibility = View.VISIBLE
-            this.ivrIcon.setOnClickListener { rightIconListener() }
+    fun showSoftKeyboard(view: View?) {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        if (view != null) {
+            view.requestFocus() // 确保视图获取焦点
+            imm.showSoftInput(view, InputMethodManager.SHOW_FORCED)
         }
     }
 

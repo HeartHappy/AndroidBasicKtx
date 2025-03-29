@@ -32,7 +32,7 @@ class LoadingPopupWindow(val context: Context) : PopupWindow(context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 isTouchModal = false
             }
-            isOutsideTouchable = true //是否支持焦点
+            isOutsideTouchable = false //是否支持焦点
             isFocusable = true
             setOnDismissListener { animationDrawable.stop() }
         }

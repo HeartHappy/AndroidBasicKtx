@@ -6,7 +6,8 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 object TimeTools {
     const val BUTTON_CLICK_TRAN = 500L
@@ -25,52 +26,52 @@ object TimeTools {
     }
 
     fun millisToToolBarString(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("EEE MM/dd HH:mm",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("EEE MM/dd HH:mm", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToDate(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToYearMonth2Day(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy/MM/dd",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToHourMinutes(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("HH:mm",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToYearMonth3Day(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy/MMM/dd",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("yyyy/MMM/dd", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToYearMonth3(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy/MMM",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("yyyy/MMM", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToYear(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("yyyy", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToDay(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("dd",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("dd", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToMonth3(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("MMM",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("MMM", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
     fun millisToHour(time: Long): String {
-        val simpleDateFormat = SimpleDateFormat("HH",Locale.getDefault())
+        val simpleDateFormat = SimpleDateFormat("HH", Locale.getDefault())
         return simpleDateFormat.format(Date(time))
     }
 
@@ -80,11 +81,9 @@ object TimeTools {
      * @param pattern String
      * @return Long
      */
-    fun strToMillis(dateString: String,pattern: String="yyyy-MM-dd HH:mm:ss"): Long {
-        // 定义日期格式
+    fun strToMillis(dateString: String, pattern: String = "yyyy-MM-dd HH:mm:ss"): Long { // 定义日期格式
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val formatter = DateTimeFormatter.ofPattern(pattern)
-            // 将日期字符串解析为 LocalDateTime
+            val formatter = DateTimeFormatter.ofPattern(pattern) // 将日期字符串解析为 LocalDateTime
             val localDateTime = LocalDateTime.parse(dateString, formatter)
 
             // 将 LocalDateTime 转换为 ZonedDateTime（默认使用 UTC 时区）
@@ -99,6 +98,23 @@ object TimeTools {
         } else {
             return 0L
         }
+    }
+
+    private var lastClickTime: Long = 0
+    private const val CLICK_INTERVAL: Long = 200 // 点击间隔时间，单位为毫秒
+
+    /**
+     * 是否连续点击
+     * @param clickInterval Long
+     * @return Boolean true是在连续点击范围内
+     */
+    fun continuousClick(clickInterval: Long = CLICK_INTERVAL, block: () -> Unit = {}) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastClickTime < clickInterval) {
+            return
+        }
+        lastClickTime = currentTime
+        block()
     }
 
 
