@@ -247,6 +247,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         return if (hasFooterImpl()) getItemSpecialCount() - 1 else -1
     }
 
+    fun getHeaderPosition(): Int {
+        return if (hasHeaderImpl()) 0 else -1
+    }
+
     /**
      * 设置插入布局
      * @param customItemLayouts List<ICustomItemSupper<*>> 插入布局的接口实现集合

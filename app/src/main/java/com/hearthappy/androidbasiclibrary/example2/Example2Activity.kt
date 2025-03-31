@@ -40,13 +40,6 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, LinearLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager.apply { bindSpecialAdapter(example2Adapter) }
         rvList.adapter = example2Adapter
-
-        root.postDelayed({
-            popupWindow(viewBinding = ItemEmptyViewBinding.inflate(layoutInflater), width = 200, height = 200, viewEventListener = {
-
-            }, backgroundBlackAlpha = 1f).showLocation(root, Gravity.CENTER)
-
-        }, 1000)
     }
 
     override fun ActivityExample2Binding.initListener() {

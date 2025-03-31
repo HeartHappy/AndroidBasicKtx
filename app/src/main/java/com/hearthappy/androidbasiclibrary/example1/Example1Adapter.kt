@@ -22,7 +22,7 @@ class Example1Adapter : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSup
     }
 
     override fun ItemHeaderBinding.bindHeaderViewHolder() {
-        tvHeader.text = "我是头部"
+        tvHeader.text = "下拉刷新"
     }
 
 

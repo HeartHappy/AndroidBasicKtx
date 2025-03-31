@@ -9,4 +9,5 @@
     <string name="remove">Remove</string>
     <string name="remove_all">RemoveAll</string>
     <string name="inset_layout_or_remove_layout">InsetLayout or RemoveLayout</string>
+    <string name="set_data">设置数据</string>
 </resources>
