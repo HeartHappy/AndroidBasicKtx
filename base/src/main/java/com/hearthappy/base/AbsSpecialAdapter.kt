@@ -9,6 +9,7 @@ import com.hearthappy.base.interfaces.ICustomItemSupper
 import com.hearthappy.base.interfaces.IEmptyViewSupport
 import com.hearthappy.base.interfaces.IFooterSupport
 import com.hearthappy.base.interfaces.IHeaderSupport
+import com.hearthappy.base.interfaces.IRefreshSupport
 import com.hearthappy.base.interfaces.OnCustomItemClickListener
 import com.hearthappy.base.interfaces.OnEmptyViewClickListener
 import com.hearthappy.base.interfaces.OnFooterClickListener
@@ -20,7 +21,7 @@ import java.util.Collections
 /**
  * Created Date: 2025/3/7
  * @author ChenRui
- * ClassDescription：特殊适配，支持头、尾、空布局，以及插入自定义布局。AbsSpecialAdapter<ViewBinding类型,数据类型>()
+ * ClassDescription：特殊适配，支持头、尾、空、刷新以及插入自定义布局。AbsSpecialAdapter<ViewBinding类型,数据类型>()
  * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport接口
  */
 
@@ -32,6 +33,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var onFooterClickListener: OnFooterClickListener? = null
     private var onEmptyViewClickListener: OnEmptyViewClickListener? = null
     private var onCustomItemClickListener: OnCustomItemClickListener? = null
+    private var refreshOffset = 0
     private var headerOffset = 0
     private var footerOffset = 0
     private var creatorCount = 0
@@ -45,6 +47,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
+            TYPE_REFRESH -> if (hasRefreshImpl()) return RefreshViewHolder(getIRefreshSupport().javaClass.findInterfaceInflate(parent, IRefreshSupport::class.java))
             TYPE_HEADER -> if (hasHeaderImpl()) return HeaderViewHolder(getIHeaderSupport().javaClass.findInterfaceInflate(parent, IHeaderSupport::class.java))
             TYPE_EMPTY -> if (hasEmptyViewImpl()) return EmptyViewHolder(getIEmptyViewSupport().javaClass.findInterfaceInflate(parent, IEmptyViewSupport::class.java))
             TYPE_FOOTER -> if (hasFooterImpl()) return FooterViewHolder(getIFooterSupport().javaClass.findInterfaceInflate(parent, IFooterSupport::class.java))
@@ -66,6 +69,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             is AbsSpecialAdapter<*, *>.EmptyViewHolder -> {
                 holder.viewBinding.root.setOnClickListener { onEmptyViewClickListener?.onEmptyViewClick(it, position) }
                 callBindMethod(this, holder.viewBinding, BIND_EMPTY)
+            }
+
+            is AbsSpecialAdapter<*, *>.RefreshViewHolder -> {
+                callBindMethod(this, holder.viewBinding, BIND_REFRESH)
             }
 
             is AbsSpecialAdapter<*, *>.HeaderViewHolder -> {
@@ -96,7 +103,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
 
     private fun getItemListPosition(position: Int): Int {
-        var realPosition = position - headerOffset
+        var realPosition = position - headerOffset - refreshOffset
         for (map in customTransformMap) {
             if (map.value > realPosition) break
             realPosition--
@@ -105,7 +112,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     }
 
     private fun getItemVirtualPosition(realPosition: Int): Int {
-        var virtualPosition = realPosition + headerOffset
+        var virtualPosition = realPosition + headerOffset + refreshOffset
         for (map in customTransformMap) {
             if (map.value > realPosition) break
             virtualPosition++
@@ -118,19 +125,21 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
      * @param inputList List<Int>
      * @return List<Int>
      */
-    private fun transformList(inputList: List<Int>): List<Int> = inputList.mapIndexed { index, value -> value + index + (if (hasHeaderImpl()) 1 else 0) }
+    private fun transformList(inputList: List<Int>): List<Int> = inputList.mapIndexed { index, value -> value + index + (if (hasHeaderImpl() && hasRefreshImpl()) 2 else if (hasHeaderImpl()) 1 else 0) }
 
     override fun getItemViewType(position: Int): Int { // 计算累积的插入布局偏移量
         return when {
             hasEmptyViewImpl() && shouldShowEmptyView -> TYPE_EMPTY
-            hasHeaderImpl() && position == TYPE_HEADER -> TYPE_HEADER
-            hasFooterImpl() && position == headerOffset + list.size + customTransformMap.size -> TYPE_FOOTER //            hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && insetItemPosition.convertInsetItemPosition() == position - headerOffset -> TYPE_INSET_ITEM
+            hasRefreshImpl() && position == TYPE_REFRESH -> TYPE_REFRESH
+            hasHeaderImpl() && position == if (hasRefreshImpl()) TYPE_HEADER else TYPE_REFRESH -> TYPE_HEADER
+            hasFooterImpl() && position == refreshOffset + headerOffset + list.size + customTransformMap.size -> TYPE_FOOTER //            hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && insetItemPosition.convertInsetItemPosition() == position - headerOffset -> TYPE_INSET_ITEM
             customTransformMap.isNotEmpty() && customTransformMap.keys.any { it == position } -> TYPE_INSET_ITEM
             else -> TYPE_ITEM
         }
     }
 
     override fun getItemCount(): Int {
+        refreshOffset = if (hasRefreshImpl()) 1 else 0
         headerOffset = if (hasHeaderImpl()) 1 else 0
         footerOffset = if (hasFooterImpl()) 1 else 0
         return if (shouldShowEmptyView && hasEmptyViewImpl()) 1 else getItemSpecialCount()
@@ -247,8 +256,12 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         return if (hasFooterImpl()) getItemSpecialCount() - 1 else -1
     }
 
+    fun getRefreshPosition(): Int {
+        return if (hasRefreshImpl()) 0 else -1
+    }
+
     fun getHeaderPosition(): Int {
-        return if (hasHeaderImpl()) 0 else -1
+        return if (hasHeaderImpl() && hasRefreshImpl()) 1 else if (hasHeaderImpl()) 0 else -1
     }
 
     /**
@@ -345,6 +358,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         creatorCount = 0
     }
 
+    inner class RefreshViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
+
     inner class HeaderViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
     inner class FooterViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
@@ -373,13 +388,15 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         }
     }
 
+    fun hasRefreshImpl() = this is IRefreshSupport<*>
     fun hasHeaderImpl() = this is IHeaderSupport<*>
     fun hasFooterImpl() = this is IFooterSupport<*>
     private fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
+    private fun getIRefreshSupport() = this as IRefreshSupport<ViewBinding>
     private fun getIHeaderSupport() = this as IHeaderSupport<ViewBinding>
     private fun getIFooterSupport() = this as IFooterSupport<ViewBinding>
     private fun getIEmptyViewSupport() = this as IEmptyViewSupport<ViewBinding>
-    private fun getItemSpecialCount(): Int = list.size + headerOffset + customTransformMap.size + footerOffset
+    private fun getItemSpecialCount(): Int = refreshOffset + headerOffset + list.size + customTransformMap.size + footerOffset
     private fun Int.convertInsetItemPosition(): Int = if (this > list.size) list.size else this
 
 
@@ -401,11 +418,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
 
     companion object {
-        const val TYPE_HEADER: Int = 0x00
-        const val TYPE_ITEM: Int = 0x01
-        const val TYPE_EMPTY: Int = 0x02
-        const val TYPE_FOOTER: Int = 0x03
-        const val TYPE_INSET_ITEM = 0x04
+        const val TYPE_REFRESH: Int = 0x00
+        const val TYPE_HEADER: Int = 0x01
+        const val TYPE_ITEM: Int = 0x02
+        const val TYPE_EMPTY: Int = 0x03
+        const val TYPE_FOOTER: Int = 0x04
+        const val TYPE_INSET_ITEM = 0x05
+        const val BIND_REFRESH = "bindRefreshViewHolder"
         const val BIND_HEAD = "bindHeaderViewHolder"
         const val BIND_FOOTER = "bindFooterViewHolder"
         const val BIND_EMPTY = "bindEmptyViewHolder"

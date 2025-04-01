@@ -5,9 +5,10 @@ import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
+import com.hearthappy.androidbasiclibrary.R
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample1Binding
 import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
-import com.hearthappy.androidbasiclibrary.databinding.ItemHeaderBinding
+import com.hearthappy.androidbasiclibrary.databinding.ItemRefreshBinding
 import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
 import com.hearthappy.base.AbsBaseActivity
 import com.hearthappy.base.ext.addOnLoadMoreListener
@@ -64,8 +65,6 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
             }
         })
         btnSettings.setOnClickListener {
-
-
             popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), viewEventListener = {
                 it.apply {
                     btnInit.setOnClickListener { viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }.also { dismiss() } }
@@ -99,8 +98,12 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                 tvFooter.text = "没有更多数据了"
             }
         }
-        rvList.addOnRefreshListener<ItemHeaderBinding>(onRefreshProgress = { progress ->
-            tvHeader.text = "下拉刷新:".plus(progress)
+        rvList.addOnRefreshListener<ItemRefreshBinding>(onRefreshProgress = { progress ->
+            tvRefresh.text = getString(R.string.pull_down_to_refresh)
+            circularProgress.progress = progress.toInt()
+            if (progress >= 100f) {
+                tvRefresh.text = "松开完成刷新"
+            }
         }, onRefreshFinish = {
             viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }
         })

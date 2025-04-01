@@ -14,21 +14,31 @@ import kotlin.math.abs
  * @receiver RecyclerView
  * @param block Function1<Boolean, Unit>
  */
-fun RecyclerView.addFastListener(block: (Boolean) -> Unit) {
+fun RecyclerView.addFastListener(block: () -> Unit) {
     var isInitialLoad = true
     var isFirstItemVisible: Boolean
     addOnScrollListener(object : RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            super.onScrolled(recyclerView, dx, dy)
-            val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
-            if (layoutManager != null) {
-                val firstVisibleItemPosition = layoutManager.findFirstCompletelyVisibleItemPosition() // 检查是否滚动到顶部，第一个 item 完全可见
-                isFirstItemVisible = firstVisibleItemPosition == 0
-                if (!isInitialLoad && isFirstItemVisible) post { block(true) }
-                else block(false) // 初始加载完成后，将标志位设为 false
-                if (isInitialLoad) isInitialLoad = false
+
+        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+            super.onScrollStateChanged(recyclerView, newState)
+            if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
+                if (layoutManager != null) {
+                    val firstVisibleItemPosition = layoutManager.findFirstCompletelyVisibleItemPosition() // 检查是否滚动到顶部，第一个 item 完全可见
+                    isFirstItemVisible = firstVisibleItemPosition == 0
+                    if (!isInitialLoad && isFirstItemVisible) block()
+                    if (isInitialLoad) isInitialLoad = false
+                }
             }
-        }
+        } //        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) { //            super.onScrolled(recyclerView, dx, dy) //            val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
+        //            if (layoutManager != null) {
+        //                val firstVisibleItemPosition = layoutManager.findFirstCompletelyVisibleItemPosition() // 检查是否滚动到顶部，第一个 item 完全可见
+        //                isFirstItemVisible = firstVisibleItemPosition == 0
+        //                if (!isInitialLoad && isFirstItemVisible) post { block(true) }
+        //                else block(false) // 初始加载完成后，将标志位设为 false
+        //                if (isInitialLoad) isInitialLoad = false
+        //            }
+        //        }
     })
 }
 
@@ -53,11 +63,12 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
     })
 }
 
-private fun <VB : ViewBinding> RecyclerView.addOnTouchListener(offsetThreshold: Int, isTopOrBottomBlock: () -> Boolean, percentageListener: (Float) -> Unit, block: VB.(Float, Boolean) -> Unit) {
+private fun RecyclerView.addOnTouchListener(offsetThreshold: Int, percentageListener: (Float) -> Unit, actionUp: (Float) -> Unit) {
     var isDragging = false
     var initialY = 0f
     var currentOffset = 0
     var clampedPercentage = 0f
+
     addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
         override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
             when (e.action) {
@@ -77,15 +88,15 @@ private fun <VB : ViewBinding> RecyclerView.addOnTouchListener(offsetThreshold: 
                         val percentage = abs(currentOffset).toFloat() / offsetThreshold.toFloat()
                         clampedPercentage = percentage.coerceIn(0f, 1f) * 100
                         percentageListener(clampedPercentage) // 无论是否达到阈值，都传递百分比给 block 函数
-                        if (isTopOrBottomBlock() && abs(currentOffset) >= offsetThreshold) {
-                            isDragging = false
-                        }
+                        //                        if (isAtTop && abs(currentOffset) >= offsetThreshold) {
+                        //                            isDragging = false
+                        //                        }
                     }
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     isDragging = false
-                    post { findHeaderViewBinding<VB> { block(clampedPercentage, isDragging) } }
+                    actionUp(clampedPercentage)
                 }
             }
             return false
@@ -97,20 +108,20 @@ private fun <VB : ViewBinding> RecyclerView.addOnTouchListener(offsetThreshold: 
     })
 }
 
+
 @Suppress("UNCHECKED_CAST")
-fun <T : ViewBinding> RecyclerView.findFooterViewBinding(block: T.(AbsSpecialAdapter<*, *>) -> Unit) {
+fun <T : ViewBinding> RecyclerView.findRefreshViewBinding(block: T.(AbsSpecialAdapter<*, *>) -> Unit) {
     when (adapter) {
         is AbsSpecialAdapter<*, *> -> {
             val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
-            val footerPosition = absSpecialAdapter.getFooterPosition()
-            if (footerPosition != RecyclerView.NO_POSITION) {
-                val footerViewHolder = findViewHolderForAdapterPosition(footerPosition) as AbsSpecialAdapter<*, *>.FooterViewHolder
-                val vb = footerViewHolder.viewBinding as T
+            val refreshPosition = absSpecialAdapter.getRefreshPosition()
+            if (refreshPosition != RecyclerView.NO_POSITION) {
+                val refreshViewHolder = findViewHolderForAdapterPosition(refreshPosition) as? AbsSpecialAdapter<*, *>.RefreshViewHolder
+                refreshViewHolder ?: return
+                val vb = refreshViewHolder.viewBinding as T
                 block(vb, absSpecialAdapter)
             }
         }
-
-        else -> Unit
     }
 }
 
@@ -127,6 +138,23 @@ fun <T : ViewBinding> RecyclerView.findHeaderViewBinding(block: T.(AbsSpecialAda
                 block(vb, absSpecialAdapter)
             }
         }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <T : ViewBinding> RecyclerView.findFooterViewBinding(block: T.(AbsSpecialAdapter<*, *>) -> Unit) {
+    when (adapter) {
+        is AbsSpecialAdapter<*, *> -> {
+            val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
+            val footerPosition = absSpecialAdapter.getFooterPosition()
+            if (footerPosition != RecyclerView.NO_POSITION) {
+                val footerViewHolder = findViewHolderForAdapterPosition(footerPosition) as AbsSpecialAdapter<*, *>.FooterViewHolder
+                val vb = footerViewHolder.viewBinding as T
+                block(vb, absSpecialAdapter)
+            }
+        }
+
+        else -> Unit
     }
 }
 
@@ -164,19 +192,15 @@ fun <VB : ViewBinding> RecyclerView.addOnLoadMoreListener(delayed: Long = 1000L,
 }
 
 
-fun <VB : ViewBinding> RecyclerView.addOnRefreshListener(delayed: Long = 200L, offsetThreshold: Int = 800, onRefreshProgress: VB.( Float) -> Unit, onRefreshFinish: VB.() -> Unit) {
-    var isAtTop = false
-    addFastListener { isAtTop = true }
-    addOnTouchListener<VB>(offsetThreshold, { isAtTop }, { percentage ->
-        post { findHeaderViewBinding<VB> { onRefreshProgress(this, percentage) } }
-    }) { percentage, isDragging ->
-        if (!isDragging) {
+fun <VB : ViewBinding> RecyclerView.addOnRefreshListener(delayed: Long = 200L, offsetThreshold: Int = 800, onRefreshProgress: VB.(Float) -> Unit, onRefreshFinish: VB.() -> Unit) {
+    addFastListener { postDelayed({ findRefreshViewBinding<VB> { smoothScrollBy(0, root.height) } }, 50) }
+    addOnTouchListener(offsetThreshold, { percentage ->
+        findRefreshViewBinding<VB> { onRefreshProgress(this, percentage) }
+    }) { percentage ->
+        findRefreshViewBinding<VB> {
             if (percentage >= 100f) onRefreshFinish()
-            root.postDelayed({
-                val firstVisible = getFirstCompletelyVisiblePosition()
-                if (firstVisible == 0) smoothScrollBy(0, root.height)
-            }, delayed)
+            postDelayed({ if (getFirstCompletelyVisiblePosition() == 0) smoothScrollBy(0, root.height) }, delayed)
         }
     }
-    postDelayed({ findHeaderViewBinding<VB> { smoothScrollBy(0, root.height) } }, 50)
+    postDelayed({ findRefreshViewBinding<VB> { smoothScrollBy(0, root.height) } }, 0)
 }
