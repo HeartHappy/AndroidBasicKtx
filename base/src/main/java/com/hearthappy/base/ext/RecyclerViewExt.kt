@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.base.AbsSpecialAdapter
+import kotlin.math.abs
 
 
 /**
@@ -52,25 +53,39 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
     })
 }
 
-private fun <VB : ViewBinding> RecyclerView.addOnTouchListener(duration: Long, isTopOrBottomBlock: () -> Boolean, block: VB.() -> Unit) {
+private fun <VB : ViewBinding> RecyclerView.addOnTouchListener(offsetThreshold: Int, isTopOrBottomBlock: () -> Boolean, percentageListener: (Float) -> Unit, block: VB.(Float, Boolean) -> Unit) {
     var isDragging = false
-    var touchDownTime = 0L
+    var initialY = 0f
+    var currentOffset = 0
+    var clampedPercentage = 0f
     addOnItemTouchListener(object : RecyclerView.OnItemTouchListener {
         override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
             when (e.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    touchDownTime = System.currentTimeMillis()
+                    initialY = e.y
                     isDragging = true
+                    currentOffset = 0
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    if (isDragging) {
+                        val deltaY = (e.y - initialY).toInt()
+                        currentOffset += deltaY
+                        initialY = e.y
+
+                        // 计算当前偏移量相对于阈值的百分比
+                        val percentage = abs(currentOffset).toFloat() / offsetThreshold.toFloat()
+                        clampedPercentage = percentage.coerceIn(0f, 1f) * 100
+                        percentageListener(clampedPercentage) // 无论是否达到阈值，都传递百分比给 block 函数
+                        if (isTopOrBottomBlock() && abs(currentOffset) >= offsetThreshold) {
+                            isDragging = false
+                        }
+                    }
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (isTopOrBottomBlock() && isDragging) {
-                        val elapsedTime = System.currentTimeMillis() - touchDownTime
-                        if (elapsedTime >= duration) { // 超过 duration，触发刷新或者加载操作
-                            post { findHeaderViewBinding<VB> { block() } }
-                        }
-                    }
                     isDragging = false
+                    post { findHeaderViewBinding<VB> { block(clampedPercentage, isDragging) } }
                 }
             }
             return false
@@ -83,7 +98,7 @@ private fun <VB : ViewBinding> RecyclerView.addOnTouchListener(duration: Long, i
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T : ViewBinding> RecyclerView.findFooterViewBinding(delayed: Long = 1000L, block: T.() -> Unit) {
+fun <T : ViewBinding> RecyclerView.findFooterViewBinding(block: T.(AbsSpecialAdapter<*, *>) -> Unit) {
     when (adapter) {
         is AbsSpecialAdapter<*, *> -> {
             val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
@@ -91,12 +106,7 @@ fun <T : ViewBinding> RecyclerView.findFooterViewBinding(delayed: Long = 1000L, 
             if (footerPosition != RecyclerView.NO_POSITION) {
                 val footerViewHolder = findViewHolderForAdapterPosition(footerPosition) as AbsSpecialAdapter<*, *>.FooterViewHolder
                 val vb = footerViewHolder.viewBinding as T
-                block(vb)
-                vb.root.postDelayed({
-                    val visiblePosition = getFirstCompletelyVisiblePosition()
-                    val lastVisiblePosition = getLastCompletelyVisiblePosition()
-                    if (lastVisiblePosition == absSpecialAdapter.getFooterPosition()) smoothScroller(visiblePosition - 1)
-                }, delayed)
+                block(vb, absSpecialAdapter)
             }
         }
 
@@ -105,7 +115,7 @@ fun <T : ViewBinding> RecyclerView.findFooterViewBinding(delayed: Long = 1000L, 
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T : ViewBinding> RecyclerView.findHeaderViewBinding(delayed: Long = 1000L, block: T.() -> Unit) {
+fun <T : ViewBinding> RecyclerView.findHeaderViewBinding(block: T.(AbsSpecialAdapter<*, *>) -> Unit) {
     when (adapter) {
         is AbsSpecialAdapter<*, *> -> {
             val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
@@ -114,12 +124,7 @@ fun <T : ViewBinding> RecyclerView.findHeaderViewBinding(delayed: Long = 1000L, 
                 val headerViewHolder = findViewHolderForAdapterPosition(headerPosition) as? AbsSpecialAdapter<*, *>.HeaderViewHolder
                 headerViewHolder ?: return
                 val vb = headerViewHolder.viewBinding as T
-                block(vb)
-                vb.root.postDelayed({
-                    val firstVisible = getFirstCompletelyVisiblePosition()
-                    val visiblePosition = getLastCompletelyVisiblePosition()
-                    if (firstVisible == 0) smoothScroller(visiblePosition + 1)
-                }, delayed)
+                block(vb, absSpecialAdapter)
             }
         }
     }
@@ -140,21 +145,38 @@ fun RecyclerView.smoothScroller(targetPosition: Int, duration: Int = 100) { // �
     val layoutManager = layoutManager as? LinearLayoutManager
     layoutManager?.startSmoothScroll(object : LinearSmoothScroller(context) {
         override fun calculateTimeForScrolling(dx: Int): Int = duration
-    }.also { it.targetPosition = targetPosition })
+    }.also {
+        it.targetPosition = targetPosition
+    })
 }
 
-fun <VB : ViewBinding> RecyclerView.addLoadMoreListener(block: VB.() -> Unit) {
+fun <VB : ViewBinding> RecyclerView.addOnLoadMoreListener(delayed: Long = 1000L, listener: VB.() -> Unit) {
     addLastListener {
-        findFooterViewBinding<VB> { block() }
+        findFooterViewBinding<VB> { abs ->
+            listener()
+            this.root.postDelayed({
+                val lastVisiblePosition = getLastCompletelyVisiblePosition()
+                val footerHeight = this.root.height
+                if (lastVisiblePosition == abs.getFooterPosition()) smoothScrollBy(0, -footerHeight)
+            }, delayed)
+        }
     }
 }
 
-fun <VB : ViewBinding> RecyclerView.addOnRefreshListener(duration: Long = 50L, block: VB.() -> Unit) {
+
+fun <VB : ViewBinding> RecyclerView.addOnRefreshListener(delayed: Long = 200L, offsetThreshold: Int = 800, onRefreshProgress: VB.( Float) -> Unit, onRefreshFinish: VB.() -> Unit) {
     var isAtTop = false
     addFastListener { isAtTop = true }
-    addOnTouchListener<VB>(duration, { isAtTop }) { block() }
-    postDelayed({
-        val visiblePosition = getLastCompletelyVisiblePosition()
-        smoothScrollToPosition(visiblePosition + 1)
-    }, 50)
+    addOnTouchListener<VB>(offsetThreshold, { isAtTop }, { percentage ->
+        post { findHeaderViewBinding<VB> { onRefreshProgress(this, percentage) } }
+    }) { percentage, isDragging ->
+        if (!isDragging) {
+            if (percentage >= 100f) onRefreshFinish()
+            root.postDelayed({
+                val firstVisible = getFirstCompletelyVisiblePosition()
+                if (firstVisible == 0) smoothScrollBy(0, root.height)
+            }, delayed)
+        }
+    }
+    postDelayed({ findHeaderViewBinding<VB> { smoothScrollBy(0, root.height) } }, 50)
 }

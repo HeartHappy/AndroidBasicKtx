@@ -2,15 +2,16 @@ package com.hearthappy.androidbasiclibrary.example1
 
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample1Binding
 import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
+import com.hearthappy.androidbasiclibrary.databinding.ItemHeaderBinding
 import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
 import com.hearthappy.base.AbsBaseActivity
-import com.hearthappy.base.ext.addLoadMoreListener
+import com.hearthappy.base.ext.addOnLoadMoreListener
+import com.hearthappy.base.ext.addOnRefreshListener
 import com.hearthappy.base.ext.popupWindow
 import com.hearthappy.base.ext.showLocation
 import com.hearthappy.base.interfaces.OnCustomItemClickListener
@@ -63,7 +64,9 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
             }
         })
         btnSettings.setOnClickListener {
-            popupWindow(PopSettingsBinding.inflate(layoutInflater), viewEventListener = {
+
+
+            popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), viewEventListener = {
                 it.apply {
                     btnInit.setOnClickListener { viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }.also { dismiss() } }
                     btnInset.setOnClickListener { example1Adapter.insertData("插入数据:${example1Adapter.list.size}").also { dismiss() } }
@@ -84,22 +87,23 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                         dismiss()
                     }
                 }
-
-            }, width = ViewGroup.LayoutParams.MATCH_PARENT, height = ViewGroup.LayoutParams.MATCH_PARENT).showLocation(root)
+            }).showLocation(root)
         }
 
         var count = 1
-        rvList.addLoadMoreListener<ItemFooterBinding> {
+        rvList.addOnLoadMoreListener<ItemFooterBinding> {
             if (count < 3) {
                 viewModel.ld.value?.let { it1 -> example1Adapter.addData(it1) }
                 count++
             } else {
                 tvFooter.text = "没有更多数据了"
             }
-        } //        rvList.addOnRefreshListener<ItemHeaderBinding> {
-        //            tvHeader.text = "下拉刷新"
-        //            viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }
-        //        }
+        }
+        rvList.addOnRefreshListener<ItemHeaderBinding>(onRefreshProgress = { progress ->
+            tvHeader.text = "下拉刷新:".plus(progress)
+        }, onRefreshFinish = {
+            viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }
+        })
     }
 
     override fun ActivityExample1Binding.initData() {

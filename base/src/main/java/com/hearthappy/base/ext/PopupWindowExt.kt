@@ -6,9 +6,13 @@ import android.transition.Fade
 import android.transition.Transition
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.PopupWindow
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.viewbinding.ViewBinding
 
 
@@ -38,38 +42,33 @@ var pwMap: MutableMap<String, PopupWindow>? = null
  *      10、支持自定义弹窗位置。分别支持：1、相对某个View位置，2、相对整个屏幕位置
  *      11、支持使用场景：Activity、Fragment
  */
-fun <VB : ViewBinding> Activity.popupWindow(viewBinding: VB, width: Int = 0, height: Int = 0, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
-                                            backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
+fun <VB : ViewBinding> AppCompatActivity.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
+                                                     backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
     return handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim, windowType)
 }
 
 fun <VB : ViewBinding> Fragment.popupWindow(
-    viewBinding: VB, width: Int = 0, height: Int = 0, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
+    viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, focusable: Boolean = true, isOutsideTouchable: Boolean = true, //点击布局外是否消失，true：消失
     backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default",
 ): PopupWindow {
-    return requireActivity().handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim, windowType)
+    return (requireActivity() as AppCompatActivity).handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim, windowType)
 }
 
-fun <VB : ViewBinding> Activity.handlerPopupWindow(key: String, viewBinding: VB, width: Int, height: Int, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean, isOutsideTouchable: Boolean, //点击布局外是否消失，true：消失
-                                                   backgroundBlackAlpha: Float, anim: Transition = Fade(), windowType: Int): PopupWindow {
+fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String, viewBinding: VB, width: Int, height: Int, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean, isOutsideTouchable: Boolean, //点击布局外是否消失，true：消失
+                                                            backgroundBlackAlpha: Float, anim: Transition = Fade(), windowType: Int): PopupWindow {
+
     if (pwMap == null) {
         pwMap = mutableMapOf()
+        lifecycle.addObserver(ActivityDestroyObserver())
     }
-    pwMap?.get(key)?.let { //如果缓存有值，则查询当前popup是否在缓存中存在
-        return it
-    }
-
-    //创建PopupWindow
-    return object : PopupWindow(viewBinding.root, width, height, focusable) {
+    return pwMap?.get(key) ?: object : PopupWindow(viewBinding.root, width, height, focusable) {
         override fun dismiss() {
             super.dismiss()
             pwMap?.remove(key)
             setBackgroundBlackAlpha(1f)
         }
     }.run {
-        viewEventListener(this, viewBinding)
-
-        //初始化PopupWindow属性
+        viewEventListener(this, viewBinding) //初始化PopupWindow属性
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //点击屏幕外是否消失
             this.isTouchModal = isOutsideTouchable
         }
@@ -119,3 +118,9 @@ fun Activity.setBackgroundBlackAlpha(backgroundBlackAlpha: Float) {
 data class ShowAtLocation(val relativeView: View, val gravity: Int = Gravity.CENTER, val x: Int = 0, val y: Int = 0)
 
 data class ShowAsDropDown(val anchor: View, val gravity: Int = Gravity.TOP or Gravity.START, val x: Int = 0, val y: Int = 0)
+
+class ActivityDestroyObserver : DefaultLifecycleObserver {
+    override fun onDestroy(owner: LifecycleOwner) { // 当 Activity 销毁时，将 pwMap 置为 null
+        pwMap = null
+    }
+}
