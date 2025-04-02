@@ -2,10 +2,10 @@ package com.hearthappy.base.interfaces
 
 import androidx.viewbinding.ViewBinding
 
-interface OnRefreshListener {
+interface OnRefreshListener<VB : ViewBinding> {
 
-    fun onRefreshProgress(viewBinding: ViewBinding,progress:Float)
+    fun onRefreshProgress(viewBinding: VB,progress:Float)
 
-    fun onRefreshFinish()
+    fun onRefreshFinish(viewBinding: VB)
 
 }

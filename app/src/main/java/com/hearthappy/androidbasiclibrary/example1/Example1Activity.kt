@@ -1,6 +1,5 @@
 package com.hearthappy.androidbasiclibrary.example1
 
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -11,8 +10,6 @@ import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemRefreshBinding
 import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
 import com.hearthappy.base.AbsBaseActivity
-import com.hearthappy.base.ext.addOnLoadMoreListener
-import com.hearthappy.base.ext.addOnRefreshListener
 import com.hearthappy.base.ext.popupWindow
 import com.hearthappy.base.ext.showLocation
 import com.hearthappy.base.interfaces.OnCustomItemClickListener
@@ -36,10 +33,6 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
         rvList.layoutManager = LinearLayoutManager(this@Example1Activity)
         example1Adapter = Example1Adapter()
         rvList.adapter = example1Adapter //屏幕宽高
-        val screenWidth = resources.displayMetrics.widthPixels
-        val screenHeight = resources.displayMetrics.heightPixels
-        Log.d("TAG", "initView: $screenWidth,$screenHeight")
-
     }
 
     override fun ActivityExample1Binding.initListener() {
@@ -67,14 +60,36 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
         btnSettings.setOnClickListener {
             popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), viewEventListener = {
                 it.apply {
-                    btnInit.setOnClickListener { viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }.also { dismiss() } }
-                    btnInset.setOnClickListener { example1Adapter.insertData("插入数据:${example1Adapter.list.size}").also { dismiss() } }
-                    btnInsetTo0.setOnClickListener { example1Adapter.insertData("插入到0数据:${example1Adapter.list.size}", 0).also { dismiss() } }
-                    btnMove.setOnClickListener { example1Adapter.moveData(0, 8).also { dismiss() } }
-                    btnAdd.setOnClickListener { viewModel.ld.value?.let { it1 -> example1Adapter.addData(it1) }.also { dismiss() } }
-                    btnAddTo0.setOnClickListener { viewModel.ld.value?.let { it1 -> example1Adapter.addData(it1, 0) }.also { dismiss() } }
-                    btnRemove.setOnClickListener { example1Adapter.removeData(example1Adapter.list.size - 1).also { dismiss() } }
-                    btnRemoveAll.setOnClickListener { example1Adapter.removeAll().also { dismiss() } }
+                    btnInit.setOnClickListener {
+                        viewModel.ld.value?.let { it1 ->
+                            example1Adapter.initData(it1)
+                        }.also { dismiss() }
+                    }
+                    btnInset.setOnClickListener {
+                        example1Adapter.insertData("插入数据:${example1Adapter.list.size}").also { dismiss() }
+                    }
+                    btnInsetTo0.setOnClickListener {
+                        example1Adapter.insertData("插入到0数据:${example1Adapter.list.size}", 0).also { dismiss() }
+                    }
+                    btnMove.setOnClickListener {
+                        example1Adapter.moveData(0, 8).also { dismiss() }
+                    }
+                    btnAdd.setOnClickListener {
+                        viewModel.ld.value?.let { it1 ->
+                            example1Adapter.addData(it1)
+                        }.also { dismiss() }
+                    }
+                    btnAddTo0.setOnClickListener {
+                        viewModel.ld.value?.let { it1 ->
+                            example1Adapter.addData(it1, 0)
+                        }.also { dismiss() }
+                    }
+                    btnRemove.setOnClickListener {
+                        example1Adapter.removeData(example1Adapter.list.size - 1).also { dismiss() }
+                    }
+                    btnRemoveAll.setOnClickListener {
+                        example1Adapter.removeAll().also { dismiss() }
+                    }
                     btnInsetLayout.setOnClickListener {
                         btnSettings.isActivated = !btnSettings.isActivated
                         if (btnSettings.isActivated) { //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity)/*, CustomItemImpl2(this@Example1Activity), CustomItemImpl3(this@Example1Activity)*/), 3/*, 7, 9*/)//4,9,12
@@ -98,15 +113,19 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                 tvFooter.text = "没有更多数据了"
             }
         }
-        rvList.addOnRefreshListener<ItemRefreshBinding>(onRefreshProgress = { progress ->
-            tvRefresh.text = getString(R.string.pull_down_to_refresh)
-            circularProgress.progress = progress.toInt()
-            if (progress >= 100f) {
-                tvRefresh.text = "松开完成刷新"
-            }
-        }, onRefreshFinish = {
-            viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }
-        })
+        rvList.addOnRefreshListener<ItemRefreshBinding>(
+
+            onRefreshProgress = { progress ->
+                tvRefresh.text = getString(R.string.pull_down_to_refresh)
+                circularProgress.progress = progress.toInt()
+                if (progress >= 100f) {
+                    tvRefresh.text = "松开完成刷新"
+                }
+            }, onRefreshFinish = {
+                viewModel.ld.value?.let { it1 ->
+                    example1Adapter.initData(it1)
+                }
+            })
     }
 
     override fun ActivityExample1Binding.initData() {

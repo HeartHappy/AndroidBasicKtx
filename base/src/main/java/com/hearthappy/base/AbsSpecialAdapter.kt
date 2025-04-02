@@ -164,6 +164,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         notifyItemRangeChanged(0, if (shouldShowEmptyView) 1 else getItemSpecialCount())
     }
 
+
     override fun insertData(data: T) {
         val position = this.list.size
         val virtualPosition = getItemVirtualPosition(position)
@@ -347,7 +348,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         removeAllCustomItemLayout()
         setCustomItemLayout(newLayouts, *newInsetPosition.toIntArray())
     }
-
 
     private fun clearAll() {
         if (list.isNotEmpty()) list.clear()
