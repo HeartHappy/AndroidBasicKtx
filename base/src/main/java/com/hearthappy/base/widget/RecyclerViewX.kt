@@ -26,7 +26,7 @@ class RecyclerViewX : RecyclerView {
 
 
     private fun hideRefreshLayout() {
-        TimeTools.continuousClick(500) {
+        TimeTools.continuousClick(100) {
             postDelayed({
                 findRefreshViewBinding<ViewBinding> {
                     root.invisible()
