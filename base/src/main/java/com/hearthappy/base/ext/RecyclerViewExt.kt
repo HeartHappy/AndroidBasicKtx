@@ -1,12 +1,15 @@
 package com.hearthappy.base.ext
 
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.base.AbsSpecialAdapter
+import java.io.Serializable
 
 
 /**
@@ -39,16 +42,30 @@ fun RecyclerView.addFastListener(block: () -> Unit) {
  */
 fun RecyclerView.addLastListener(block: () -> Unit) {
     var isAtBottom: Boolean
-    addOnScrollListener(object : RecyclerView.OnScrollListener() {
+    addOnScrollListener(object : OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
             if (newState == SCROLL_STATE_IDLE) {
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
+                val lm = recyclerView.layoutManager
+                val itemCount = layoutManager?.itemCount ?: 0
                 if (layoutManager != null) {
-                    val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
-                    val itemCount = layoutManager.itemCount // 检查是否滚动到底部
-                    isAtBottom = lastVisibleItemPosition >= itemCount - 1
-                    if (isAtBottom) post { block() }
+
+                    when (lm) {
+                        is LinearLayoutManager -> {
+                            val lastVisibleItemPosition = lm.findLastVisibleItemPosition()
+                            isAtBottom = lastVisibleItemPosition >= itemCount - 1
+                        }
+                        is GridLayoutManager -> {
+                            val lastVisibleItemPosition = lm.findLastVisibleItemPosition() // 对于网格布局，需要根据列数来判断是否滚动到底部
+                            val spanCount = lm.spanCount
+                            val lastRowStartIndex = (itemCount - 1) / spanCount * spanCount
+                            isAtBottom = lastVisibleItemPosition >= lastRowStartIndex
+                        }
+                        else -> {
+                            isAtBottom = false
+                        }
+                    }
+                    if (isAtBottom) recyclerView.post { block() }
                 }
             }
         }
@@ -121,14 +138,17 @@ fun RecyclerView.getFirstVisiblePosition(): Int {
     return layoutManager?.findFirstVisibleItemPosition() ?: RecyclerView.NO_POSITION
 }
 
-fun RecyclerView.getLastVisiblePosition(): Int {
-    val layoutManager = layoutManager as? LinearLayoutManager
-    return layoutManager?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION
+fun RecyclerView.getLastVisiblePosition(): Serializable {
+    return when (layoutManager) {
+        is LinearLayoutManager -> {  (layoutManager as? LinearLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION}
+        is GridLayoutManager->{  (layoutManager as? GridLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION}
+        else->{  (layoutManager as? StaggeredGridLayoutManager)?.findLastVisibleItemPositions(intArrayOf(0)) ?: RecyclerView.NO_POSITION}
+    }
+
 }
 
 fun RecyclerView.smoothScroller(targetPosition: Int, duration: Int = 100) { // 获取 RecyclerView 的 LayoutManager
     if (targetPosition == RecyclerView.NO_POSITION) return
-    val layoutManager = layoutManager as? LinearLayoutManager
     layoutManager?.startSmoothScroll(object : LinearSmoothScroller(context) {
         override fun calculateTimeForScrolling(dx: Int): Int = duration
     }.also {
