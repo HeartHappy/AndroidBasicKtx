@@ -26,4 +26,4 @@ dependencyResolutionManagement {
 enableFeaturePreview('VERSION_CATALOGS')
 rootProject.name = "AndroidBasicKtx"
 include ':app'
-include ':base'
+include ':basic'

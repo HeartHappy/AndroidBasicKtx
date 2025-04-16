@@ -9,13 +9,13 @@ import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
 import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemRefreshBinding
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl
-import com.hearthappy.base.AbsBaseActivity
-import com.hearthappy.base.ext.createActivityCircularReveal
-import com.hearthappy.base.ext.disappearCircularReveal
-import com.hearthappy.base.interfaces.OnCustomItemClickListener
-import com.hearthappy.base.interfaces.OnFooterClickListener
-import com.hearthappy.base.interfaces.OnHeaderClickListener
-import com.hearthappy.base.interfaces.OnItemClickListener
+import com.hearthappy.basic.AbsBaseActivity
+import com.hearthappy.basic.ext.createActivityCircularReveal
+import com.hearthappy.basic.ext.disappearCircularReveal
+import com.hearthappy.basic.interfaces.OnCustomItemClickListener
+import com.hearthappy.basic.interfaces.OnFooterClickListener
+import com.hearthappy.basic.interfaces.OnHeaderClickListener
+import com.hearthappy.basic.interfaces.OnItemClickListener
 
 class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
     private lateinit var viewModel: MainViewModel

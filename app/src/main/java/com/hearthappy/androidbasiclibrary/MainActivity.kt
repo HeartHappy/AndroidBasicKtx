@@ -3,8 +3,8 @@ package com.hearthappy.androidbasiclibrary
 import com.hearthappy.androidbasiclibrary.databinding.ActivityMainBinding
 import com.hearthappy.androidbasiclibrary.example1.Example1Activity
 import com.hearthappy.androidbasiclibrary.example2.Example2Activity
-import com.hearthappy.base.AbsBaseActivity
-import com.hearthappy.base.ext.findViewCoordinates
+import com.hearthappy.basic.AbsBaseActivity
+import com.hearthappy.basic.ext.findViewCoordinates
 
 class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
 

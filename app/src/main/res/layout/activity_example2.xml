@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".example2.Example2Activity">
 
-    <com.hearthappy.base.widget.RecyclerViewX
+    <com.hearthappy.basic.widget.RecyclerViewX
         android:id="@+id/rvList"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_width="match_parent"

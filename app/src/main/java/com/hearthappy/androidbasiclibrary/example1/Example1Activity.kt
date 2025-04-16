@@ -9,13 +9,13 @@ import com.hearthappy.androidbasiclibrary.databinding.ActivityExample1Binding
 import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemRefreshBinding
 import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
-import com.hearthappy.base.AbsBaseActivity
-import com.hearthappy.base.ext.popupWindow
-import com.hearthappy.base.ext.showLocation
-import com.hearthappy.base.interfaces.OnCustomItemClickListener
-import com.hearthappy.base.interfaces.OnFooterClickListener
-import com.hearthappy.base.interfaces.OnHeaderClickListener
-import com.hearthappy.base.interfaces.OnItemClickListener
+import com.hearthappy.basic.AbsBaseActivity
+import com.hearthappy.basic.ext.popupWindow
+import com.hearthappy.basic.ext.showLocation
+import com.hearthappy.basic.interfaces.OnCustomItemClickListener
+import com.hearthappy.basic.interfaces.OnFooterClickListener
+import com.hearthappy.basic.interfaces.OnHeaderClickListener
+import com.hearthappy.basic.interfaces.OnItemClickListener
 
 class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
     private lateinit var viewModel: MainViewModel

@@ -2,12 +2,10 @@ package com.hearthappy.androidbasiclibrary.example1
 
 import android.content.Context
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import com.hearthappy.androidbasiclibrary.R
 import com.hearthappy.androidbasiclibrary.databinding.ItemInsetViewBinding
-import com.hearthappy.base.interfaces.ICustomItemSupper
+import com.hearthappy.basic.interfaces.ICustomItemSupper
 
 class CustomItemImpl2(val context: Context):ICustomItemSupper<ItemInsetViewBinding> {
 
