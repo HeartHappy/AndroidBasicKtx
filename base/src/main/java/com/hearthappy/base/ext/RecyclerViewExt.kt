@@ -25,24 +25,32 @@ fun RecyclerView.addFastListener(block: () -> Unit) {
             super.onScrollStateChanged(recyclerView, newState)
             if (newState == SCROLL_STATE_IDLE) {
                 val lm = recyclerView.layoutManager
-                val itemCount = layoutManager?.itemCount ?: 0
                 if (lm != null) {
                     when (lm) {
                         is LinearLayoutManager -> {
                             val firstVisibleItemPosition = lm.findFirstVisibleItemPosition()
-                            isFirstItemVisible =firstVisibleItemPosition == 0
+                            isFirstItemVisible = firstVisibleItemPosition == 0
                         }
                         is GridLayoutManager -> {
                             val firstVisibleItemPosition = lm.findFirstVisibleItemPosition() // 对于网格布局，需要根据列数来判断是否滚动到底部
+                            isFirstItemVisible = firstVisibleItemPosition == 0
+                        }
+                        is StaggeredGridLayoutManager -> {
+                            val firstVisibleItemPositions: IntArray = lm.findFirstVisibleItemPositions(null)
+                            var firstVisibleItemPosition = Int.MAX_VALUE
+                            for (position in firstVisibleItemPositions) {
+                                if (position < firstVisibleItemPosition) {
+                                    firstVisibleItemPosition = position
+                                }
+                            }
                             isFirstItemVisible = firstVisibleItemPosition == 0
                         }
                         else -> {
                             isFirstItemVisible = false
                         }
                     }
-                    if (isFirstItemVisible) block()
-//                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition() // 检查是否滚动到顶部，第一个 item 完全可见
-//                    isFirstItemVisible = firstVisibleItemPosition == 0
+                    if (isFirstItemVisible) block() //                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition() // 检查是否滚动到顶部，第一个 item 完全可见
+                    //                    isFirstItemVisible = firstVisibleItemPosition == 0
 
                 }
             }
@@ -63,16 +71,20 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
             if (newState == SCROLL_STATE_IDLE) {
                 val lm = recyclerView.layoutManager
                 val itemCount = layoutManager?.itemCount ?: 0
-                if (lm != null) {
-
-                    when (lm) {
+                lm?.let {
+                    when (it) {
                         is LinearLayoutManager -> {
-                            val lastVisibleItemPosition = lm.findLastVisibleItemPosition()
+                            val lastVisibleItemPosition = it.findLastVisibleItemPosition()
                             isAtBottom = lastVisibleItemPosition >= itemCount - 1
                         }
+                        is StaggeredGridLayoutManager -> {
+                            val lastVisibleItemPositions = it.findLastVisibleItemPositions(null)
+                            val maxLastVisibleItemPosition = lastVisibleItemPositions.maxOrNull() ?: 0
+                            isAtBottom = maxLastVisibleItemPosition >= itemCount - 1
+                        }
                         is GridLayoutManager -> {
-                            val lastVisibleItemPosition = lm.findLastVisibleItemPosition() // 对于网格布局，需要根据列数来判断是否滚动到底部
-                            val spanCount = lm.spanCount
+                            val lastVisibleItemPosition = it.findLastVisibleItemPosition() // 对于网格布局，需要根据列数来判断是否滚动到底部
+                            val spanCount = it.spanCount
                             val lastRowStartIndex = (itemCount - 1) / spanCount * spanCount
                             isAtBottom = lastVisibleItemPosition >= lastRowStartIndex
                         }
@@ -80,7 +92,7 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
                             isAtBottom = false
                         }
                     }
-                    if (isAtBottom) recyclerView.post { block() }
+                    if (isAtBottom) block()
                 }
             }
         }
@@ -155,11 +167,16 @@ fun RecyclerView.getFirstVisiblePosition(): Int {
 
 fun RecyclerView.getLastVisiblePosition(): Serializable {
     return when (layoutManager) {
-        is LinearLayoutManager -> {  (layoutManager as? LinearLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION}
-        is GridLayoutManager->{  (layoutManager as? GridLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION}
-        else->{  (layoutManager as? StaggeredGridLayoutManager)?.findLastVisibleItemPositions(intArrayOf(0)) ?: RecyclerView.NO_POSITION}
+        is LinearLayoutManager -> {
+            (layoutManager as? LinearLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION
+        }
+        is StaggeredGridLayoutManager -> {
+            (layoutManager as? StaggeredGridLayoutManager)?.findLastVisibleItemPositions(null)?.maxOrNull() ?: RecyclerView.NO_POSITION
+        }
+        else -> {
+            (layoutManager as? GridLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION
+        }
     }
-
 }
 
 fun RecyclerView.smoothScroller(targetPosition: Int, duration: Int = 100) { // 获取 RecyclerView 的 LayoutManager

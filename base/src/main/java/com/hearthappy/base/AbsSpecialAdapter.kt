@@ -1,8 +1,10 @@
 package com.hearthappy.base
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.base.ext.findInterfaceInflate
 import com.hearthappy.base.interfaces.ICustomItemSupper
@@ -22,7 +24,7 @@ import java.util.Collections
  * Created Date: 2025/3/7
  * @author ChenRui
  * ClassDescription：特殊适配，支持头、尾、空、刷新以及插入自定义布局。AbsSpecialAdapter<ViewBinding类型,数据类型>()
- * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport接口
+ * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport、接口
  */
 
 @Suppress("UNCHECKED_CAST")
@@ -43,6 +45,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var customItemSupperMap = mutableMapOf<Int, ICustomItemSupper<*>>() //推算的索引，布局接口实现
     private var customTransformMap = mutableMapOf<Int, Int>() //推算的索引,原索引
     private lateinit var transformPositions: List<Int> //返回推算的索引集合
+    private var isRefreshFull = false
+    private var isHeaderFull = false
+    private var isFooterFull = false
+    private var isCustomFull = false
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -67,37 +73,62 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is AbsSpecialAdapter<*, *>.EmptyViewHolder -> {
-                holder.viewBinding.root.setOnClickListener { onEmptyViewClickListener?.onEmptyViewClick(it, position) }
-                callBindMethod(this, holder.viewBinding, BIND_EMPTY)
+                holder.viewBinding.apply {
+                    root.setOnClickListener { onEmptyViewClickListener?.onEmptyViewClick(it, position) }
+                    callBindMethod(this@AbsSpecialAdapter, this, BIND_EMPTY)
+                }
             }
 
             is AbsSpecialAdapter<*, *>.RefreshViewHolder -> {
-                callBindMethod(this, holder.viewBinding, BIND_REFRESH)
+                holder.viewBinding.apply {
+                    setItemFull(root, isRefreshFull)
+                    callBindMethod(this@AbsSpecialAdapter, this, BIND_REFRESH)
+                }
             }
 
             is AbsSpecialAdapter<*, *>.HeaderViewHolder -> {
-                holder.viewBinding.root.setOnClickListener { onHeaderClickListener?.onHeaderClick(it, position) }
-                callBindMethod(this, holder.viewBinding, BIND_HEAD)
+                holder.viewBinding.apply {
+                    setItemFull(root, isHeaderFull)
+                    root.setOnClickListener { onHeaderClickListener?.onHeaderClick(it, position) }
+                    callBindMethod(this@AbsSpecialAdapter, this, BIND_HEAD)
+                }
             }
 
             is AbsSpecialAdapter<*, *>.ItemViewHolder -> {
                 val listPosition = getItemListPosition(position)
-                holder.viewBinding.root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition], position, listPosition) }
-                (holder.viewBinding as VB).bindViewHolder(list[listPosition], listPosition)
+                holder.viewBinding.apply {
+                    root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition], position, listPosition) }
+                    (this as VB).bindViewHolder(list[listPosition], listPosition)
+                }
             }
 
             is AbsSpecialAdapter<*, *>.CustomItemViewHolder -> {
                 val customPosition = customTransformMap[position] ?: -1
-                holder.viewBinding.root.setOnClickListener { onCustomItemClickListener?.onInsetItemClick(it, position, customPosition) }
-                customItemSupperMap[position]?.let { callCustomBindMethod(it, holder.viewBinding, customPosition = customPosition) }
+                holder.viewBinding.apply {
+                    setItemFull(root, isCustomFull)
+                    root.setOnClickListener { onCustomItemClickListener?.onInsetItemClick(it, position, customPosition) }
+                    customItemSupperMap[position]?.let { callCustomBindMethod(it, this, customPosition = customPosition) }
+                }
             }
 
             is AbsSpecialAdapter<*, *>.FooterViewHolder -> {
-                holder.viewBinding.root.setOnClickListener { onFooterClickListener?.onFooterClick(it, position) }
-                callBindMethod(this, holder.viewBinding, BIND_FOOTER)
+                holder.viewBinding.apply {
+                    setItemFull(root, isFooterFull)
+                    root.setOnClickListener { onFooterClickListener?.onFooterClick(it, position) }
+                    callBindMethod(this@AbsSpecialAdapter, this, BIND_FOOTER)
+                }
             }
 
             else -> Unit
+        }
+    }
+
+    private fun setItemFull(view: View, isFull: Boolean) {
+        if (isFull) {
+            val layoutParams = view.layoutParams as? StaggeredGridLayoutManager.LayoutParams
+            layoutParams ?: return
+            layoutParams.isFullSpan = true
+            view.layoutParams = layoutParams
         }
     }
 
@@ -146,6 +177,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     }
 
 
+    override fun initData(list: List<T>) {
+        initData(list, true)
+    }
+
     /**
      * 调用数据初始化，如果先前数据与更新数据不一致，则会移除先移除先前数据，在将新数据更新
      * @param list List<T>
@@ -156,7 +191,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
                 removeAllCustomItemLayout()
             }
             getItemSpecialCount().also {
-                clearAll(isClearCustomLayout) //                notifyItemRangeRemoved(0, it)
+                clearAll(isClearCustomLayout)
+                if (this.list.size != list.size) notifyItemRangeRemoved(0, it)
                 notifyItemRangeChanged(0, it)
             }
         }
@@ -360,6 +396,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             if (customItemSupperMap.isNotEmpty()) customItemSupperMap.clear()
             creatorCount = 0
         }
+    }
+
+    fun setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true) {
+        this.isRefreshFull = isRefreshFull
+        this.isHeaderFull = isHeaderFull
+        this.isFooterFull = isFooterFull
+        this.isCustomFull = isCustomFull
     }
 
     inner class RefreshViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)

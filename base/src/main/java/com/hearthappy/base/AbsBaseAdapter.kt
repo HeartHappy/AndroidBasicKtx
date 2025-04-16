@@ -29,7 +29,11 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
 
     open fun initData(list: List<T>) {
         if (list.isEmpty()) return
-        if (this.list.isNotEmpty()) this.list.clear()
+        if (this.list.isNotEmpty()){
+            val size = this.list.size
+            this.list.clear()
+            notifyItemRangeRemoved(0,size)
+        }
         this.list.addAll(list)
         notifyItemRangeChanged(0, list.size)
     }

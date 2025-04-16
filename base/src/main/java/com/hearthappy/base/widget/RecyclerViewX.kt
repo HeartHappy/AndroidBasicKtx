@@ -2,13 +2,15 @@ package com.hearthappy.base.widget
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.base.AbsSpecialAdapter
 import com.hearthappy.base.ext.addFastListener
 import com.hearthappy.base.ext.addLastListener
-import com.hearthappy.base.ext.bindSpecialAdapter
 import com.hearthappy.base.ext.findFooterViewBinding
 import com.hearthappy.base.ext.findRefreshViewBinding
 import com.hearthappy.base.ext.getLastVisiblePosition
@@ -42,6 +44,11 @@ class RecyclerViewX : RecyclerView {
         adapterDataObserver?.let { getAdapter()?.unregisterAdapterDataObserver(it) }
         adapter ?: return
         adapterDataObserver = object : AdapterDataObserver() {
+            override fun onChanged() {
+                super.onChanged()
+                Log.d("TAG", "onChanged: ")
+            }
+
             override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) {
                 super.onItemRangeChanged(positionStart, itemCount, payload) // 部分数据更新时调用，携带有效负载
                 onAdapterDataChanged(positionStart, itemCount)
@@ -99,6 +106,33 @@ class RecyclerViewX : RecyclerView {
             override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
             }
         })
+    }
+
+
+    fun setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true) {
+        val specialAdapter = adapter as? AbsSpecialAdapter<*, *>
+        specialAdapter ?: return
+        when (layoutManager) {
+            is GridLayoutManager -> {
+                val gridLayoutManager = layoutManager as GridLayoutManager
+                val spanCount = gridLayoutManager.spanCount
+                gridLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                    override fun getSpanSize(position: Int): Int {
+                        return when {
+                            specialAdapter.hasRefreshImpl() && position == specialAdapter.getRefreshPosition() && isRefreshFull -> spanCount
+                            specialAdapter.hasHeaderImpl() && position == specialAdapter.getHeaderPosition() && isHeaderFull -> spanCount
+                            specialAdapter.hasFooterImpl() && position == specialAdapter.getFooterPosition() && isFooterFull -> spanCount
+                            specialAdapter.getCustomPositions().contains(position) && isCustomFull -> spanCount
+                            else -> 1
+                        }
+                    }
+                }
+            }
+            is StaggeredGridLayoutManager -> {
+                specialAdapter.setOccupySpace(isRefreshFull, isHeaderFull, isFooterFull, isCustomFull)
+            }
+            else -> {}
+        }
     }
 
     fun <VB : ViewBinding> addOnLoadMoreListener(delayed: Long = 50L, listener: VB.() -> Unit) {

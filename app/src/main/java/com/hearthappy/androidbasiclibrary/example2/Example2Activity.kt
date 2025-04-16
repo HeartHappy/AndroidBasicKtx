@@ -2,7 +2,7 @@ package com.hearthappy.androidbasiclibrary.example2
 
 import android.view.View
 import android.widget.Toast
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.R
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
@@ -10,7 +10,6 @@ import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemRefreshBinding
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl
 import com.hearthappy.base.AbsBaseActivity
-import com.hearthappy.base.ext.bindSpecialAdapter
 import com.hearthappy.base.ext.createActivityCircularReveal
 import com.hearthappy.base.ext.disappearCircularReveal
 import com.hearthappy.base.interfaces.OnCustomItemClickListener
@@ -34,9 +33,10 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         createActivityCircularReveal(500, coordinates.first.toInt(), coordinates.second.toInt())
         viewModel = getViewModel(MainViewModel::class.java)
         example2Adapter = Example2Adapter()
-        val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false).apply { bindSpecialAdapter(example2Adapter) }
+        val gridLayoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL) //        val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager
         rvList.adapter = example2Adapter
+        rvList.setOccupySpace()
     }
 
     override fun ActivityExample2Binding.initListener() {
@@ -72,19 +72,17 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
             }
         }
 
-        rvList.addOnRefreshListener<ItemRefreshBinding>(
-
-            onRefreshProgress = { progress ->
-                tvRefresh.text = getString(R.string.pull_down_to_refresh)
-                circularProgress.progress = progress.toInt()
-                if (progress >= 100f) {
-                    tvRefresh.text = "松开完成刷新"
-                }
-            }, onRefreshFinish = {
-                viewModel.ld.value?.let { it1 ->
-                    example2Adapter.initData(it1,true)
-                }
-            })
+        rvList.addOnRefreshListener<ItemRefreshBinding>(onRefreshProgress = { progress ->
+            tvRefresh.text = getString(R.string.pull_down_to_refresh)
+            circularProgress.progress = progress.toInt()
+            if (progress >= 100f) {
+                tvRefresh.text = "松开完成刷新"
+            }
+        }, onRefreshFinish = {
+            viewModel.ld.value?.let { it1 ->
+                example2Adapter.initData(it1, true)
+            }
+        })
     }
 
     override fun ActivityExample2Binding.initData() {

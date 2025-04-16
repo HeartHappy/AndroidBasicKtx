@@ -14,10 +14,6 @@ import com.hearthappy.base.interfaces.ICustomItemSupper
 class CustomItemImpl(val context: Context):ICustomItemSupper<ItemInsetViewBinding> {
 
     override fun ItemInsetViewBinding.bindCustomViewHolder(position:Int) {
-        root.layoutParams.apply {
-            width=ConstraintLayout.LayoutParams.MATCH_PARENT
-            height=30.dp2px()
-        }
         ivEmptyDefault.text="我是插入的布局"
         ivEmptyDefault.setTextColor(ContextCompat.getColor(context, R.color.blue))
     }
