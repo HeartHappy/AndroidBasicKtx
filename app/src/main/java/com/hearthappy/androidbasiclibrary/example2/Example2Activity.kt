@@ -3,7 +3,6 @@ package com.hearthappy.androidbasiclibrary.example2
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.R
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
@@ -35,7 +34,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         createActivityCircularReveal(500, coordinates.first.toInt(), coordinates.second.toInt())
         viewModel = getViewModel(MainViewModel::class.java)
         example2Adapter = Example2Adapter()
-        val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, LinearLayoutManager.VERTICAL, false).apply { bindSpecialAdapter(example2Adapter) }
+        val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false).apply { bindSpecialAdapter(example2Adapter) }
         rvList.layoutManager = gridLayoutManager
         rvList.adapter = example2Adapter
     }
@@ -83,7 +82,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
                 }
             }, onRefreshFinish = {
                 viewModel.ld.value?.let { it1 ->
-                    example2Adapter.initData(it1)
+                    example2Adapter.initData(it1,true)
                 }
             })
     }

@@ -1,6 +1,8 @@
 package com.hearthappy.base.ext
 
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.hearthappy.base.AbsSpecialAdapter
 
 /**
@@ -20,4 +22,57 @@ fun GridLayoutManager.bindSpecialAdapter(specialAdapter: AbsSpecialAdapter<*, *>
             }
         }
     }
+}
+fun StaggeredGridLayoutManager.bindSpecialAdapter(rv: RecyclerView, specialAdapter: AbsSpecialAdapter<*, *>, isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true){
+    // 监听 RecyclerView 的视图绑定事件，在绑定 ViewHolder 时设置布局参数
+    specialAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+        override fun onChanged() {
+            super.onChanged()
+            rv.post {
+                rv.findViewHolderForAdapterPosition(0)?.itemView?.let { view ->
+                    val layoutParams = view.layoutParams as? StaggeredGridLayoutManager.LayoutParams
+                    if (specialAdapter.hasRefreshImpl() && isRefreshFull) {
+                        layoutParams?.isFullSpan = true
+                    } else {
+                        layoutParams?.isFullSpan = false
+                    }
+                    view.layoutParams = layoutParams
+                }
+                // 处理 header
+                if (specialAdapter.hasHeaderImpl() && specialAdapter.hasRefreshImpl()) {
+                    rv.findViewHolderForAdapterPosition(1)?.itemView?.let { view ->
+                        val layoutParams = view.layoutParams as? StaggeredGridLayoutManager.LayoutParams
+                        if (isHeaderFull) {
+                            layoutParams?.isFullSpan = true
+                        } else {
+                            layoutParams?.isFullSpan = false
+                        }
+                        view.layoutParams = layoutParams
+                    }
+                }
+                // 处理 footer
+                rv.findViewHolderForAdapterPosition(itemCount - 1)?.itemView?.let { view ->
+                    val layoutParams = view.layoutParams as? StaggeredGridLayoutManager.LayoutParams
+                    if (specialAdapter.hasFooterImpl() && isFooterFull) {
+                        layoutParams?.isFullSpan = true
+                    } else {
+                        layoutParams?.isFullSpan = false
+                    }
+                    view.layoutParams = layoutParams
+                }
+                // 处理自定义位置
+                specialAdapter.getCustomPositions().forEach { position ->
+                    rv.findViewHolderForAdapterPosition(position)?.itemView?.let { view ->
+                        val layoutParams = view.layoutParams as? StaggeredGridLayoutManager.LayoutParams
+                        if (isCustomFull) {
+                            layoutParams?.isFullSpan = true
+                        } else {
+                            layoutParams?.isFullSpan = false
+                        }
+                        view.layoutParams = layoutParams
+                    }
+                }
+            }
+        }
+    })
 }

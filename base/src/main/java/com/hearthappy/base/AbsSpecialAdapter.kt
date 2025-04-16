@@ -150,12 +150,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
      * 调用数据初始化，如果先前数据与更新数据不一致，则会移除先移除先前数据，在将新数据更新
      * @param list List<T>
      */
-    override fun initData(list: List<T>) {
+    fun initData(list: List<T>, isClearCustomLayout: Boolean = true) {
         if (this.list.isNotEmpty() || customTransformMap.isNotEmpty()) {
-            removeAllCustomItemLayout()
+            if (isClearCustomLayout) {
+                removeAllCustomItemLayout()
+            }
             getItemSpecialCount().also {
-                clearAll()
-                notifyItemRangeRemoved(0, it)
+                clearAll(isClearCustomLayout) //                notifyItemRangeRemoved(0, it)
                 notifyItemRangeChanged(0, it)
             }
         }
@@ -206,7 +207,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             notifyItemRangeRemoved(headerOffset, size + customTransformMap.size)
             if (hasFooterImpl()) notifyItemRemoved(footerOffset)
             shouldShowEmptyView = true
-            clearAll()
+            clearAll(true)
             notifyItemChanged(if (hasEmptyViewImpl()) 1 else 0)
         }
     }
@@ -313,6 +314,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     fun removeAllCustomItemLayout() {
         if (customTransformMap.isNotEmpty()) {
+            transformPositions = emptyList()
             removeEntries(customTransformMap, customItemPositions.toSet()) { notifyItemRemoved(it) }
             notifyItemRangeChanged(headerOffset, getItemSpecialCount())
         }
@@ -349,13 +351,15 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         setCustomItemLayout(newLayouts, *newInsetPosition.toIntArray())
     }
 
-    private fun clearAll() {
+    private fun clearAll(isClearCustomLayout: Boolean) {
         if (list.isNotEmpty()) list.clear()
-        if (customItemPositions.isNotEmpty()) customItemPositions.clear()
-        if (customItemLayouts.isNotEmpty()) customItemLayouts.clear()
-        if (customTransformMap.isNotEmpty()) customTransformMap.clear()
-        if (customItemSupperMap.isNotEmpty()) customItemSupperMap.clear()
-        creatorCount = 0
+        if (isClearCustomLayout) {
+            if (customItemPositions.isNotEmpty()) customItemPositions.clear()
+            if (customItemLayouts.isNotEmpty()) customItemLayouts.clear()
+            if (customTransformMap.isNotEmpty()) customTransformMap.clear()
+            if (customItemSupperMap.isNotEmpty()) customItemSupperMap.clear()
+            creatorCount = 0
+        }
     }
 
     inner class RefreshViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)

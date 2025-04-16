@@ -24,11 +24,26 @@ fun RecyclerView.addFastListener(block: () -> Unit) {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
             if (newState == SCROLL_STATE_IDLE) {
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager?
-                if (layoutManager != null) {
-                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition() // 检查是否滚动到顶部，第一个 item 完全可见
-                    isFirstItemVisible = firstVisibleItemPosition == 0
+                val lm = recyclerView.layoutManager
+                val itemCount = layoutManager?.itemCount ?: 0
+                if (lm != null) {
+                    when (lm) {
+                        is LinearLayoutManager -> {
+                            val firstVisibleItemPosition = lm.findFirstVisibleItemPosition()
+                            isFirstItemVisible =firstVisibleItemPosition == 0
+                        }
+                        is GridLayoutManager -> {
+                            val firstVisibleItemPosition = lm.findFirstVisibleItemPosition() // 对于网格布局，需要根据列数来判断是否滚动到底部
+                            isFirstItemVisible = firstVisibleItemPosition == 0
+                        }
+                        else -> {
+                            isFirstItemVisible = false
+                        }
+                    }
                     if (isFirstItemVisible) block()
+//                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition() // 检查是否滚动到顶部，第一个 item 完全可见
+//                    isFirstItemVisible = firstVisibleItemPosition == 0
+
                 }
             }
         }
@@ -48,7 +63,7 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
             if (newState == SCROLL_STATE_IDLE) {
                 val lm = recyclerView.layoutManager
                 val itemCount = layoutManager?.itemCount ?: 0
-                if (layoutManager != null) {
+                if (lm != null) {
 
                     when (lm) {
                         is LinearLayoutManager -> {

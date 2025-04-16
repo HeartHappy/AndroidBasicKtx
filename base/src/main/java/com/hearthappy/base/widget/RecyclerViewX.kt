@@ -5,8 +5,10 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
+import com.hearthappy.base.AbsSpecialAdapter
 import com.hearthappy.base.ext.addFastListener
 import com.hearthappy.base.ext.addLastListener
+import com.hearthappy.base.ext.bindSpecialAdapter
 import com.hearthappy.base.ext.findFooterViewBinding
 import com.hearthappy.base.ext.findRefreshViewBinding
 import com.hearthappy.base.ext.getLastVisiblePosition
