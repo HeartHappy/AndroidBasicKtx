@@ -20,21 +20,11 @@ import java.io.Serializable
 fun RecyclerView.addFastListener(block: () -> Unit) {
     var isFirstItemVisible: Boolean
     addOnScrollListener(object : OnScrollListener() {
-
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
             if (newState == SCROLL_STATE_IDLE) {
-                val lm = recyclerView.layoutManager
-                if (lm != null) {
-                    when (lm) {
-                        is LinearLayoutManager -> {
-                            val firstVisibleItemPosition = lm.findFirstVisibleItemPosition()
-                            isFirstItemVisible = firstVisibleItemPosition == 0
-                        }
-                        is GridLayoutManager -> {
-                            val firstVisibleItemPosition = lm.findFirstVisibleItemPosition() // 对于网格布局，需要根据列数来判断是否滚动到底部
-                            isFirstItemVisible = firstVisibleItemPosition == 0
-                        }
+                if (layoutManager != null) {
+                    when (val lm = layoutManager) {
                         is StaggeredGridLayoutManager -> {
                             val firstVisibleItemPositions: IntArray = lm.findFirstVisibleItemPositions(null)
                             var firstVisibleItemPosition = Int.MAX_VALUE
@@ -45,13 +35,19 @@ fun RecyclerView.addFastListener(block: () -> Unit) {
                             }
                             isFirstItemVisible = firstVisibleItemPosition == 0
                         }
+                        is GridLayoutManager -> {
+                            val firstVisibleItemPosition = lm.findFirstVisibleItemPosition() // 对于网格布局，需要根据列数来判断是否滚动到底部
+                            isFirstItemVisible = firstVisibleItemPosition == 0
+                        }
+                        is LinearLayoutManager -> {
+                            val firstVisibleItemPosition = lm.findFirstVisibleItemPosition()
+                            isFirstItemVisible = firstVisibleItemPosition == 0
+                        }
                         else -> {
                             isFirstItemVisible = false
                         }
                     }
-                    if (isFirstItemVisible) block() //                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition() // 检查是否滚动到顶部，第一个 item 完全可见
-                    //                    isFirstItemVisible = firstVisibleItemPosition == 0
-
+                    if (isFirstItemVisible) block()
                 }
             }
         }
@@ -73,10 +69,6 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
                 val itemCount = layoutManager?.itemCount ?: 0
                 lm?.let {
                     when (it) {
-                        is LinearLayoutManager -> {
-                            val lastVisibleItemPosition = it.findLastVisibleItemPosition()
-                            isAtBottom = lastVisibleItemPosition >= itemCount - 1
-                        }
                         is StaggeredGridLayoutManager -> {
                             val lastVisibleItemPositions = it.findLastVisibleItemPositions(null)
                             val maxLastVisibleItemPosition = lastVisibleItemPositions.maxOrNull() ?: 0
@@ -87,6 +79,10 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
                             val spanCount = it.spanCount
                             val lastRowStartIndex = (itemCount - 1) / spanCount * spanCount
                             isAtBottom = lastVisibleItemPosition >= lastRowStartIndex
+                        }
+                        is LinearLayoutManager -> {
+                            val lastVisibleItemPosition = it.findLastVisibleItemPosition()
+                            isAtBottom = lastVisibleItemPosition >= itemCount - 1
                         }
                         else -> {
                             isAtBottom = false
@@ -167,14 +163,14 @@ fun RecyclerView.getFirstVisiblePosition(): Int {
 
 fun RecyclerView.getLastVisiblePosition(): Serializable {
     return when (layoutManager) {
-        is LinearLayoutManager -> {
-            (layoutManager as? LinearLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION
+        is GridLayoutManager -> {
+            (layoutManager as? GridLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION
         }
         is StaggeredGridLayoutManager -> {
             (layoutManager as? StaggeredGridLayoutManager)?.findLastVisibleItemPositions(null)?.maxOrNull() ?: RecyclerView.NO_POSITION
         }
-        else -> {
-            (layoutManager as? GridLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION
+        else-> {
+            (layoutManager as? LinearLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION
         }
     }
 }

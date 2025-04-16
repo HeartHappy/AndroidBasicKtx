@@ -2,7 +2,6 @@ package com.hearthappy.base.widget
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -44,11 +43,6 @@ class RecyclerViewX : RecyclerView {
         adapterDataObserver?.let { getAdapter()?.unregisterAdapterDataObserver(it) }
         adapter ?: return
         adapterDataObserver = object : AdapterDataObserver() {
-            override fun onChanged() {
-                super.onChanged()
-                Log.d("TAG", "onChanged: ")
-            }
-
             override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) {
                 super.onItemRangeChanged(positionStart, itemCount, payload) // 部分数据更新时调用，携带有效负载
                 onAdapterDataChanged(positionStart, itemCount)
