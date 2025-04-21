@@ -80,7 +80,7 @@ class VerticalViewPager : ViewPager {
         override fun run() {
             if (getGlobalVisibleRect(rect)) {
                 ++carouselIndex
-                if (carouselIndex >= childCount) {
+                if (carouselIndex >= Int.MAX_VALUE) {
                     carouselIndex = 0
                 }
                 setCurrentItem(carouselIndex, carouselIndex != 0)

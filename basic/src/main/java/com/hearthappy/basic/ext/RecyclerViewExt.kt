@@ -5,15 +5,49 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.basic.AbsSpecialAdapter
 import java.io.Serializable
 
+fun RecyclerView.addFastCompletelyVisibleListener(block: (Boolean) -> Unit) {
+    addOnScrollListener(object : OnScrollListener() {
+        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+            super.onScrollStateChanged(recyclerView, newState)
+            if(newState==SCROLL_STATE_IDLE){
+                val layoutManager = recyclerView.layoutManager
+                if (layoutManager != null) {
+                    when (layoutManager) {
+                        is StaggeredGridLayoutManager -> {
+                            val firstVisibleItemPositions: IntArray = layoutManager.findFirstCompletelyVisibleItemPositions(null)
+                            var firstVisibleItemPosition = Int.MAX_VALUE
+                            for (position in firstVisibleItemPositions) {
+                                if (position < firstVisibleItemPosition) {
+                                    firstVisibleItemPosition = position
+                                }
+                            }
+                            block(firstVisibleItemPosition == 0)
+                        }
+                        is GridLayoutManager -> {
+                            val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition() // 对于网格布局，需要根据列数来判断是否滚动到底部
+                            block(firstVisibleItemPosition % layoutManager.spanCount == 0)
+                        }
+                        else -> {
+                            val firstVisibleItemPosition = (layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
+                            block(firstVisibleItemPosition == 0)
+                        }
+                    }
+
+                }
+            }
+        }
+    })
+}
 
 /**
- * 监听第一个完全可见Item
+ * 监听第一个可见Item
  * @receiver RecyclerView
  * @param block Function1<Boolean, Unit>
  */
@@ -64,6 +98,7 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
     addOnScrollListener(object : OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
+
             if (newState == SCROLL_STATE_IDLE) {
                 val lm = recyclerView.layoutManager
                 val itemCount = layoutManager?.itemCount ?: 0
@@ -146,20 +181,7 @@ fun <T : ViewBinding> RecyclerView.findFooterViewBinding(block: T.(AbsSpecialAda
     }
 }
 
-fun RecyclerView.getFirstCompletelyVisiblePosition(): Int {
-    val layoutManager = layoutManager as? LinearLayoutManager
-    return layoutManager?.findFirstCompletelyVisibleItemPosition() ?: RecyclerView.NO_POSITION
-}
 
-fun RecyclerView.getLastCompletelyVisiblePosition(): Int {
-    val layoutManager = layoutManager as? LinearLayoutManager
-    return layoutManager?.findLastCompletelyVisibleItemPosition() ?: RecyclerView.NO_POSITION
-}
-
-fun RecyclerView.getFirstVisiblePosition(): Int {
-    val layoutManager = layoutManager as? LinearLayoutManager
-    return layoutManager?.findFirstVisibleItemPosition() ?: RecyclerView.NO_POSITION
-}
 
 fun RecyclerView.getLastVisiblePosition(): Serializable {
     return when (layoutManager) {
@@ -169,7 +191,7 @@ fun RecyclerView.getLastVisiblePosition(): Serializable {
         is StaggeredGridLayoutManager -> {
             (layoutManager as? StaggeredGridLayoutManager)?.findLastVisibleItemPositions(null)?.maxOrNull() ?: RecyclerView.NO_POSITION
         }
-        else-> {
+        else -> {
             (layoutManager as? LinearLayoutManager)?.findLastVisibleItemPosition() ?: RecyclerView.NO_POSITION
         }
     }
