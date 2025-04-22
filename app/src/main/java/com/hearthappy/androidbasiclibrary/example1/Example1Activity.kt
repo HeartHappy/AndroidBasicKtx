@@ -9,6 +9,7 @@ import com.hearthappy.androidbasiclibrary.databinding.ActivityExample1Binding
 import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemRefreshBinding
 import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
+import com.hearthappy.androidbasiclibrary.example2.Example2Activity
 import com.hearthappy.basic.AbsBaseActivity
 import com.hearthappy.basic.ext.popupWindow
 import com.hearthappy.basic.ext.showLocation
@@ -49,6 +50,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
         example1Adapter.setOnHeaderClickListener(object : OnHeaderClickListener {
             override fun onHeaderClick(view: View, position: Int) {
                 Toast.makeText(this@Example1Activity, "我是头部", Toast.LENGTH_SHORT).show()
+                startActivity(Example2Activity::class.java)
             }
         })
 

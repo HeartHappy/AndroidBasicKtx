@@ -8,7 +8,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.hearthappy.basic.widget.VerticalViewPager
+import com.hearthappy.basic.widget.CarouselViewPager
 
 
 fun ViewPager.addListener(onSelect: (Int) -> Unit, onPageScrolled: (Int, Float, Int) -> Unit = { p, po, pop -> }, onPageScrollStateChanged: (Int) -> Unit = {}) {
@@ -62,7 +62,7 @@ fun ViewPager.addCarouselAdapter(fragmentManager: FragmentManager, count: Int, i
             return item(position % count)
         }
     }
-    (this as? VerticalViewPager)?.setCarouse(true)
+    (this as? CarouselViewPager)?.setCarouse(true)
 }
 
 fun ViewPager2.addStateAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle, count: Int, item: (Int) -> Fragment) {
@@ -71,6 +71,7 @@ fun ViewPager2.addStateAdapter(fragmentManager: FragmentManager, lifecycle: Life
         override fun createFragment(position: Int): Fragment = item(position)
     }
 }
+
 
 fun ViewPager2.addListener(onSelect: (Int) -> Unit) {
     registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {

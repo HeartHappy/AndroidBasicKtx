@@ -7,7 +7,6 @@ import com.hearthappy.basic.AbsBaseActivity
 import com.hearthappy.basic.ext.findViewCoordinates
 
 class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
-
     override fun ActivityMainBinding.initData() {
     }
 
@@ -21,11 +20,11 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
         }
     }
 
+
     override fun ActivityMainBinding.initViewModelListener() {
 
     }
 
     override fun ActivityMainBinding.initView() {
     }
-
 }

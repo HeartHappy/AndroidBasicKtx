@@ -1,15 +1,20 @@
 package com.hearthappy.basic.widget
 
 import android.content.Context
-import android.graphics.Rect
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.viewpager.widget.ViewPager
 
-
-class VerticalViewPager : ViewPager {
+/**
+ * Created Date: 2025/4/22
+ * @author ChenRui
+ * ClassDescription：轮播ViewPager
+ */
+class CarouselViewPager : ViewPager {
     private var isSwipeEnabled = false
+    private var isViewVisible = false
 
     constructor(context: Context) : super(context) {
         init()
@@ -21,7 +26,67 @@ class VerticalViewPager : ViewPager {
 
     private fun init() { // The majority of the magic happens here
         setPageTransformer(true, VerticalPageTransformer()) // The easiest way to get rid of the overscroll drawing that happens on the left and right
-        overScrollMode = OVER_SCROLL_NEVER
+        overScrollMode = OVER_SCROLL_NEVER //        (context as? AppCompatActivity)?.lifecycle?.addObserver(activityLifecycleObserver)
+    }
+
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        isViewVisible = visibility == VISIBLE
+    }
+
+
+    override fun canScrollVertically(direction: Int): Boolean {
+        return false
+    }
+
+    override fun canScrollHorizontally(direction: Int): Boolean {
+        return false
+    }
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean { //        val intercepted = super.onInterceptTouchEvent(swapXY(ev))
+        //        swapXY(ev) // return touch coordinates to original reference frame for any child views
+        return isSwipeEnabled && super.onInterceptTouchEvent(ev)
+    }
+
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
+        return isSwipeEnabled && super.onTouchEvent(ev)
+    }
+
+    fun setSwipeEnabled(enabled: Boolean) {
+        this.isSwipeEnabled = enabled
+    }
+
+
+    var carouselIndex = 0
+    var delay = 3000L
+    fun setCarouse(isCarouse: Boolean) {
+        if (isCarouse) {
+            setSwipeEnabled(true)
+            removeCallbacks(carouseTask)
+            postDelayed(carouseTask, delay)
+        }
+    }
+
+    private val carouseTask = object : Runnable {
+        override fun run() {
+            if (isViewVisible) {
+                ++carouselIndex
+                if (carouselIndex >= Int.MAX_VALUE) {
+                    carouselIndex = 0
+                }
+                setCurrentItem(carouselIndex, carouselIndex != 0)
+                Log.d(TAG, "run isViewVisible:${isViewVisible},index: $carouselIndex")
+            }
+            postDelayed(this, delay)
+        }
+    }
+
+    fun startCarouse() {
+        setCarouse(true)
+    }
+
+    fun stopCarouse() {
+        removeCallbacks(carouseTask)
     }
 
     private inner class VerticalPageTransformer : PageTransformer {
@@ -45,54 +110,7 @@ class VerticalViewPager : ViewPager {
         }
     }
 
-    override fun canScrollVertically(direction: Int): Boolean {
-        return false
-    }
-
-    override fun canScrollHorizontally(direction: Int): Boolean {
-        return false
-    }
-
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean { //        val intercepted = super.onInterceptTouchEvent(swapXY(ev))
-        //        swapXY(ev) // return touch coordinates to original reference frame for any child views
-        return isSwipeEnabled && super.onInterceptTouchEvent(ev)
-    }
-
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
-        return isSwipeEnabled && super.onTouchEvent(ev)
-    }
-
-    fun setSwipeEnabled(enabled: Boolean) {
-        this.isSwipeEnabled = enabled
-    }
-
-    val rect = Rect()
-    var carouselIndex = 0
-    var delay = 3000L
-    fun setCarouse(isCarouse: Boolean) {
-        if (isCarouse) {
-            setSwipeEnabled(true)
-            postDelayed(carouseTask, delay)
-        }
-    }
-
-    private val carouseTask = object : Runnable {
-        override fun run() {
-            if (getGlobalVisibleRect(rect)) {
-                ++carouselIndex
-                if (carouselIndex >= Int.MAX_VALUE) {
-                    carouselIndex = 0
-                }
-                setCurrentItem(carouselIndex, carouselIndex != 0)
-            }
-            postDelayed(this, delay)
-        }
-    }
-    fun startCarouse() {
-        setCarouse(true)
-    }
-
-    fun stopCarouse() {
-        removeCallbacks(carouseTask)
+    companion object {
+        private const val TAG = "CarouselViewPager"
     }
 }
