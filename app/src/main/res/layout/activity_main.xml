@@ -6,14 +6,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-    <FrameLayout
-        android:id="@+id/fragmentLayout"
+    <!--<com.hearthappy.basic.widget.CarouselViewPager
+        android:id="@+id/vp"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/btnExample1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />-->
     <Button
         android:id="@+id/btnExample1"
         style="@style/style_button"
@@ -27,15 +27,15 @@
         style="@style/style_button"
         android:layout_width="match_parent"
         android:text="Example2"
-        app:layout_constraintBottom_toTopOf="@+id/bnv"
+        app:layout_constraintBottom_toBottomOf="parent"
          />
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+   <!-- <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bnv"
         android:layout_width="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:menu="@menu/menu_bottom"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"/>-->
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

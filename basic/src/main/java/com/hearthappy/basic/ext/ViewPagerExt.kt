@@ -62,7 +62,7 @@ fun ViewPager.addCarouselAdapter(fragmentManager: FragmentManager, count: Int, i
             return item(position % count)
         }
     }
-    (this as? CarouselViewPager)?.setCarouse(true)
+    (this as? CarouselViewPager)?.startCarouse()
 }
 
 fun ViewPager2.addStateAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle, count: Int, item: (Int) -> Fragment) {

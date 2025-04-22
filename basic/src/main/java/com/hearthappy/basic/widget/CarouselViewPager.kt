@@ -61,8 +61,9 @@ class CarouselViewPager : ViewPager {
     var delay = 3000L
     fun setCarouse(isCarouse: Boolean) {
         if (isCarouse) {
+            carouselIndex = 0
             setSwipeEnabled(true)
-            removeCallbacks(carouseTask)
+            stopCarouse()
             postDelayed(carouseTask, delay)
         }
     }
