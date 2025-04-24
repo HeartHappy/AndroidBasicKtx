@@ -53,11 +53,11 @@ abstract class AbsBaseFragment<VB : ViewBinding> : Fragment() {
 
     abstract fun VB.initView(savedInstanceState: Bundle?)
 
-    abstract fun VB.initData()
+    abstract fun VB.initViewModelListener()
 
     abstract fun VB.initListener()
 
-    abstract fun VB.initViewModelListener()
+    abstract fun VB.initData()
 
     fun showDialogHint(title: String, text: String, themeId: Int = android.R.style.Theme_Material_Dialog, confirm: () -> Unit, cancel: () -> Unit) {
         context?.run {

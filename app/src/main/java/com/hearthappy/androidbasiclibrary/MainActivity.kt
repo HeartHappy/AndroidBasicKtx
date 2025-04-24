@@ -26,5 +26,7 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
     }
 
     override fun ActivityMainBinding.initView() {
+        val url = "http://dongting10.oss-cn-beijing.aliyuncs.com/admin/png/5aa3cfcea145a90d7de7b73f68c35e52.png"
+        ngv.initData(listOf(url/*, url, url, url, url, url, url, url, url, url*/))
     }
 }
