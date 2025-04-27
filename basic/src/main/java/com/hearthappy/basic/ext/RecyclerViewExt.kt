@@ -5,7 +5,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.viewbinding.ViewBinding
@@ -16,7 +15,7 @@ fun RecyclerView.addFastCompletelyVisibleListener(block: (Boolean) -> Unit) {
     addOnScrollListener(object : OnScrollListener() {
         override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
             super.onScrollStateChanged(recyclerView, newState)
-            if(newState==SCROLL_STATE_IDLE){
+            if (newState == SCROLL_STATE_IDLE) {
                 val layoutManager = recyclerView.layoutManager
                 if (layoutManager != null) {
                     when (layoutManager) {
@@ -182,7 +181,6 @@ fun <T : ViewBinding> RecyclerView.findFooterViewBinding(block: T.(AbsSpecialAda
 }
 
 
-
 fun RecyclerView.getLastVisiblePosition(): Serializable {
     return when (layoutManager) {
         is GridLayoutManager -> {
@@ -204,6 +202,40 @@ fun RecyclerView.smoothScroller(targetPosition: Int, duration: Int = 100) { // �
     }.also {
         it.targetPosition = targetPosition
     })
+}
+
+/**
+ * 设置特殊布局是否铺满整行空间
+ * @param isRefreshFull Boolean
+ * @param isHeaderFull Boolean
+ * @param isFooterFull Boolean
+ * @param isCustomFull Boolean
+ */
+fun RecyclerView.setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true, isEmptyFull: Boolean = true) {
+    val specialAdapter = adapter as? AbsSpecialAdapter<*, *>
+    specialAdapter ?: return
+    when (layoutManager) {
+        is GridLayoutManager -> {
+            val gridLayoutManager = layoutManager as GridLayoutManager
+            val spanCount = gridLayoutManager.spanCount
+            gridLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    return when {
+                        specialAdapter.hasRefreshImpl() && position == specialAdapter.getRefreshPosition() && isRefreshFull -> spanCount
+                        specialAdapter.hasHeaderImpl() && position == specialAdapter.getHeaderPosition() && isHeaderFull -> spanCount
+                        specialAdapter.hasFooterImpl() && position == specialAdapter.getFooterPosition() && isFooterFull -> spanCount
+                        specialAdapter.getCustomPositions().contains(position) && isCustomFull -> spanCount
+                        specialAdapter.hasEmptyViewImpl() && position == 0 && isEmptyFull && specialAdapter.itemCount == 1 -> spanCount
+                        else -> 1
+                    }
+                }
+            }
+        }
+        is StaggeredGridLayoutManager -> {
+            specialAdapter.setOccupySpace(isRefreshFull, isHeaderFull, isFooterFull, isCustomFull, isEmptyFull)
+        }
+        else -> {}
+    }
 }
 
 

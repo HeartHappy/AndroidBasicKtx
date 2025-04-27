@@ -49,6 +49,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var isHeaderFull = false
     private var isFooterFull = false
     private var isCustomFull = false
+    private var isEmptyFull = false
+    private var itemRealCount = -1 //真实数量，例如：无限列表，实际显示数量5个，进行轮播时使用
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -74,6 +76,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         when (holder) {
             is AbsSpecialAdapter<*, *>.EmptyViewHolder -> {
                 holder.viewBinding.apply {
+                    setItemFull(root, isEmptyFull)
                     root.setOnClickListener { onEmptyViewClickListener?.onEmptyViewClick(it, position) }
                     callBindMethod(this@AbsSpecialAdapter, this, BIND_EMPTY)
                 }
@@ -96,9 +99,16 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
             is AbsSpecialAdapter<*, *>.ItemViewHolder -> {
                 val listPosition = getItemListPosition(position)
+                if (list.isEmpty()) return
+
                 holder.viewBinding.apply {
                     root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition], position, listPosition) }
-                    (this as VB).bindViewHolder(list[listPosition], listPosition)
+                    if (list.size == itemCount) {
+                        val realPosition = if (listPosition > list.size - 1) list.size - 1 else listPosition
+                        (this as VB).bindViewHolder(list[realPosition], listPosition)
+                    } else if (list.size != itemCount && itemRealCount != -1) {
+                        (this as VB).bindViewHolder(list[listPosition % itemRealCount], listPosition % itemRealCount)
+                    }
                 }
             }
 
@@ -179,6 +189,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     override fun initData(list: List<T>) {
         initData(list, true)
+        itemRealCount = list.size
     }
 
     /**
@@ -302,6 +313,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         return if (hasHeaderImpl() && hasRefreshImpl()) 1 else if (hasHeaderImpl()) 0 else -1
     }
 
+    fun getItemRealCount() = if (itemRealCount == itemCount) -1 else itemRealCount
+
     /**
      * 设置插入布局
      * @param customItemLayouts List<ICustomItemSupper<*>> 插入布局的接口实现集合
@@ -398,11 +411,12 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         }
     }
 
-    fun setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true) {
+    fun setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true, isEmptyFull: Boolean) {
         this.isRefreshFull = isRefreshFull
         this.isHeaderFull = isHeaderFull
         this.isFooterFull = isFooterFull
         this.isCustomFull = isCustomFull
+        this.isEmptyFull = isEmptyFull
     }
 
     inner class RefreshViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
@@ -438,7 +452,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     fun hasRefreshImpl() = this is IRefreshSupport<*>
     fun hasHeaderImpl() = this is IHeaderSupport<*>
     fun hasFooterImpl() = this is IFooterSupport<*>
-    private fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
+    fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
     private fun getIRefreshSupport() = this as IRefreshSupport<ViewBinding>
     private fun getIHeaderSupport() = this as IHeaderSupport<ViewBinding>
     private fun getIFooterSupport() = this as IFooterSupport<ViewBinding>

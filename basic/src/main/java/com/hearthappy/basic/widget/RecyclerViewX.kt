@@ -109,7 +109,7 @@ class RecyclerViewX : RecyclerView {
      * @param isFooterFull Boolean
      * @param isCustomFull Boolean
      */
-    fun setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true) {
+    fun setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true, isEmptyFull: Boolean = true) {
         val specialAdapter = adapter as? AbsSpecialAdapter<*, *>
         specialAdapter ?: return
         when (layoutManager) {
@@ -123,13 +123,14 @@ class RecyclerViewX : RecyclerView {
                             specialAdapter.hasHeaderImpl() && position == specialAdapter.getHeaderPosition() && isHeaderFull -> spanCount
                             specialAdapter.hasFooterImpl() && position == specialAdapter.getFooterPosition() && isFooterFull -> spanCount
                             specialAdapter.getCustomPositions().contains(position) && isCustomFull -> spanCount
+                            specialAdapter.hasEmptyViewImpl() && position == 0 && isEmptyFull && specialAdapter.itemCount == 1 -> spanCount
                             else -> 1
                         }
                     }
                 }
             }
             is StaggeredGridLayoutManager -> {
-                specialAdapter.setOccupySpace(isRefreshFull, isHeaderFull, isFooterFull, isCustomFull)
+                specialAdapter.setOccupySpace(isRefreshFull, isHeaderFull, isFooterFull, isCustomFull, isEmptyFull)
             }
             else -> {}
         }

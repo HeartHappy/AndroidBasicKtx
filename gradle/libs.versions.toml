@@ -44,7 +44,6 @@ androidx-lifecycle-livedata-core-ktx = { group = "androidx.lifecycle", name = "l
 github-viewmodelautomation-annotation = { group = "com.github.HeartHappy.ViewModelAutomationX", name = "annotations", version.ref = "viewModelAutomation" }
 github-viewmodelautomation-ktx = { group = "com.github.HeartHappy.ViewModelAutomationX", name = "vma-ktx", version.ref = "viewModelAutomation" }
 github-viewmodelautomation-processor = { group = "com.github.HeartHappy.ViewModelAutomationX", name = "processor", version.ref = "viewModelAutomation" }
-androidbasicktx = { module = "com.github.HeartHappy:AndroidBasicKtx", version.ref = "androidbasicktx" }
 #androidbasicktx = { group = "com.github.HeartHappy", name = "AndroidBasicKtx", version.ref = "androidbasicktx" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlinReflectVersion" }
 com-github-bumptech-glide-glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }

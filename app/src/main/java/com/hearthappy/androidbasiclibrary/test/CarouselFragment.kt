@@ -4,10 +4,9 @@ import android.os.Bundle
 import com.hearthappy.androidbasiclibrary.databinding.FragmentTestBinding
 import com.hearthappy.basic.AbsBaseFragment
 
-class TestFragment : AbsBaseFragment<FragmentTestBinding>() {
+class CarouselFragment : AbsBaseFragment<FragmentTestBinding>() {
     override fun FragmentTestBinding.initView(savedInstanceState: Bundle?) {
-        arguments?.getInt("index")?.let {
-            tvTitle.text = "$it"
+        arguments?.getInt("index")?.let { //            tvTitle.text = "$it"
         }
     }
 
@@ -21,8 +20,8 @@ class TestFragment : AbsBaseFragment<FragmentTestBinding>() {
     }
 
     companion object {
-        fun newInstance(index: Int): TestFragment {
-            return TestFragment().apply {
+        fun newInstance(index: Int): CarouselFragment {
+            return CarouselFragment().apply {
                 arguments = Bundle().apply {
                     putInt("index", index)
                 }

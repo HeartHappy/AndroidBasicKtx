@@ -42,6 +42,7 @@ fun Class<*>.findInterfaceInflate(container: ViewGroup?, interfaceClazz: Class<*
     throw IllegalArgumentException("Failed to get ViewBinding instance.")
 }
 
+
 @Suppress("UNCHECKED_CAST")
 fun <VB : ViewBinding> Fragment.findFragmentInflate(inflater: LayoutInflater, container: ViewGroup?): VB {
     val type = javaClass.genericSuperclass

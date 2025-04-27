@@ -2,6 +2,7 @@ package com.hearthappy.androidbasiclibrary.example2
 
 import android.view.View
 import android.widget.Toast
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.R
@@ -23,7 +24,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
 
     override fun ActivityExample2Binding.initViewModelListener() {
         viewModel.ld.observe(this@Example2Activity) {
-            example2Adapter.initData(it) //            mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity)), 7)//4,9,12
+            example2Adapter.initData(emptyList()) //            mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity)), 7)//4,9,12
             example2Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity)), 4) //4,9,12
         }
     }
@@ -36,7 +37,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         val gridLayoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL) //        val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager
         rvList.adapter = example2Adapter
-        rvList.setOccupySpace()
+        rvList.setOccupySpace(isEmptyFull = false)
     }
 
     override fun ActivityExample2Binding.initListener() {
