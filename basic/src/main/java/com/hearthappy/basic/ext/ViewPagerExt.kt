@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
-import com.hearthappy.basic.widget.CarouselViewPager
 
 
 fun ViewPager.addListener(onSelect: (Int) -> Unit, onPageScrolled: (Int, Float, Int) -> Unit = { p, po, pop -> }, onPageScrollStateChanged: (Int) -> Unit = {}) {
@@ -54,20 +53,6 @@ fun ViewPager.addAdapter(fragmentManager: FragmentManager, count: Int, item: (In
             return item(position)
         }
     }
-}
-
-
-fun ViewPager.addCarouselAdapter(fragmentManager: FragmentManager, count: Int, item: (Int) -> Fragment) {
-    adapter = object : FragmentStatePagerAdapter(fragmentManager) {
-        override fun getCount(): Int {
-            return Int.MAX_VALUE
-        }
-
-        override fun getItem(position: Int): Fragment {
-            return item(position % count)
-        }
-    }
-    (this as? CarouselViewPager)?.startCarouse()
 }
 
 

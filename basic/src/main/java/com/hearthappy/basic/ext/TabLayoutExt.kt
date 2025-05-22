@@ -9,7 +9,7 @@ import com.hearthappy.basic.model.TabItem
  * @author ChenRui
  * ClassDescription：监听扩展，用于简化代码 ，提高可读性
  */
-fun TabLayout.addListener(onSelect: (TabLayout.Tab) -> Unit, onUnSelect: (TabLayout.Tab) -> Unit, onReselected: (TabLayout.Tab) -> Unit = {}) {
+fun TabLayout.addListener(onSelect: (TabLayout.Tab) -> Unit, onUnSelect: (TabLayout.Tab) -> Unit={}, onReselected: (TabLayout.Tab) -> Unit = {}) {
     addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
         override fun onTabSelected(tab: TabLayout.Tab) {
             onSelect(tab)

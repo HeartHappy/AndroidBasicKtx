@@ -38,8 +38,8 @@ fun TextView.setBackgroundGradient(startColor: Int, endColor: Int) { // 创建�
     background = gradientDrawable
 }
 
-fun TextView.setLinkText(linkText: String, content: String, @ColorRes linkTextColor: Int, isUnderlineText: Boolean = false, @DrawableRes linkIcon: Int = -1, linkIconSize: Int = 14, linkBlock: () -> Unit) { // 加载图标
-    if (linkText.isBlank()) {
+fun TextView.setLinkText(linkText: String?, content: String, @ColorRes linkTextColor: Int, isUnderlineText: Boolean = false, @DrawableRes linkIcon: Int = -1, linkIconSize: Int = 14, linkBlock: () -> Unit) { // 加载图标
+    if (linkText.isNullOrEmpty()) {
         text = content
         return
     }
@@ -51,7 +51,9 @@ fun TextView.setLinkText(linkText: String, content: String, @ColorRes linkTextCo
     }
 
     val clickableSpan: ClickableSpan = object : ClickableSpan() {
-        override fun onClick(widget: View) {linkBlock()}
+        override fun onClick(widget: View) {
+            linkBlock()
+        }
 
         override fun updateDrawState(ds: TextPaint) {
             super.updateDrawState(ds)
