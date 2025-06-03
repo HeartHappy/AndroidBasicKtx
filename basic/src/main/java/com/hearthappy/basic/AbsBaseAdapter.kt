@@ -17,6 +17,7 @@ import java.util.Collections
  * @Describe 万用适配器
  */
 abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mutableListOf()) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    internal var itemRealCount = -1 //真实数量，例如：无限列表，实际显示数量5个，进行轮播时使用
 
     inner class ViewHolder(val viewBinding: VB) : RecyclerView.ViewHolder(viewBinding.root)
 
@@ -27,15 +28,21 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
 
     abstract fun VB.bindViewHolder(data: T, position: Int)
 
+
+    fun initRealItemCount() {
+        itemRealCount = list.size
+    }
+
     open fun initData(list: List<T>) {
         if (list.isEmpty()) return
-        if (this.list.isNotEmpty()){
+        if (this.list.isNotEmpty()) {
             val size = this.list.size
             this.list.clear()
-            notifyItemRangeRemoved(0,size)
+            notifyItemRangeRemoved(0, size)
         }
         this.list.addAll(list)
         notifyItemRangeChanged(0, list.size)
+        initRealItemCount()
     }
 
     open fun insertData(data: T) {
@@ -96,7 +103,7 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
         this.onItemClickListener = onItemClickListener
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = ViewHolder(initViewBinding(parent, viewType)?:byViewBinding(LayoutInflater.from(parent.context),parent))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = ViewHolder(initViewBinding(parent, viewType) ?: byViewBinding(LayoutInflater.from(parent.context), parent))
 
     override fun getItemCount(): Int = list.size
 
@@ -104,8 +111,16 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is AbsBaseAdapter<*, *>.ViewHolder -> {
-                holder.viewBinding.root.setOnClickListener { v -> onItemClickListener?.onItemClick(v, list[position], position, position) }
-                (holder.viewBinding as VB).bindViewHolder(list[position], position)
+                holder.viewBinding.apply {
+                    if (list.size == itemCount) {
+                        root.setOnClickListener { v -> onItemClickListener?.onItemClick(v, list[position], position, position) }
+                        (this as VB).bindViewHolder(list[position], position)
+                    } else if (list.size != itemCount && itemRealCount != -1) {
+                        val realPosition = position % itemRealCount
+                        root.setOnClickListener { v -> onItemClickListener?.onItemClick(v, list[realPosition], realPosition, realPosition) }
+                        (this as VB).bindViewHolder(list[realPosition], realPosition)
+                    }
+                }
             }
 
             else -> Unit
@@ -121,9 +136,9 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
                 val inflateMethod = clazz.getMethod("inflate", LayoutInflater::class.java, ViewGroup::class.java, Boolean::class.java)
                 return inflateMethod.invoke(null, inflater, container, false) as VB
             } catch (e: IllegalAccessException) {
-                Log.e("AbsBaseFragment", "IllegalAccessException: ${e.message}", e)
+                Log.e("AbsBaseAdapter", "IllegalAccessException: ${e.message}", e)
             } catch (e: InvocationTargetException) {
-                Log.e("AbsBaseFragment", "InvocationTargetException: ${e.message}", e)
+                Log.e("AbsBaseAdapter", "InvocationTargetException: ${e.message}", e)
             }
         }
         throw IllegalArgumentException("Failed to get ViewBinding instance.")

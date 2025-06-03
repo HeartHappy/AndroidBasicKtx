@@ -50,7 +50,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var isFooterFull = false
     private var isCustomFull = false
     private var isEmptyFull = false
-    private var itemRealCount = -1 //真实数量，例如：无限列表，实际显示数量5个，进行轮播时使用
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -189,7 +188,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     override fun initData(list: List<T>) {
         initData(list, true)
-        itemRealCount = list.size
+        initRealItemCount()
     }
 
     /**
