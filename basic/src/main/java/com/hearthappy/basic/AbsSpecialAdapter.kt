@@ -1,5 +1,6 @@
 package com.hearthappy.basic
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -157,6 +158,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private fun transformList(inputList: List<Int>): List<Int> = inputList.mapIndexed { index, value -> value + index + if (hasHeaderImpl()) 1 else 0 }
 
     override fun getItemViewType(position: Int): Int { // 计算累积的插入布局偏移量
+        Log.d("TAG", "getItemViewType: $position")
         return when {
             hasHeaderImpl() && position == TYPE_HEADER && (!shouldShowEmptyView || showEmptyAndHeader) -> TYPE_HEADER
             hasEmptyViewImpl() && shouldShowEmptyView -> TYPE_EMPTY
@@ -188,10 +190,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         if (isClearCustomLayout) {
             removeAllCustomItemLayout()
         }
-        notifyItemRangeRemoved(headerOffset, getItemSpecialCount())
+        notifyItemRangeRemoved(0, getItemSpecialCount())
         this.list = list.toMutableList()
         shouldShowEmptyView = list.isEmpty()
-        notifyItemRangeInserted(headerOffset, getItemSpecialCount())
+        notifyItemRangeInserted(0, if(shouldShowEmptyView) headerOffset+1 else getItemSpecialCount())
     }
 
 

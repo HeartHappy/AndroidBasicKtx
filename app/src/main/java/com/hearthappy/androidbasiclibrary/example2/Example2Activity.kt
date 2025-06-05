@@ -23,8 +23,8 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
 
     override fun ActivityExample2Binding.initViewModelListener() {
         viewModel.ld.observe(this@Example2Activity) {
-            example2Adapter.initData(it)
-            example2Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity), CustomItemImpl2(this@Example2Activity), CustomItemImpl3(this@Example2Activity)), 4, 8, 12) //4,9,12
+            example2Adapter.initData(emptyList())
+//            example2Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity), CustomItemImpl2(this@Example2Activity), CustomItemImpl3(this@Example2Activity)), 4, 8, 12) //4,9,12
         }
     }
 
