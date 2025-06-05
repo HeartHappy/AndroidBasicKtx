@@ -8,10 +8,10 @@ import androidx.viewbinding.ViewBinding
  * ClassDescription：特殊适配器的扩展接口
  */
 
-// 下拉刷新布局接口
-interface IRefreshSupport<RB : ViewBinding> {
-    fun RB.bindRefreshViewHolder()
-}
+//// 下拉刷新布局接口
+//interface IRefreshSupport<RB : ViewBinding> {
+//    fun RB.bindRefreshViewHolder()
+//}
 
 // 头部布局接口
 interface IHeaderSupport<HB : ViewBinding> {

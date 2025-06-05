@@ -10,14 +10,13 @@ import com.hearthappy.basic.AbsSpecialAdapter
 import com.hearthappy.basic.interfaces.IEmptyViewSupport
 import com.hearthappy.basic.interfaces.IFooterSupport
 import com.hearthappy.basic.interfaces.IHeaderSupport
-import com.hearthappy.basic.interfaces.IRefreshSupport
 
 /**
  * Created Date: 2025/3/8
  * @author ChenRui
  * ClassDescription：头、尾布局， 则AbsSpecialAdapter<ViewBinding类型,数据类型>()
  */
-class Example1Adapter : AbsSpecialAdapter<ItemListBinding, String>(), IRefreshSupport<ItemRefreshBinding>, IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
+class Example1Adapter : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
 
     override fun ItemListBinding.bindViewHolder(data: String, position: Int) {
         tvTitle.text = data.plus("listPosition:$position")
@@ -36,7 +35,4 @@ class Example1Adapter : AbsSpecialAdapter<ItemListBinding, String>(), IRefreshSu
         ivEmptyDefault.setImageResource(R.mipmap.nd_default)
     }
 
-    override fun ItemRefreshBinding.bindRefreshViewHolder() {
-        tvRefresh.text = "下拉刷新..."
-    }
 }

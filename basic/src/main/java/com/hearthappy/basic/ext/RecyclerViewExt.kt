@@ -1,5 +1,6 @@
 package com.hearthappy.basic.ext
 
+import android.util.Log
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
@@ -130,21 +131,21 @@ fun RecyclerView.addLastListener(block: () -> Unit) {
 }
 
 
-@Suppress("UNCHECKED_CAST")
-fun <T : ViewBinding> RecyclerView.findRefreshViewBinding(block: T.(AbsSpecialAdapter<*, *>) -> Unit) {
-    when (adapter) {
-        is AbsSpecialAdapter<*, *> -> {
-            val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
-            val refreshPosition = absSpecialAdapter.getRefreshPosition()
-            if (refreshPosition != RecyclerView.NO_POSITION) {
-                val refreshViewHolder = findViewHolderForAdapterPosition(refreshPosition) as? AbsSpecialAdapter<*, *>.RefreshViewHolder
-                refreshViewHolder ?: return
-                val vb = refreshViewHolder.viewBinding as T
-                block(vb, absSpecialAdapter)
-            }
-        }
-    }
-}
+//@Suppress("UNCHECKED_CAST")
+//fun <T : ViewBinding> RecyclerView.findRefreshViewBinding(block: T.(AbsSpecialAdapter<*, *>) -> Unit) {
+//    when (adapter) {
+//        is AbsSpecialAdapter<*, *> -> {
+//            val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
+//            val refreshPosition = absSpecialAdapter.getRefreshPosition()
+//            if (refreshPosition != RecyclerView.NO_POSITION) {
+//                val refreshViewHolder = findViewHolderForAdapterPosition(refreshPosition) as? AbsSpecialAdapter<*, *>.RefreshViewHolder
+//                refreshViewHolder ?: return
+//                val vb = refreshViewHolder.viewBinding as T
+//                block(vb, absSpecialAdapter)
+//            }
+//        }
+//    }
+//}
 
 @Suppress("UNCHECKED_CAST")
 fun <T : ViewBinding> RecyclerView.findHeaderViewBinding(block: T.(AbsSpecialAdapter<*, *>) -> Unit) {
@@ -206,12 +207,12 @@ fun RecyclerView.smoothScroller(targetPosition: Int, duration: Int = 100) { // �
 
 /**
  * 设置特殊布局是否铺满整行空间
- * @param isRefreshFull Boolean
  * @param isHeaderFull Boolean
  * @param isFooterFull Boolean
  * @param isCustomFull Boolean
+ * @param isEmptyFull Boolean
  */
-fun RecyclerView.setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true, isEmptyFull: Boolean = true) {
+fun RecyclerView.setOccupySpace(isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true, isEmptyFull: Boolean = true) {
     val specialAdapter = adapter as? AbsSpecialAdapter<*, *>
     specialAdapter ?: return
     when (layoutManager) {
@@ -221,18 +222,17 @@ fun RecyclerView.setOccupySpace(isRefreshFull: Boolean = true, isHeaderFull: Boo
             gridLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int {
                     return when {
-                        specialAdapter.hasRefreshImpl() && position == specialAdapter.getRefreshPosition() && isRefreshFull -> spanCount
                         specialAdapter.hasHeaderImpl() && position == specialAdapter.getHeaderPosition() && isHeaderFull -> spanCount
                         specialAdapter.hasFooterImpl() && position == specialAdapter.getFooterPosition() && isFooterFull -> spanCount
                         specialAdapter.getCustomPositions().contains(position) && isCustomFull -> spanCount
-                        specialAdapter.hasEmptyViewImpl() && position == 0 && isEmptyFull && specialAdapter.itemCount == 1 -> spanCount
+                        specialAdapter.hasEmptyViewImpl() && position == specialAdapter.getEmptyPosition() && isEmptyFull && specialAdapter.list.isEmpty() ->spanCount
                         else -> 1
                     }
                 }
             }
         }
         is StaggeredGridLayoutManager -> {
-            specialAdapter.setOccupySpace(isRefreshFull, isHeaderFull, isFooterFull, isCustomFull, isEmptyFull)
+            specialAdapter.setOccupySpace(isHeaderFull, isFooterFull, isCustomFull, isEmptyFull)
         }
         else -> {}
     }

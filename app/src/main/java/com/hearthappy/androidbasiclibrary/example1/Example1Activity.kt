@@ -105,29 +105,6 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                 }
             }).showLocation(root)
         }
-
-        var count = 1
-        rvList.addOnLoadMoreListener<ItemFooterBinding> {
-            if (count < 3) {
-                viewModel.ld.value?.let { it1 -> example1Adapter.addData(it1) }
-                count++
-            } else {
-                tvFooter.text = "没有更多数据了"
-            }
-        }
-        rvList.addOnRefreshListener<ItemRefreshBinding>(
-
-            onRefreshProgress = { progress ->
-                tvRefresh.text = getString(R.string.pull_down_to_refresh)
-                circularProgress.progress = progress.toInt()
-                if (progress >= 100f) {
-                    tvRefresh.text = "松开完成刷新"
-                }
-            }, onRefreshFinish = {
-                viewModel.ld.value?.let { it1 ->
-                    example1Adapter.initData(it1)
-                }
-            })
     }
 
     override fun ActivityExample1Binding.initData() {
