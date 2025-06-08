@@ -4,12 +4,6 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <Button
-        android:id="@+id/btnInsetLayout"
-        style="@style/style_button"
-        android:layout_width="match_parent"
-        android:text="@string/inset_layout_or_remove_layout"
-        app:layout_constraintBottom_toTopOf="@+id/btnRemoveAll" />
 
     <Button
         android:id="@+id/btnRemoveAll"

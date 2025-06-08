@@ -16,6 +16,7 @@ import com.hearthappy.basic.interfaces.OnCustomItemClickListener
 import com.hearthappy.basic.interfaces.OnEmptyViewClickListener
 import com.hearthappy.basic.interfaces.OnFooterClickListener
 import com.hearthappy.basic.interfaces.OnHeaderClickListener
+import com.hearthappy.basic.model.CustomItemView
 import java.lang.reflect.Method
 import java.util.Collections
 
@@ -37,13 +38,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var onCustomItemClickListener : OnCustomItemClickListener? = null
     private var headerOffset = 0
     private var footerOffset = 0
-    private var creatorCount = 0
 
-    private var customItemPositions : MutableList<Int> = mutableListOf()
-    private var customItemLayouts : MutableList<ICustomItemSupper<*>> = mutableListOf()
-    private var customItemSupperMap = mutableMapOf<Int, ICustomItemSupper<*>>() //推算的索引，布局接口实现
-    private var customTransformMap = mutableMapOf<Int, Int>() //推算的索引,原索引
-    private lateinit var transformPositions : List<Int> //返回推算的索引集合
+    private val customItems = mutableListOf<CustomItemView>()
+    private val fullSpanViewTypes = setOf(TYPE_HEADER, TYPE_FOOTER, TYPE_EMPTY)
+
     private var isHeaderFull = false
     private var isFooterFull = false
     private var isCustomFull = false
@@ -71,18 +69,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
                 )
             )
 
-            TYPE_INSET_ITEM -> {
-                val insetItem = customItemLayouts[creatorCount]
-                creatorCount++
-                if (creatorCount >= customItemLayouts.size) {
-                    creatorCount--
+            else -> {
+                val customItem = customItems.firstOrNull { it.viewType == viewType }
+                if (customItem != null) {
+                    return CustomItemViewHolder(customItem.supper.javaClass.findInterfaceInflate(parent, ICustomItemSupper::class.java))
                 }
-                return CustomItemViewHolder(
-                    insetItem.javaClass.findInterfaceInflate(
-                        parent, ICustomItemSupper::class.java
-                    )
-                )
             }
+
         }
         return ItemViewHolder(
             initViewBinding(
@@ -132,14 +125,12 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             }
 
             is AbsSpecialAdapter<*, *>.CustomItemViewHolder -> {
-                val customPosition = customTransformMap[position] ?: -1
-                holder.viewBinding.apply {
-                    setItemFull(root, isCustomFull)
-                    root.setOnClickListener {
-                        onCustomItemClickListener?.onInsetItemClick(it, position, customPosition)
-                    }
-                    customItemSupperMap[position]?.let {
-                        callCustomBindMethod(it, this, customPosition = customPosition)
+                val customItem = getCustomItemByPosition(position)
+                if (customItem != null) {
+                    holder.viewBinding.apply {
+                        setItemFull(root, isCustomFull)
+                        root.setOnClickListener { onCustomItemClickListener?.onInsetItemClick(it, position) }
+                        callCustomBindMethod(customItem.supper, this, customPosition = position)
                     }
                 }
             }
@@ -167,38 +158,50 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
 
     private fun getItemListPosition(position : Int) : Int {
-        var realPosition = position - headerOffset
-        for (map in customTransformMap) {
-            if (map.value > realPosition) break
-            realPosition--
-        }
-        return realPosition
+        return position - headerOffset
     }
 
     private fun getItemVirtualPosition(realPosition : Int) : Int {
-        var virtualPosition = realPosition + headerOffset
-        for (map in customTransformMap) {
-            if (map.value > realPosition) break
-            virtualPosition++
-        }
-        return virtualPosition
+        return realPosition + headerOffset
     }
 
-    /**
-     * 插入index后推算显示位置，index 从 0 开始，所以要加 1 得到从 1 开始的位置
-     * @param inputList List<Int>
-     * @return List<Int>
-     */
-    private fun transformList(inputList : List<Int>) : List<Int> = inputList.mapIndexed { index, value -> value + index + if (hasHeaderImpl()) 1 else 0 }
 
-    override fun getItemViewType(position : Int) : Int { // 计算累积的插入布局偏移量
+    fun addCustomItems(block : MutableList<CustomItemView>.() -> Unit) {
+        block(customItems)
+    }
+
+    open fun getCustomItemViewType(data : T, position : Int) : Int = -1
+
+    private fun getCustomItemByPosition(position : Int) : CustomItemView? {
+        val viewType = getItemViewType(position)
+        return customItems.firstOrNull { it.viewType == viewType }
+    }
+
+
+    override fun getItemViewType(position : Int) : Int {
+        val (customItemViewType : Int, isCustomLayout) = isCustomByPosition(position)
         return when {
-            hasHeaderImpl() && position == TYPE_HEADER && (!shouldShowEmptyView || showEmptyAndHeader) -> TYPE_HEADER
+            hasHeaderImpl() && position == getHeaderPosition() && (!shouldShowEmptyView || showEmptyAndHeader) -> TYPE_HEADER
             hasEmptyViewImpl() && shouldShowEmptyView -> TYPE_EMPTY
-            hasFooterImpl() && position == headerOffset + list.size + customTransformMap.size -> TYPE_FOOTER //            hasInsetItemImpl() && insetItemPosition != NOT_INSERTED && insetItemPosition.convertInsetItemPosition() == position - headerOffset -> TYPE_INSET_ITEM
-            customTransformMap.isNotEmpty() && customTransformMap.keys.any { it == position } -> TYPE_INSET_ITEM
+            hasFooterImpl() && position == getFooterPosition() -> TYPE_FOOTER
+            isCustomLayout -> customItemViewType
             else -> TYPE_ITEM
         }
+    }
+
+    private fun isCustomByPosition(position : Int) : Pair<Int, Boolean> {
+        var customItemViewType : Int = -1
+        var isCustomLayout = false
+        if (customItems.isNotEmpty() && list.isNotEmpty()) {
+            customItemViewType =
+                getCustomItemViewType(list[position.coerceIn(0, list.size - 1)], position)
+            when {
+                customItemViewType == -1 -> Log.e(TAG, "error: getCustomItemViewType method is not overridden")
+                fullSpanViewTypes.contains(customItemViewType) -> Log.e(TAG, "error: The type of custom layout, it is not recommended to use $TYPE_HEADER, $TYPE_FOOTER,$TYPE_EMPTY these will conflict with the header, footer, and empty layout types . position:$position")
+                else -> isCustomLayout = true
+            }
+        }
+        return Pair(customItemViewType, isCustomLayout)
     }
 
     override fun getItemCount() : Int {
@@ -207,25 +210,20 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         return getItemSpecialCount()
     }
 
-
-    override fun initData(list : List<T>) {
-        initData(list, true)
-        initRealItemCount()
-    }
-
     /**
      * 调用数据初始化，
      * 1、如果先前数据与更新数据数量不一致或新数据数量为0，则会移除先移除先前数据
      * 2、如果相同，将通知数据内容发生改变，但是位置没有改变
      * @param list List<T>
      */
-    fun initData(list : List<T>, isClearCustomLayout : Boolean = true) {
-        if (isClearCustomLayout) removeAllCustomItemLayout()
+    override fun initData(list : List<T>) {
         val size = this.list.size
         this.list = list.toMutableList()
         shouldShowEmptyView = list.isEmpty()
         if (list.isEmpty() || size != list.size) notifyItemRangeRemoved(0, size)
         notifyItemRangeChanged(0, getItemSpecialCount())
+        initRealItemCount()
+
     }
 
 
@@ -261,12 +259,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     override fun removeAll() {
         val size = this.list.size
         if (size > 0) {
+            if (list.isNotEmpty()) list.clear()
             if (hasHeaderImpl() && !showEmptyAndHeader) notifyItemRemoved(0)
-            notifyItemRangeRemoved(headerOffset, size + customTransformMap.size)
+            notifyItemRangeRemoved(headerOffset, size)
             if (hasFooterImpl()) notifyItemRemoved(footerOffset)
             shouldShowEmptyView = true
-            clearAll()
-            notifyItemChanged(0, getItemSpecialCount())
+            if (list.isNotEmpty()) list.clear()
+            notifyItemRangeChanged(0, getItemSpecialCount())
         }
     }
 
@@ -292,7 +291,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         this.list[position] = data
         shouldShowEmptyView = false
         val virtualPosition = getItemVirtualPosition(position)
-        notifyItemChanged(virtualPosition) //        notifyDataSetChanged()
+        notifyItemChanged(virtualPosition)
     }
 
     override fun moveData(fromPosition : Int, toPosition : Int) {
@@ -305,16 +304,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         notifyItemRangeChanged(virtualFromPosition, virtualToPosition)
     }
 
-    fun getCustomPositions() : List<Int> {
-        if (!::transformPositions.isInitialized) {
-            transformPositions = customTransformMap.keys.toList()
-        }
-        return transformPositions
+    fun isCustomItemType(position : Int) : Boolean {
+        return !fullSpanViewTypes.contains(getItemViewType(position))
     }
 
     //获取尾部局的Position，如果没有实现尾部局，则返回-1
     fun getFooterPosition() : Int {
-        return if (hasFooterImpl()) getItemSpecialCount() - 1 else -1
+        return if (hasFooterImpl()) headerOffset + list.size else -1
     }
 
 
@@ -331,110 +327,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     fun getItemRealCount() = if (itemRealCount == itemCount) -1 else itemRealCount
 
-    /**
-     * 设置插入布局
-     * @param customItemLayouts List<ICustomItemSupper<*>> 插入布局的接口实现集合
-     * @param customItemPositions IntArray inset position
-     * position range:P:-1：不插入 || P >=list.size：插入到item列表最后一条 || -1< P <list.size：插入到指定位置 ,传入空则不插入
-     */
-    fun setCustomItemLayout(
-        customItemLayouts : List<ICustomItemSupper<*>>, vararg customItemPositions : Int
-    ) {
-        if (customItemLayouts.size != customItemPositions.size) throw RuntimeException("The number of layout and insertion positions is not equal")
-        if (customItemPositions.isEmpty() || customItemLayouts.isEmpty()) return
-        removeAllCustomItemLayout()
-        notifyCustomLayoutChanged(customItemLayouts, customItemPositions)
-    }
-
-    private fun notifyCustomLayoutChanged(
-        customItemLayouts : List<ICustomItemSupper<*>>, customItemPositions : IntArray
-    ) { // 添加新的布局元素
-        this.customItemLayouts = customItemLayouts.toMutableList() // 添加新的插入位置元素
-        this.customItemPositions =
-            customItemPositions.map { it.convertInsetItemPosition() }.toMutableList()
-        val transformResult = transformList(this.customItemPositions.toList())
-        this.customItemPositions.forEachIndexed { index, insetPosition ->
-            val transformPosition = transformResult[index]
-            customTransformMap[transformPosition] = insetPosition
-            customItemSupperMap[transformPosition] = this.customItemLayouts[index]
-        }
-//        notifyItemRangeChanged(headerOffset, getItemSpecialCount())
-        notifyDataSetChanged()
-    }
-
-    fun addCustomItemLayout(
-        insetItemLayouts : List<ICustomItemSupper<*>>, vararg insetItemPositions : Int
-    ) {
-        if (insetItemLayouts.size != insetItemPositions.size) throw RuntimeException("The number of layout and insertion positions is not equal")
-        if (insetItemPositions.isEmpty() || insetItemLayouts.isEmpty()) return
-        val newLayouts = this.customItemLayouts.toMutableList()
-        val newInsetPositions = this.customItemPositions.toMutableList()
-        newLayouts.addAll(insetItemLayouts)
-        newInsetPositions.addAll(insetItemPositions.toList())
-        notifyCustomLayoutsChanged(newLayouts, newInsetPositions)
-    }
-
-
-    fun removeCustomItemLayout(vararg position : Int) {
-        if (customTransformMap.isNotEmpty() && position.isNotEmpty()) {
-            removeEntries(customTransformMap, position.toSet()) {notifyItemRemoved(it)}
-            notifyItemRangeChanged(headerOffset, getItemSpecialCount())
-            notifyCustomLayoutsChanged( customItemLayouts.toMutableList(), customTransformMap.values.map { it })
-        }
-    }
-
-
-    fun removeAllCustomItemLayout() {
-        if (customTransformMap.isNotEmpty()) {
-            transformPositions = emptyList()
-            removeEntries(customTransformMap, customItemPositions.toSet()) { notifyItemRemoved(it) }
-            notifyItemRangeChanged(headerOffset, getItemSpecialCount())
-        }
-    }
-
-    /**
-     *
-     * @param map MutableMap<Int, Int> 需要删除的键值对: key:推算的索引，value:原索引
-     * @param keysToRemove Set<Int> 原索引
-     * @param block Function1<Int, Unit>
-     */
-    private fun removeEntries(
-        map : MutableMap<Int, Int>, keysToRemove : Set<Int>, block : (Int) -> Unit
-    ) { // 移除指定的键
-        val iterator = map.iterator()
-        while (iterator.hasNext()) {
-            val entry = iterator.next() //查找原索引
-            if (keysToRemove.contains(entry.value)) {
-                iterator.remove()
-                val itemSupper = customItemSupperMap[entry.key]
-                val indexOf = customItemLayouts.indexOf(itemSupper)
-                if (indexOf == -1) break
-                customItemLayouts.remove(itemSupper)
-                customItemPositions.removeAt(indexOf) //移除推算的索引，布局接口实现
-                customItemSupperMap.remove(entry.key)
-                if (creatorCount > 0) {
-                    creatorCount--
-                }
-                block(entry.key)
-            }
-        }
-    }
-
-    private fun notifyCustomLayoutsChanged(
-        newLayouts : List<ICustomItemSupper<*>>, newInsetPosition : List<Int>
-    ) {
-        removeAllCustomItemLayout()
-        setCustomItemLayout(newLayouts, *newInsetPosition.toIntArray())
-    }
-
-    private fun clearAll() {
-        if (list.isNotEmpty()) list.clear()
-        if (customItemPositions.isNotEmpty()) customItemPositions.clear()
-        if (customItemLayouts.isNotEmpty()) customItemLayouts.clear()
-        if (customTransformMap.isNotEmpty()) customTransformMap.clear()
-        if (customItemSupperMap.isNotEmpty()) customItemSupperMap.clear()
-        creatorCount = 0
-    }
 
     fun setOccupySpace(
         isHeaderFull : Boolean = true, isFooterFull : Boolean = true, isCustomFull : Boolean = true, isEmptyFull : Boolean
@@ -484,11 +376,12 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     fun hasHeaderImpl() = this is IHeaderSupport<*>
     fun hasFooterImpl() = this is IFooterSupport<*>
     fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
+    fun hasCustomViewImpl() = this is ICustomItemSupper<*>
     private fun getIHeaderSupport() = this as IHeaderSupport<ViewBinding>
     private fun getIFooterSupport() = this as IFooterSupport<ViewBinding>
     private fun getIEmptyViewSupport() = this as IEmptyViewSupport<ViewBinding>
     private fun getItemSpecialCount() : Int {
-        return if (hasEmptyViewImpl() && shouldShowEmptyView && showEmptyAndHeader) headerOffset + 1 else if (hasEmptyViewImpl() && shouldShowEmptyView) +1 else headerOffset + list.size + customTransformMap.size + footerOffset
+        return if (hasEmptyViewImpl() && shouldShowEmptyView && showEmptyAndHeader) headerOffset + 1 else if (hasEmptyViewImpl() && shouldShowEmptyView) +1 else headerOffset + list.size + footerOffset
     }
 
     private fun Int.convertInsetItemPosition() : Int = if (this > list.size) list.size else this
@@ -513,11 +406,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     companion object {
         private const val TAG = "AbsSpecialAdapter"
-        const val TYPE_HEADER : Int = 0x00
-        const val TYPE_EMPTY : Int = 0x01
-        const val TYPE_ITEM : Int = 0x02
-        const val TYPE_FOOTER : Int = 0x03
-        const val TYPE_INSET_ITEM = 0x04
+        const val TYPE_HEADER : Int = 0x10
+        const val TYPE_EMPTY : Int = 0x11
+        const val TYPE_ITEM : Int = 0x12
+        const val TYPE_FOOTER : Int = 0x13
         const val BIND_HEAD = "bindHeaderViewHolder"
         const val BIND_FOOTER = "bindFooterViewHolder"
         const val BIND_EMPTY = "bindEmptyViewHolder"

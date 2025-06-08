@@ -221,11 +221,10 @@ fun RecyclerView.setOccupySpace(isHeaderFull: Boolean = true, isFooterFull: Bool
             val spanCount = gridLayoutManager.spanCount
             gridLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int {
-                    Log.d("TAG", "getSpanSize: ${specialAdapter.getCustomPositions()}")
                     return when {
                         specialAdapter.hasHeaderImpl() && position == specialAdapter.getHeaderPosition() && isHeaderFull -> spanCount
                         specialAdapter.hasFooterImpl() && position == specialAdapter.getFooterPosition() && isFooterFull -> spanCount
-                        specialAdapter.getCustomPositions().contains(position) && isCustomFull -> spanCount
+                        specialAdapter.isCustomItemType(position) && isCustomFull -> spanCount
                         specialAdapter.hasEmptyViewImpl() && position == specialAdapter.getEmptyPosition() && isEmptyFull && specialAdapter.list.isEmpty() ->spanCount
                         else -> 1
                     }

@@ -6,12 +6,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
 import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
-import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl
-import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl2
-import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl3
 import com.hearthappy.basic.AbsBaseActivity
-import com.hearthappy.basic.ext.createActivityCircularReveal
-import com.hearthappy.basic.ext.disappearCircularReveal
 import com.hearthappy.basic.ext.popupWindow
 import com.hearthappy.basic.ext.setOccupySpace
 import com.hearthappy.basic.ext.showLocation
@@ -35,7 +30,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
 //        val coordinates = getCarryCoordinates()
 //        createActivityCircularReveal(500, coordinates.first.toInt(), coordinates.second.toInt())
         viewModel = getViewModel(MainViewModel::class.java)
-        example2Adapter = Example2Adapter() //        val gridLayoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+        example2Adapter = Example2Adapter(this@Example2Activity) //        val gridLayoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
         val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager
         rvList.adapter = example2Adapter
@@ -60,13 +55,13 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
             override fun onHeaderClick(view: View, position: Int) {
 //                disappearCircularReveal(500)
                 Toast.makeText(this@Example2Activity, "我是头部,更新列表", Toast.LENGTH_SHORT).show()
-                viewModel.ld.value?.let { example2Adapter.initData(it.drop(10),false) }
+                viewModel.ld.value?.let { example2Adapter.initData(it.drop(10)) }
             }
         })
 
         example2Adapter.setOnCustomItemClickListener(object : OnCustomItemClickListener {
-            override fun onInsetItemClick(view: View, position: Int, customPosition: Int) {
-                Toast.makeText(this@Example2Activity, "我是自定义布局:position:$position,customPosition:$customPosition", Toast.LENGTH_SHORT).show()
+            override fun onInsetItemClick(view: View, position: Int) {
+                Toast.makeText(this@Example2Activity, "我是自定义布局:position:$position", Toast.LENGTH_SHORT).show()
             }
         })
         btnSettings.setOnClickListener {
@@ -101,17 +96,6 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
                     }
                     btnRemoveAll.setOnClickListener {
                         example2Adapter.removeAll().also { dismiss() }
-                    }
-                    btnInsetLayout.setOnClickListener {
-                        btnSettings.isActivated = !btnSettings.isActivated
-                        if (btnSettings.isActivated) { //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity)/*, CustomItemImpl2(this@Example1Activity), CustomItemImpl3(this@Example1Activity)*/), 3/*, 7, 9*/)//4,9,12
-                            example2Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity), CustomItemImpl2(this@Example2Activity), CustomItemImpl3(this@Example2Activity)), 4, 8, 12) //4,9,12
-                        } else {
-                            //                            val ints = example2Adapter.getCustomPositions().toIntArray()
-                            example2Adapter.removeCustomItemLayout(4, 8, 12) //                mainAdapter.addCustomItemLayout(listOf(CustomItemImpl3(this@Example1Activity)), 10)
-                            //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity),CustomItemImpl2(this@Example1Activity),CustomItemImpl3(this@Example1Activity)),3,7,9)//4,9,1
-                        }
-                        dismiss()
                     }
                 }
             }).showLocation(root)
