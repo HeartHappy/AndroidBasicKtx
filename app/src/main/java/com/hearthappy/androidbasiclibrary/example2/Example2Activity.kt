@@ -5,13 +5,16 @@ import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
+import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl2
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl3
 import com.hearthappy.basic.AbsBaseActivity
 import com.hearthappy.basic.ext.createActivityCircularReveal
 import com.hearthappy.basic.ext.disappearCircularReveal
+import com.hearthappy.basic.ext.popupWindow
 import com.hearthappy.basic.ext.setOccupySpace
+import com.hearthappy.basic.ext.showLocation
 import com.hearthappy.basic.interfaces.OnCustomItemClickListener
 import com.hearthappy.basic.interfaces.OnFooterClickListener
 import com.hearthappy.basic.interfaces.OnHeaderClickListener
@@ -23,7 +26,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
 
     override fun ActivityExample2Binding.initViewModelListener() {
         viewModel.ld.observe(this@Example2Activity) {
-            example2Adapter.initData(emptyList())
+            example2Adapter.initData(it)
 //            example2Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity), CustomItemImpl2(this@Example2Activity), CustomItemImpl3(this@Example2Activity)), 4, 8, 12) //4,9,12
         }
     }
@@ -36,7 +39,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager
         rvList.adapter = example2Adapter
-        rvList.setOccupySpace(isEmptyFull = true)
+        rvList.setOccupySpace(isEmptyFull = true, isCustomFull = true)
         rvList.itemAnimator = null
     }
 
@@ -66,6 +69,53 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
                 Toast.makeText(this@Example2Activity, "我是自定义布局:position:$position,customPosition:$customPosition", Toast.LENGTH_SHORT).show()
             }
         })
+        btnSettings.setOnClickListener {
+            popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), viewEventListener = {
+                it.apply {
+                    btnInit.setOnClickListener {
+                        viewModel.ld.value?.let { it1 ->
+                            example2Adapter.initData(it1)
+                        }.also { dismiss() }
+                    }
+                    btnInset.setOnClickListener {
+                        example2Adapter.insertData("插入数据:${example2Adapter.list.size}").also { dismiss() }
+                    }
+                    btnInsetTo0.setOnClickListener {
+                        example2Adapter.insertData("插入到0数据:${example2Adapter.list.size}", 0).also { dismiss() }
+                    }
+                    btnMove.setOnClickListener {
+                        example2Adapter.moveData(0, 8).also { dismiss() }
+                    }
+                    btnAdd.setOnClickListener {
+                        viewModel.ld.value?.let { it1 ->
+                            example2Adapter.addData(it1)
+                        }.also { dismiss() }
+                    }
+                    btnAddTo0.setOnClickListener {
+                        viewModel.ld.value?.let { it1 ->
+                            example2Adapter.addData(it1, 0)
+                        }.also { dismiss() }
+                    }
+                    btnRemove.setOnClickListener {
+                        example2Adapter.removeData(example2Adapter.list.size - 1).also { dismiss() }
+                    }
+                    btnRemoveAll.setOnClickListener {
+                        example2Adapter.removeAll().also { dismiss() }
+                    }
+                    btnInsetLayout.setOnClickListener {
+                        btnSettings.isActivated = !btnSettings.isActivated
+                        if (btnSettings.isActivated) { //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity)/*, CustomItemImpl2(this@Example1Activity), CustomItemImpl3(this@Example1Activity)*/), 3/*, 7, 9*/)//4,9,12
+                            example2Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity), CustomItemImpl2(this@Example2Activity), CustomItemImpl3(this@Example2Activity)), 4, 8, 12) //4,9,12
+                        } else {
+                            //                            val ints = example2Adapter.getCustomPositions().toIntArray()
+                            example2Adapter.removeCustomItemLayout(4, 8, 12) //                mainAdapter.addCustomItemLayout(listOf(CustomItemImpl3(this@Example1Activity)), 10)
+                            //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity),CustomItemImpl2(this@Example1Activity),CustomItemImpl3(this@Example1Activity)),3,7,9)//4,9,1
+                        }
+                        dismiss()
+                    }
+                }
+            }).showLocation(root)
+        }
     }
 
     override fun ActivityExample2Binding.initData() {

@@ -1,5 +1,6 @@
 package com.hearthappy.androidbasiclibrary.example1
 
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -13,6 +14,7 @@ import com.hearthappy.androidbasiclibrary.example2.Example2Activity
 import com.hearthappy.basic.AbsBaseActivity
 import com.hearthappy.basic.ext.popupWindow
 import com.hearthappy.basic.ext.showLocation
+import com.hearthappy.basic.ext.toArrayList
 import com.hearthappy.basic.interfaces.OnCustomItemClickListener
 import com.hearthappy.basic.interfaces.OnFooterClickListener
 import com.hearthappy.basic.interfaces.OnHeaderClickListener
@@ -96,8 +98,9 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                         btnSettings.isActivated = !btnSettings.isActivated
                         if (btnSettings.isActivated) { //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity)/*, CustomItemImpl2(this@Example1Activity), CustomItemImpl3(this@Example1Activity)*/), 3/*, 7, 9*/)//4,9,12
                             example1Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity), CustomItemImpl2(this@Example1Activity), CustomItemImpl3(this@Example1Activity)), 3, 7, 9) //4,9,12
-                        } else { //                mainAdapter.removeAllCustomItemLayout()
-                            example1Adapter.removeCustomItemLayout(3, 7, 9) //                mainAdapter.addCustomItemLayout(listOf(CustomItemImpl3(this@Example1Activity)), 10)
+                        } else {
+//                            val ints = example1Adapter.getCustomPositions().toIntArray()
+                            example1Adapter.removeCustomItemLayout(3,7,9) //                mainAdapter.addCustomItemLayout(listOf(CustomItemImpl3(this@Example1Activity)), 10)
                             //                mainAdapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example1Activity),CustomItemImpl2(this@Example1Activity),CustomItemImpl3(this@Example1Activity)),3,7,9)//4,9,1
                         }
                         dismiss()
