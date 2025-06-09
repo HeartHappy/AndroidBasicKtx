@@ -22,7 +22,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
 
     override fun ActivityExample1Binding.initViewModelListener() {
         viewModel.ld.observe(this@Example1Activity) {
-            example1Adapter.initData(it)
+            example1Adapter.initData(emptyList())
         }
     }
 
@@ -70,6 +70,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                     }
                     btnInsetTo0.setOnClickListener {
                         example1Adapter.insertData("插入到0数据:${example1Adapter.list.size}", 0).also { dismiss() }
+                        rvList.scrollToPosition(0)
                     }
                     btnMove.setOnClickListener {
                         example1Adapter.moveData(0, 8,true).also { dismiss() }

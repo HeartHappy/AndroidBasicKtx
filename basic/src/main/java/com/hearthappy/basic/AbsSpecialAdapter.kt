@@ -205,103 +205,113 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
      * @param list List<T>
      */
     fun initData(list: List<T>, useDataSetChanged: Boolean = false) {
-        val size = this.list.size
-        this.list = list.toMutableList()
-        shouldShowEmptyView = list.isEmpty()
-        if (useDataSetChanged) notifyGlobalRefresh()
-        else {
-            if (list.isEmpty() || size != list.size) notifyItemRangeRemoved(0, size)
-            notifyItemRangeChanged(0, getItemSpecialCount())
-            initRealItemCount()
+        val oldSize = this.list.size
+        this.list.clear()
+        this.list.addAll(list)
+
+        if (useDataSetChanged) {
+            notifyGlobalRefresh()
+            return
         }
+
+        // 移除旧数据（若有）
+        if (list.isEmpty() || oldSize != list.size) notifyItemRangeRemoved(0, oldSize)
+
+        // 插入新数据（若有）
+        shouldShowEmptyView = this.list.isEmpty() // 刷新头尾布局（数据变化可能影响空状态显示）
+        notifyItemRangeChanged(0, getItemSpecialCount())
+        initRealItemCount()
     }
 
 
     fun insertData(data: T, useDataSetChanged: Boolean = false) {
-        val position = this.list.size
-        val virtualPosition = getItemVirtualPosition(position)
-        this.list.add(data)
-        shouldShowEmptyView = false
-        if (useDataSetChanged) notifyGlobalRefresh()
-        else {
-            notifyItemInserted(virtualPosition)
-            notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
-        }
+        insertData(data, list.size, useDataSetChanged)
     }
 
     fun insertData(data: T, position: Int, useDataSetChanged: Boolean = false) {
-        this.list.add(position, data)
-        val virtualPosition = getItemVirtualPosition(position)
-        shouldShowEmptyView = false
-        if (useDataSetChanged) notifyGlobalRefresh()
-        else {
-            notifyItemInserted(virtualPosition)
-            notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
+        if (position < 0 || position > list.size) {
+            throw IndexOutOfBoundsException("插入位置越界: position=$position, list.size=${list.size}")
         }
 
+        list.add(position, data)
+        shouldShowEmptyView = false
+        if (useDataSetChanged) {
+            notifyGlobalRefresh()
+            return
+        }
+
+        // 实际列表中的位置 = 头布局数量 + 数据中的位置
+        val actualPosition = getItemVirtualPosition(position)
+        notifyItemInserted(actualPosition)
+
+        // 若插入位置在数据中间，后续数据项位置变化，需刷新Footer
+        notifyItemRangeChanged(actualPosition + 1, list.size - position)
     }
 
     fun removeData(position: Int, useDataSetChanged: Boolean = false): T? {
-        val virtualPosition = getItemVirtualPosition(position)
-        if (position >= 0 && position < this.list.size) {
-            val removedItem = this.list.removeAt(position)
-            shouldShowEmptyView = this.list.isEmpty()
-            if (useDataSetChanged) notifyGlobalRefresh()
-            else {
-                notifyItemRemoved(virtualPosition)
-                notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
-            }
-
-            return removedItem
+        if (position < 0 || position >= list.size) {
+            return null
         }
-        return null
+
+        val removedData = list.removeAt(position)
+        shouldShowEmptyView = list.isEmpty()
+        if (useDataSetChanged) {
+            notifyGlobalRefresh()
+            return removedData
+        }
+
+        // 实际列表中的位置 = 头布局数量 + 数据中的位置
+        val actualPosition = getItemVirtualPosition(position)
+        notifyItemRemoved(actualPosition)
+
+        // 若删除位置在数据中间，后续数据项位置变化，需刷新Footer
+        notifyItemRangeChanged(actualPosition, list.size - position)
+
+        return removedData
     }
 
 
     fun removeAll(useDataSetChanged: Boolean = false) {
+        val oldSize = list.size
+        list.clear()
 
-        if (useDataSetChanged){
-            list.clear()
+        if (useDataSetChanged) {
             notifyGlobalRefresh()
-        }
-        else {
-            val size = this.list.size
-            if (size > 0) {
-                if (hasHeaderImpl() && !showEmptyAndHeader) notifyItemRemoved(0)
-                if (list.isNotEmpty()) list.clear()
-                notifyItemRangeRemoved(headerOffset, size)
-                if (hasFooterImpl()) notifyItemRemoved(footerOffset)
-                shouldShowEmptyView = true
-                notifyItemRangeChanged(0, getItemSpecialCount())
-            }
+            return
         }
 
-
+        // 移除所有数据项（起始位置为头布局之后）
+        if (oldSize > 0) {
+            if (hasHeaderImpl() && !showEmptyAndHeader) notifyItemRemoved(0)
+            notifyItemRangeRemoved(headerOffset, oldSize)
+            if (hasFooterImpl()) notifyItemRemoved(footerOffset)
+        }
+        shouldShowEmptyView = true
+        notifyItemRangeChanged(0, getItemSpecialCount())
     }
 
     fun addData(list: List<T>, useDataSetChanged: Boolean = false) {
-        val oldPosition = this.list.size
-        this.list.addAll(list)
-        shouldShowEmptyView = this.list.isEmpty()
-        if (useDataSetChanged) {
-            notifyGlobalRefresh()
-        } else {
-            notifyItemRangeChanged(oldPosition + headerOffset, getItemSpecialCount())
-        }
+        addData(list, this.list.size, useDataSetChanged)
 
     }
 
     fun addData(list: List<T>, position: Int, useDataSetChanged: Boolean = false) {
+        if (list.isEmpty()) return
+        if (position < 0 || position > this.list.size) {
+            throw IndexOutOfBoundsException("添加位置越界: position=$position, list.size=${this.list.size}")
+        }
         val realPosition = getItemVirtualPosition(position)
         this.list.addAll(position, list)
         shouldShowEmptyView = this.list.isEmpty()
         if (useDataSetChanged) notifyGlobalRefresh()
-        else notifyItemRangeChanged(realPosition, list.size)
-
+        else {
+            notifyItemRangeInserted(realPosition, list.size)
+            notifyItemRangeChanged(realPosition + list.size, getItemSpecialCount())
+        }
     }
 
     fun updateData(data: T, position: Int, useDataSetChanged: Boolean = false) {
-        if (position >= this.list.size) return
+        if (position !in this.list.indices) return
         this.list[position] = data
         shouldShowEmptyView = false
         val virtualPosition = getItemVirtualPosition(position)
@@ -311,15 +321,17 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
     }
 
     fun moveData(fromPosition: Int, toPosition: Int, useDataSetChanged: Boolean = false) {
+        if (fromPosition !in this.list.indices || toPosition !in 0..this.list.size) return
         if (fromPosition == toPosition) return
-        if (fromPosition > getItemSpecialCount() || toPosition > getItemSpecialCount()) return
         Collections.swap(this.list, fromPosition, toPosition)
         if (useDataSetChanged) notifyGlobalRefresh()
         else {
             val virtualFromPosition = getItemVirtualPosition(fromPosition)
             val virtualToPosition = getItemVirtualPosition(toPosition)
             notifyItemMoved(virtualFromPosition, virtualToPosition)
-            notifyItemRangeChanged(virtualFromPosition, virtualToPosition)
+            val start = minOf(virtualFromPosition, virtualToPosition)
+            val end = maxOf(virtualFromPosition, virtualToPosition)
+            notifyItemRangeChanged(start, end - start - 1)
         }
 
     }
