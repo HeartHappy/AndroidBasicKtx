@@ -6,7 +6,11 @@ import com.hearthappy.androidbasiclibrary.databinding.ItemEmptyViewBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemHeaderBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemListBinding
+import com.hearthappy.androidbasiclibrary.example2.Example2Adapter.Companion.TYPE_CUSTOM1
+import com.hearthappy.androidbasiclibrary.example2.Example2Adapter.Companion.TYPE_CUSTOM2
+import com.hearthappy.androidbasiclibrary.example2.Example2Adapter.Companion.TYPE_CUSTOM3
 import com.hearthappy.basic.AbsSpecialAdapter
+import com.hearthappy.basic.AbsSpecialAdapter.Companion.TYPE_ITEM
 import com.hearthappy.basic.interfaces.IEmptyViewSupport
 import com.hearthappy.basic.interfaces.IFooterSupport
 import com.hearthappy.basic.interfaces.IHeaderSupport
@@ -17,7 +21,7 @@ import com.hearthappy.basic.model.CustomItemView
  * @author ChenRui
  * ClassDescription：头、尾布局， 则AbsSpecialAdapter<ViewBinding类型,数据类型>()
  */
-class Example1Adapter(private val context : Context) : AbsSpecialAdapter<ItemListBinding, String>(), IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
+class Example1Adapter(private val context : Context) : AbsSpecialAdapter<ItemListBinding, String>(),/* IHeaderSupport<ItemHeaderBinding>, IFooterSupport<ItemFooterBinding>,*/ IEmptyViewSupport<ItemEmptyViewBinding> {
     init {
         addCustomItems {
             add(CustomItemView(TYPE_CUSTOM1, CustomItemImpl(context)))
@@ -29,14 +33,14 @@ class Example1Adapter(private val context : Context) : AbsSpecialAdapter<ItemLis
         tvTitle.text = data.plus("listPosition:$position")
     }
 
-    override fun ItemHeaderBinding.bindHeaderViewHolder() {
-        tvHeader.text = "头布局"
-    }
-
-
-    override fun ItemFooterBinding.bindFooterViewHolder() {
-        tvFooter.text = "继续上拉，加载更多..."
-    }
+//    override fun ItemHeaderBinding.bindHeaderViewHolder() {
+//        tvHeader.text = "头布局"
+//    }
+//
+//
+//    override fun ItemFooterBinding.bindFooterViewHolder() {
+//        tvFooter.text = "继续上拉，加载更多..."
+//    }
 
     override fun ItemEmptyViewBinding.bindEmptyViewHolder() {
         ivEmptyDefault.setImageResource(R.mipmap.nd_default)

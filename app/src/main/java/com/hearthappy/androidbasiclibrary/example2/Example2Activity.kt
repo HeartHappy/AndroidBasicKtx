@@ -94,7 +94,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
                         }.also { dismiss() }
                     }
                     btnRemove.setOnClickListener {
-                        example2Adapter.removeData(example2Adapter.list.size - 1).also { dismiss() }
+                        example2Adapter.removeData(0).also { dismiss() }
                     }
                     btnRemoveAll.setOnClickListener {
                         example2Adapter.removeAll().also { dismiss() }

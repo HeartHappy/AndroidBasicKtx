@@ -72,7 +72,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                         example1Adapter.insertData("插入到0数据:${example1Adapter.list.size}", 0).also { dismiss() }
                     }
                     btnMove.setOnClickListener {
-                        example1Adapter.moveData(0, 8).also { dismiss() }
+                        example1Adapter.moveData(0, 8,true).also { dismiss() }
                     }
                     btnAdd.setOnClickListener {
                         viewModel.ld.value?.let { it1 ->
@@ -85,7 +85,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                         }.also { dismiss() }
                     }
                     btnRemove.setOnClickListener {
-                        example1Adapter.removeData(example1Adapter.list.size - 1).also { dismiss() }
+                        example1Adapter.removeData(0).also { dismiss() }
                     }
                     btnRemoveAll.setOnClickListener {
                         example1Adapter.removeAll().also { dismiss() }

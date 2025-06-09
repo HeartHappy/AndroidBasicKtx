@@ -1,5 +1,6 @@
 package com.hearthappy.basic
 
+import android.annotation.SuppressLint
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +8,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.viewbinding.ViewBinding
+import com.hearthappy.basic.ext.findAdapterInflate
 import com.hearthappy.basic.ext.findInterfaceInflate
 import com.hearthappy.basic.interfaces.ICustomItemSupper
 import com.hearthappy.basic.interfaces.IEmptyViewSupport
@@ -29,7 +31,7 @@ import java.util.Collections
  */
 
 @Suppress("UNCHECKED_CAST")
-abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() {
+abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>() {
 
     private var shouldShowEmptyView: Boolean = false
     private var onHeaderClickListener: OnHeaderClickListener? = null
@@ -66,7 +68,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             }
 
         }
-        return ItemViewHolder(initViewBinding(parent, viewType) ?: byViewBinding(LayoutInflater.from(parent.context), parent))
+        return ItemViewHolder(initViewBinding(parent, viewType) ?: findAdapterInflate(LayoutInflater.from(parent.context), parent))
     }
 
 
@@ -202,85 +204,128 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
      * 2、如果相同，将通知数据内容发生改变，但是位置没有改变
      * @param list List<T>
      */
-    override fun initData(list: List<T>) {
+    fun initData(list: List<T>, useDataSetChanged: Boolean = false) {
         val size = this.list.size
         this.list = list.toMutableList()
         shouldShowEmptyView = list.isEmpty()
-        if (list.isEmpty() || size != list.size) notifyItemRangeRemoved(0, size)
-        notifyItemRangeChanged(0, getItemSpecialCount())
-        initRealItemCount()
+        if (useDataSetChanged) notifyGlobalRefresh()
+        else {
+            if (list.isEmpty() || size != list.size) notifyItemRangeRemoved(0, size)
+            notifyItemRangeChanged(0, getItemSpecialCount())
+            initRealItemCount()
+        }
     }
 
 
-    override fun insertData(data: T) {
+    fun insertData(data: T, useDataSetChanged: Boolean = false) {
         val position = this.list.size
         val virtualPosition = getItemVirtualPosition(position)
         this.list.add(data)
         shouldShowEmptyView = false
-        notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
+        if (useDataSetChanged) notifyGlobalRefresh()
+        else {
+            notifyItemInserted(virtualPosition)
+            notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
+        }
     }
 
-    override fun insertData(data: T, position: Int) {
+    fun insertData(data: T, position: Int, useDataSetChanged: Boolean = false) {
         this.list.add(position, data)
         val virtualPosition = getItemVirtualPosition(position)
         shouldShowEmptyView = false
-        notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
+        if (useDataSetChanged) notifyGlobalRefresh()
+        else {
+            notifyItemInserted(virtualPosition)
+            notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
+        }
+
     }
 
-    override fun removeData(position: Int): T? {
+    fun removeData(position: Int, useDataSetChanged: Boolean = false): T? {
         val virtualPosition = getItemVirtualPosition(position)
         if (position >= 0 && position < this.list.size) {
             val removedItem = this.list.removeAt(position)
             shouldShowEmptyView = this.list.isEmpty()
-            notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
+            if (useDataSetChanged) notifyGlobalRefresh()
+            else {
+                notifyItemRemoved(virtualPosition)
+                notifyItemRangeChanged(virtualPosition, getItemSpecialCount())
+            }
+
             return removedItem
         }
         return null
     }
 
 
-    override fun removeAll() {
-        val size = this.list.size
-        if (size > 0) {
-            if (hasHeaderImpl() && !showEmptyAndHeader) notifyItemRemoved(0)
-            if (list.isNotEmpty()) list.clear()
-            notifyItemRangeRemoved(headerOffset, size)
-            if (hasFooterImpl()) notifyItemRemoved(footerOffset)
-            shouldShowEmptyView = true
-            notifyItemRangeChanged(0, getItemSpecialCount())
+    fun removeAll(useDataSetChanged: Boolean = false) {
+
+        if (useDataSetChanged){
+            list.clear()
+            notifyGlobalRefresh()
         }
+        else {
+            val size = this.list.size
+            if (size > 0) {
+                if (hasHeaderImpl() && !showEmptyAndHeader) notifyItemRemoved(0)
+                if (list.isNotEmpty()) list.clear()
+                notifyItemRangeRemoved(headerOffset, size)
+                if (hasFooterImpl()) notifyItemRemoved(footerOffset)
+                shouldShowEmptyView = true
+                notifyItemRangeChanged(0, getItemSpecialCount())
+            }
+        }
+
+
     }
 
-    override fun addData(list: List<T>) {
+    fun addData(list: List<T>, useDataSetChanged: Boolean = false) {
         val oldPosition = this.list.size
         this.list.addAll(list)
         shouldShowEmptyView = this.list.isEmpty()
-        notifyItemRangeChanged(oldPosition + headerOffset, getItemSpecialCount())
+        if (useDataSetChanged) {
+            notifyGlobalRefresh()
+        } else {
+            notifyItemRangeChanged(oldPosition + headerOffset, getItemSpecialCount())
+        }
+
     }
 
-    override fun addData(list: List<T>, position: Int) {
+    fun addData(list: List<T>, position: Int, useDataSetChanged: Boolean = false) {
         val realPosition = getItemVirtualPosition(position)
         this.list.addAll(position, list)
         shouldShowEmptyView = this.list.isEmpty()
-        notifyItemRangeChanged(realPosition, list.size)
+        if (useDataSetChanged) notifyGlobalRefresh()
+        else notifyItemRangeChanged(realPosition, list.size)
+
     }
 
-    override fun updateData(data: T, position: Int) {
+    fun updateData(data: T, position: Int, useDataSetChanged: Boolean = false) {
         if (position >= this.list.size) return
         this.list[position] = data
         shouldShowEmptyView = false
         val virtualPosition = getItemVirtualPosition(position)
-        notifyItemChanged(virtualPosition)
+        if (useDataSetChanged) notifyGlobalRefresh()
+        else notifyItemChanged(virtualPosition)
+
     }
 
-    override fun moveData(fromPosition: Int, toPosition: Int) {
+    fun moveData(fromPosition: Int, toPosition: Int, useDataSetChanged: Boolean = false) {
         if (fromPosition == toPosition) return
         if (fromPosition > getItemSpecialCount() || toPosition > getItemSpecialCount()) return
         Collections.swap(this.list, fromPosition, toPosition)
-        val virtualFromPosition = getItemVirtualPosition(fromPosition)
-        val virtualToPosition = getItemVirtualPosition(toPosition)
-        notifyItemMoved(virtualFromPosition, virtualToPosition)
-        notifyItemRangeChanged(virtualFromPosition, virtualToPosition)
+        if (useDataSetChanged) notifyGlobalRefresh()
+        else {
+            val virtualFromPosition = getItemVirtualPosition(fromPosition)
+            val virtualToPosition = getItemVirtualPosition(toPosition)
+            notifyItemMoved(virtualFromPosition, virtualToPosition)
+            notifyItemRangeChanged(virtualFromPosition, virtualToPosition)
+        }
+
+    }
+
+    @SuppressLint("NotifyDataSetChanged") fun notifyGlobalRefresh() {
+        notifyDataSetChanged()
     }
 
     fun isCustomItemType(position: Int): Boolean {

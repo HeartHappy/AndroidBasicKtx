@@ -1,9 +1,11 @@
 package com.hearthappy.basic.ext
 
 import android.app.Activity
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.ParameterizedType
@@ -55,6 +57,23 @@ fun <VB : ViewBinding> Fragment.findFragmentInflate(inflater: LayoutInflater, co
             e.printStackTrace()
         } catch (e: InvocationTargetException) {
             e.printStackTrace()
+        }
+    }
+    throw IllegalArgumentException("Failed to get ViewBinding instance.")
+}
+
+@Suppress("UNCHECKED_CAST")
+ fun <VB:ViewBinding> RecyclerView.Adapter<RecyclerView.ViewHolder>.findAdapterInflate(inflater: LayoutInflater, container: ViewGroup?): VB {
+    val type = javaClass.genericSuperclass
+    if (type is ParameterizedType) {
+        val clazz = type.actualTypeArguments[0] as Class<VB>
+        try {
+            val inflateMethod = clazz.getMethod("inflate", LayoutInflater::class.java, ViewGroup::class.java, Boolean::class.java)
+            return inflateMethod.invoke(null, inflater, container, false) as VB
+        } catch (e: IllegalAccessException) {
+            Log.e("AbsBaseAdapter", "IllegalAccessException: ${e.message}", e)
+        } catch (e: InvocationTargetException) {
+            Log.e("AbsBaseAdapter", "InvocationTargetException: ${e.message}", e)
         }
     }
     throw IllegalArgumentException("Failed to get ViewBinding instance.")
