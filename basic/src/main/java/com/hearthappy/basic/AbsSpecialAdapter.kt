@@ -230,7 +230,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
 
     fun insertData(data: T, position: Int, useDataSetChanged: Boolean = false) {
         if (position < 0 || position > list.size) {
-            throw IndexOutOfBoundsException("插入位置越界: position=$position, list.size=${list.size}")
+            throw IndexOutOfBoundsException("insert position out of bounds: position=$position, list.size=${list.size}")
         }
 
         list.add(position, data)
@@ -298,7 +298,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
     fun addData(list: List<T>, position: Int, useDataSetChanged: Boolean = false) {
         if (list.isEmpty()) return
         if (position < 0 || position > this.list.size) {
-            throw IndexOutOfBoundsException("添加位置越界: position=$position, list.size=${this.list.size}")
+            throw IndexOutOfBoundsException("Add position out of bounds: position=$position, list.size=${this.list.size}")
         }
         val realPosition = getItemVirtualPosition(position)
         this.list.addAll(position, list)
