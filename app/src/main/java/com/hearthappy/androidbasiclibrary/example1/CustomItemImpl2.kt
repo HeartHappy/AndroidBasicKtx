@@ -7,11 +7,10 @@ import com.hearthappy.androidbasiclibrary.R
 import com.hearthappy.androidbasiclibrary.databinding.ItemInsetViewBinding
 import com.hearthappy.basic.interfaces.ICustomItemSupper
 
-class CustomItemImpl2(val context: Context):ICustomItemSupper<ItemInsetViewBinding> {
+class CustomItemImpl2(val context: Context):ICustomItemSupper<ItemInsetViewBinding,String> {
 
-    override fun ItemInsetViewBinding.bindCustomViewHolder(position:Int) {
-        ivEmptyDefault.text="我是插入的布局2"
+    override fun ItemInsetViewBinding.bindCustomViewHolder(data:String,position:Int) {
+        ivEmptyDefault.text="我是自定义布局2: ".plus(data)
         ivEmptyDefault.setTextColor(ContextCompat.getColor(context, R.color.yellow))
-        Log.d("TAG", "bindCustomViewHolder: $position")
     }
 }

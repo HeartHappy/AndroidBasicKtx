@@ -51,9 +51,10 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
             }
         })
 
-        example1Adapter.setOnCustomItemClickListener(object : OnCustomItemClickListener {
-            override fun onInsetItemClick(view: View, position: Int) {
-                Toast.makeText(this@Example1Activity, "我是自定义布局:position:$position", Toast.LENGTH_SHORT).show()
+        example1Adapter.setOnCustomItemClickListener(object : OnCustomItemClickListener<String> {
+
+            override fun onCustomItemClick(view: View, data: String, position: Int, listPosition: Int) {
+                Toast.makeText(this@Example1Activity, "我是自定义布局:position:$listPosition", Toast.LENGTH_SHORT).show()
             }
         })
         btnSettings.setOnClickListener {

@@ -3,6 +3,7 @@ package com.hearthappy.androidbasiclibrary.example2
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
 import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
@@ -30,8 +31,9 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
 //        val coordinates = getCarryCoordinates()
 //        createActivityCircularReveal(500, coordinates.first.toInt(), coordinates.second.toInt())
         viewModel = getViewModel(MainViewModel::class.java)
-        example2Adapter = Example2Adapter(this@Example2Activity) //        val gridLayoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
-        val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false)
+        example2Adapter = Example2Adapter(this@Example2Activity)
+                val gridLayoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+//        val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false)
         rvList.layoutManager = gridLayoutManager
         rvList.adapter = example2Adapter
         rvList.setOccupySpace(isEmptyFull = true, isCustomFull = true)
@@ -59,9 +61,9 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
             }
         })
 
-        example2Adapter.setOnCustomItemClickListener(object : OnCustomItemClickListener {
-            override fun onInsetItemClick(view: View, position: Int) {
-                Toast.makeText(this@Example2Activity, "我是自定义布局:position:$position", Toast.LENGTH_SHORT).show()
+        example2Adapter.setOnCustomItemClickListener(object : OnCustomItemClickListener<String> {
+            override fun onCustomItemClick(view: View, data: String, position: Int, listPosition: Int) {
+                Toast.makeText(this@Example2Activity, "我是自定义布局:position:$listPosition", Toast.LENGTH_SHORT).show()
             }
         })
         btnSettings.setOnClickListener {

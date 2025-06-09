@@ -2,7 +2,7 @@ package com.hearthappy.basic.interfaces
 
 import android.view.View
 
-interface OnCustomItemClickListener {
+interface OnCustomItemClickListener<T> {
 
-    fun onInsetItemClick(view: View, position: Int)
+    fun onCustomItemClick(view: View, data: T, position: Int, listPosition: Int)
 }

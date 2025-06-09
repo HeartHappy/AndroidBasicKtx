@@ -14,7 +14,7 @@ import java.util.Collections
  * @Author ChenRui
  * @Email 1096885636@qq.com
  * @Date 10/11/24
- * @Describe 万用适配器
+ * @Describe 基础适配器
  */
 abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mutableListOf()) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     internal var itemRealCount = -1 //真实数量，例如：无限列表，实际显示数量5个，进行轮播时使用
