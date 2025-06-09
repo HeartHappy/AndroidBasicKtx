@@ -203,11 +203,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
      * @param list List<T>
      */
     override fun initData(list: List<T>) {
-        if (list.isEmpty()) return
         val size = this.list.size
         this.list = list.toMutableList()
         shouldShowEmptyView = list.isEmpty()
-        if (size != list.size) notifyItemRangeRemoved(0, size)
+        if (list.isEmpty() || size != list.size) notifyItemRangeRemoved(0, size)
         notifyItemRangeChanged(0, getItemSpecialCount())
         initRealItemCount()
     }
@@ -362,8 +361,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
             else -> headerOffset + list.size + footerOffset
         }
     }
-
-
 
 
     private fun Int.convertInsetItemPosition(): Int = if (this > list.size) list.size else this
