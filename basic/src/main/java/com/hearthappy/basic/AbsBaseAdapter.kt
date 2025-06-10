@@ -96,7 +96,9 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
         if (fromPosition == toPosition) return
         Collections.swap(list, fromPosition, toPosition)
         notifyItemMoved(fromPosition, toPosition)
-        notifyItemRangeChanged(fromPosition, toPosition)
+        val start = minOf(fromPosition, toPosition)
+        val end = maxOf(fromPosition, toPosition)
+        notifyItemRangeChanged(start, end - start - 1)
     }
 
     fun setOnItemClickListener(onItemClickListener: OnItemClickListener<T>?) {

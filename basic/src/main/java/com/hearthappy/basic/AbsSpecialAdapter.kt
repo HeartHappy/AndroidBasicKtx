@@ -31,8 +31,7 @@ import java.util.Collections
  */
 
 @Suppress("UNCHECKED_CAST")
-abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>() {
-
+abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() {
     private var shouldShowEmptyView: Boolean = false
     private var onHeaderClickListener: OnHeaderClickListener? = null
     private var onFooterClickListener: OnFooterClickListener? = null
@@ -50,7 +49,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
     private var isCustomFull = false
     private var isEmptyFull = false
     private var showEmptyAndHeader = true //同时显示空布局和头布局
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
@@ -204,7 +202,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
      * 2、如果相同，将通知数据内容发生改变，但是位置没有改变
      * @param list List<T>
      */
-    fun initData(list: List<T>, useDataSetChanged: Boolean = false) {
+    fun initData(list: List<T>, useDataSetChanged: Boolean) {
         val oldSize = this.list.size
         this.list.clear()
         this.list.addAll(list)
@@ -223,12 +221,45 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
         initRealItemCount()
     }
 
+    override fun initData(list: List<T>){
+        initData(list,false)
+    }
 
-    fun insertData(data: T, useDataSetChanged: Boolean = false) {
+    override fun insertData(data: T) {
+        insertData(data,false)
+    }
+    override fun insertData(data: T, position: Int) {
+        insertData(data, position,false)
+    }
+
+    override fun removeData(position: Int): T? {
+        return removeData(position,false)
+    }
+
+    override fun removeAll() {
+        removeAll(false)
+    }
+
+    override fun addData(list: List<T>) {
+        addData(list,false)
+    }
+    override fun addData(list: List<T>, position: Int) {
+        addData(list, position,false)
+    }
+
+    override fun updateData(data: T, position: Int) {
+        updateData(data, position,false)
+    }
+
+    override fun moveData(fromPosition: Int, toPosition: Int) {
+        moveData(fromPosition, toPosition,false)
+    }
+
+    fun insertData(data: T, useDataSetChanged: Boolean) {
         insertData(data, list.size, useDataSetChanged)
     }
 
-    fun insertData(data: T, position: Int, useDataSetChanged: Boolean = false) {
+    fun insertData(data: T, position: Int, useDataSetChanged: Boolean) {
         if (position < 0 || position > list.size) {
             throw IndexOutOfBoundsException("insert position out of bounds: position=$position, list.size=${list.size}")
         }
@@ -248,7 +279,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
         notifyItemRangeChanged(actualPosition + 1, list.size - position)
     }
 
-    fun removeData(position: Int, useDataSetChanged: Boolean = false): T? {
+    fun removeData(position: Int, useDataSetChanged: Boolean): T? {
         if (position < 0 || position >= list.size) {
             return null
         }
@@ -271,7 +302,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
     }
 
 
-    fun removeAll(useDataSetChanged: Boolean = false) {
+    fun removeAll(useDataSetChanged: Boolean) {
         val oldSize = list.size
         list.clear()
 
@@ -290,12 +321,12 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
         notifyItemRangeChanged(0, getItemSpecialCount())
     }
 
-    fun addData(list: List<T>, useDataSetChanged: Boolean = false) {
+    fun addData(list: List<T>, useDataSetChanged: Boolean) {
         addData(list, this.list.size, useDataSetChanged)
 
     }
 
-    fun addData(list: List<T>, position: Int, useDataSetChanged: Boolean = false) {
+    fun addData(list: List<T>, position: Int, useDataSetChanged: Boolean) {
         if (list.isEmpty()) return
         if (position < 0 || position > this.list.size) {
             throw IndexOutOfBoundsException("Add position out of bounds: position=$position, list.size=${this.list.size}")
@@ -310,7 +341,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
         }
     }
 
-    fun updateData(data: T, position: Int, useDataSetChanged: Boolean = false) {
+    fun updateData(data: T, position: Int, useDataSetChanged: Boolean) {
         if (position !in this.list.indices) return
         this.list[position] = data
         shouldShowEmptyView = false
@@ -320,7 +351,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
 
     }
 
-    fun moveData(fromPosition: Int, toPosition: Int, useDataSetChanged: Boolean = false) {
+    fun moveData(fromPosition: Int, toPosition: Int, useDataSetChanged: Boolean) {
         if (fromPosition !in this.list.indices || toPosition !in 0..this.list.size) return
         if (fromPosition == toPosition) return
         Collections.swap(this.list, fromPosition, toPosition)
@@ -362,8 +393,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
     }
 
     fun getItemRealCount() = if (itemRealCount == itemCount) -1 else itemRealCount
-
-
     fun setOccupySpace(isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true, isEmptyFull: Boolean) {
         this.isHeaderFull = isHeaderFull
         this.isFooterFull = isFooterFull
@@ -374,6 +403,24 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
     fun setShowEmptyAndHeader(isSimultaneously: Boolean) {
         showEmptyAndHeader = isSimultaneously
     }
+
+
+    fun setOnHeaderClickListener(onHeaderClickListener: OnHeaderClickListener?) {
+        this.onHeaderClickListener = onHeaderClickListener
+    }
+
+    fun setOnFooterClickListener(onFooterClickListener: OnFooterClickListener?) {
+        this.onFooterClickListener = onFooterClickListener
+    }
+
+    fun setOnEmptyViewClickListener(onEmptyViewClickListener: OnEmptyViewClickListener?) {
+        this.onEmptyViewClickListener = onEmptyViewClickListener
+    }
+
+    fun setOnCustomItemClickListener(onCustomItemClickListener: OnCustomItemClickListener<T>?) {
+        this.onCustomItemClickListener = onCustomItemClickListener
+    }
+
 
 
     inner class HeaderViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
@@ -421,23 +468,6 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : ISpecialAdapter<VB, T>()
 
 
     private fun Int.convertInsetItemPosition(): Int = if (this > list.size) list.size else this
-
-
-    fun setOnHeaderClickListener(onHeaderClickListener: OnHeaderClickListener?) {
-        this.onHeaderClickListener = onHeaderClickListener
-    }
-
-    fun setOnFooterClickListener(onFooterClickListener: OnFooterClickListener?) {
-        this.onFooterClickListener = onFooterClickListener
-    }
-
-    fun setOnEmptyViewClickListener(onEmptyViewClickListener: OnEmptyViewClickListener?) {
-        this.onEmptyViewClickListener = onEmptyViewClickListener
-    }
-
-    fun setOnCustomItemClickListener(onCustomItemClickListener: OnCustomItemClickListener<T>?) {
-        this.onCustomItemClickListener = onCustomItemClickListener
-    }
 
 
     companion object {
