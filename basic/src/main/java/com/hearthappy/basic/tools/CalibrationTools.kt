@@ -10,7 +10,7 @@ import java.util.regex.Pattern
 object CalibrationTools {
     const val REGEX_USERNAME = "^[A-Za-z0-9._~!@#$^&*]{4,20}$"
     const val REGEX_PASSWORD = "[0-9a-zA-Z_]{6,18}"
-    const val REGEX_PHONE = "^(?![0-9])(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,16}$"
+    const val REGEX_PHONE = "^[1]\\d{10}\$"
 
     /**
      * 匹配验证

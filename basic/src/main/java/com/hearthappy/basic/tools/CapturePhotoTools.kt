@@ -16,7 +16,7 @@ import java.io.IOException
  * the correct date meta data
  * @author samuelkirton
  */
-object CapturePhotoUtils {
+object CapturePhotoTools {
     /**
      * A copy of the Android internals  insertImage method, this method populates the
      * meta data with DATE_ADDED and DATE_TAKEN. This fixes a common problem where media

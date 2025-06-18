@@ -18,7 +18,7 @@ import java.util.*
  * @author ChenRui
  * ClassDescription:
  */
-internal object LocationTools {
+object LocationTools {
 
 
     /**
@@ -51,7 +51,7 @@ internal object LocationTools {
     /**
      * 自动更新，无需反复调用
      */
-   inline fun getLocationAddress2(context: Context, crossinline block:(locationBean: LocationBean)->Unit) {
+   fun getLocationAddress2(context: Context,  block:(locationBean: LocationBean)->Unit) {
         val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (ActivityCompat.checkSelfPermission(
                 context, Manifest.permission.ACCESS_FINE_LOCATION

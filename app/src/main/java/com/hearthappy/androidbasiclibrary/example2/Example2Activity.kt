@@ -2,7 +2,6 @@ package com.hearthappy.androidbasiclibrary.example2
 
 import android.view.View
 import android.widget.Toast
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
@@ -10,7 +9,7 @@ import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
 import com.hearthappy.basic.AbsBaseActivity
 import com.hearthappy.basic.ext.popupWindow
 import com.hearthappy.basic.ext.setOccupySpace
-import com.hearthappy.basic.ext.showLocation
+import com.hearthappy.basic.ext.showAtBottom
 import com.hearthappy.basic.interfaces.OnCustomItemClickListener
 import com.hearthappy.basic.interfaces.OnFooterClickListener
 import com.hearthappy.basic.interfaces.OnHeaderClickListener
@@ -100,7 +99,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
                         example2Adapter.removeAll().also { dismiss() }
                     }
                 }
-            }).showLocation(root)
+            }).showAtBottom(root)
         }
     }
 

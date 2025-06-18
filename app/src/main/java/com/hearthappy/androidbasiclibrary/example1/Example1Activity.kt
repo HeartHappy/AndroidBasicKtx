@@ -9,7 +9,7 @@ import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
 import com.hearthappy.androidbasiclibrary.example2.Example2Activity
 import com.hearthappy.basic.AbsBaseActivity
 import com.hearthappy.basic.ext.popupWindow
-import com.hearthappy.basic.ext.showLocation
+import com.hearthappy.basic.ext.showAtBottom
 import com.hearthappy.basic.interfaces.OnCustomItemClickListener
 import com.hearthappy.basic.interfaces.OnFooterClickListener
 import com.hearthappy.basic.interfaces.OnHeaderClickListener
@@ -92,7 +92,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                         example1Adapter.removeAll().also { dismiss() }
                     }
                 }
-            }).showLocation(root)
+            }).showAtBottom(root)
         }
     }
 
