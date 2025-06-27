@@ -6,10 +6,9 @@ import com.hearthappy.androidbasiclibrary.databinding.ItemEmptyViewBinding
 import com.hearthappy.androidbasiclibrary.example1.Example1Activity
 import com.hearthappy.androidbasiclibrary.example2.Example2Activity
 import com.hearthappy.basic.AbsBaseActivity
-import com.hearthappy.basic.ext.PopupManager
 import com.hearthappy.basic.ext.findViewCoordinates
 import com.hearthappy.basic.ext.popupWindow
-import com.hearthappy.basic.ext.showLocation
+import com.hearthappy.basic.ext.showAtBottom
 
 class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
     override fun ActivityMainBinding.initData() {
@@ -27,7 +26,7 @@ class MainActivity : AbsBaseActivity<ActivityMainBinding>() {
                                                 startActivity(Example1Activity::class.java)
                                                 finish()
                         }
-                    }).showLocation(root, Gravity.BOTTOM)
+                    }).showAtBottom(root)
                 }
             }).showAtLocation(root, Gravity.CENTER, 0, 0)
         }

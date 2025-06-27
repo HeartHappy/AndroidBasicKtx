@@ -8,7 +8,7 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-fun ImageView.loadUrl(urlString: String) {
+fun ImageView.testLoadUrl(urlString: String) {
     Thread {
         var bitmap: Bitmap? = null
         try {

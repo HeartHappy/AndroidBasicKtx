@@ -18,7 +18,7 @@ fun String.substringMiddle(prefix: String, suffix: String, jumpOverCount: Int = 
  * @receiver String
  * @return Bitmap
  */
-fun String.base64ToBitmap(): Bitmap {
+fun String.fromBase64ToBitmap(): Bitmap {
     val bytes = Base64.decode(this, Base64.DEFAULT)
     return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 }
@@ -29,7 +29,7 @@ fun String.base64ToBitmap(): Bitmap {
  * @receiver String
  * @return ByteArray
  */
-fun String.base64ToByteArray(): ByteArray {
+fun String.fromBase64ToByteArray(): ByteArray {
     return Base64.decode(this, Base64.DEFAULT)
 }
 
@@ -38,7 +38,7 @@ fun String.base64ToByteArray(): ByteArray {
  * @receiver String 文件路径
  * @return String 文件base64
  */
-fun String.file2Base64(): String {
+fun String.fromFile2Base64(): String {
     val bitmap = BitmapFactory.decodeFile(this)
     val byteArrayOutputStream = ByteArrayOutputStream()
     bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)

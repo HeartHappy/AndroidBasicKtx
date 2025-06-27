@@ -221,19 +221,20 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         initRealItemCount()
     }
 
-    override fun initData(list: List<T>){
-        initData(list,false)
+    override fun initData(list: List<T>) {
+        initData(list, false)
     }
 
     override fun insertData(data: T) {
-        insertData(data,false)
+        insertData(data, false)
     }
+
     override fun insertData(data: T, position: Int) {
-        insertData(data, position,false)
+        insertData(data, position, false)
     }
 
     override fun removeData(position: Int): T? {
-        return removeData(position,false)
+        return removeData(position, false)
     }
 
     override fun removeAll() {
@@ -241,18 +242,19 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     }
 
     override fun addData(list: List<T>) {
-        addData(list,false)
+        addData(list, false)
     }
+
     override fun addData(list: List<T>, position: Int) {
-        addData(list, position,false)
+        addData(list, position, false)
     }
 
     override fun updateData(data: T, position: Int) {
-        updateData(data, position,false)
+        updateData(data, position, false)
     }
 
     override fun moveData(fromPosition: Int, toPosition: Int) {
-        moveData(fromPosition, toPosition,false)
+        moveData(fromPosition, toPosition, false)
     }
 
     fun insertData(data: T, useDataSetChanged: Boolean) {
@@ -409,18 +411,49 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         this.onHeaderClickListener = onHeaderClickListener
     }
 
+    fun setOnHeaderClickListener(block: (view: View, position: Int) -> Unit) {
+        setOnHeaderClickListener(object : OnHeaderClickListener {
+            override fun onHeaderClick(view: View, position: Int) {
+                block.invoke(view, position)
+            }
+        })
+    }
+
     fun setOnFooterClickListener(onFooterClickListener: OnFooterClickListener?) {
         this.onFooterClickListener = onFooterClickListener
+    }
+
+    fun setOnFooterClickListener(block: (view: View, position: Int) -> Unit) {
+        setOnFooterClickListener(object : OnFooterClickListener {
+            override fun onFooterClick(view: View, position: Int) {
+                block.invoke(view, position)
+            }
+        })
     }
 
     fun setOnEmptyViewClickListener(onEmptyViewClickListener: OnEmptyViewClickListener?) {
         this.onEmptyViewClickListener = onEmptyViewClickListener
     }
 
+    fun setOnEmptyViewClickListener(block: (view: View, position: Int) -> Unit) {
+        setOnEmptyViewClickListener(object : OnEmptyViewClickListener {
+            override fun onEmptyViewClick(view: View, position: Int) {
+                block.invoke(view, position)
+            }
+        })
+    }
+
     fun setOnCustomItemClickListener(onCustomItemClickListener: OnCustomItemClickListener<T>?) {
         this.onCustomItemClickListener = onCustomItemClickListener
     }
 
+    fun setOnCustomItemClickListener(block: (view: View, data: T, position: Int, listPosition: Int) -> Unit) {
+        this.onCustomItemClickListener = object : OnCustomItemClickListener<T> {
+            override fun onCustomItemClick(view: View, data: T, position: Int, listPosition: Int) {
+                block.invoke(view, data, position, listPosition)
+            }
+        }
+    }
 
 
     inner class HeaderViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)

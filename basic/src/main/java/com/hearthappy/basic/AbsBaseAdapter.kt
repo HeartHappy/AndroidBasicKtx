@@ -2,6 +2,7 @@ package com.hearthappy.basic
 
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
@@ -103,6 +104,14 @@ abstract class AbsBaseAdapter<VB : ViewBinding, T>(var list: MutableList<T> = mu
 
     fun setOnItemClickListener(onItemClickListener: OnItemClickListener<T>?) {
         this.onItemClickListener = onItemClickListener
+    }
+
+    fun setOnItemClickListener(block: (view: View, data: T, position: Int, listPosition: Int) -> Unit) {
+        this.onItemClickListener = object : OnItemClickListener<T> {
+            override fun onItemClick(view: View, data: T, position: Int, listPosition: Int) {
+                block(view, data, position, listPosition)
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder = ViewHolder(initViewBinding(parent, viewType) ?: byViewBinding(LayoutInflater.from(parent.context), parent))
