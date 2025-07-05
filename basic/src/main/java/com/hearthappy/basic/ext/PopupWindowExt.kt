@@ -140,21 +140,21 @@ object PopupManager {
 /**
  * Activity扩展函数
  */
-fun <VB : ViewBinding> AppCompatActivity.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, focusable: Boolean = true, isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
-    return handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim, windowType)
+fun <VB : ViewBinding> AppCompatActivity.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, transition: Transition = Fade(), animatorStyle:Int= android.R.style.Animation_Dialog,windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
+    return handlerPopupWindow(key, viewBinding, width, height, viewEventListener,  isOutsideTouchable, backgroundBlackAlpha, transition = transition, animatorStyle = animatorStyle, windowType = windowType)
 }
 
 /**
  * Fragment扩展函数
  */
-fun <VB : ViewBinding> Fragment.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, focusable: Boolean = true, isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, anim: Transition = Fade(), windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
-    return (requireActivity() as AppCompatActivity).handlerPopupWindow(key, viewBinding, width, height, viewEventListener, focusable, isOutsideTouchable, backgroundBlackAlpha, anim, windowType)
+fun <VB : ViewBinding> Fragment.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT,  isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, transition: Transition = Fade(),animatorStyle:Int= android.R.style.Animation_Dialog, windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
+    return (requireActivity() as AppCompatActivity).handlerPopupWindow(key, viewBinding, width, height, viewEventListener,  isOutsideTouchable, backgroundBlackAlpha, transition = transition, animatorStyle =animatorStyle, windowType)
 }
 
 /**
  * 处理弹窗创建和复用
  */
-private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String, viewBinding: VB, width: Int, height: Int, viewEventListener: PopupWindow.(VB) -> Unit, focusable: Boolean, isOutsideTouchable: Boolean, backgroundBlackAlpha: Float, anim: Transition, windowType: Int): PopupWindow { // 尝试获取已存在的弹窗
+private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String, viewBinding: VB, width: Int, height: Int, viewEventListener: PopupWindow.(VB) -> Unit, isOutsideTouchable: Boolean, backgroundBlackAlpha: Float, transition: Transition, animatorStyle: Int, windowType: Int): PopupWindow { // 尝试获取已存在的弹窗
     val existingPopup = PopupManager.findOwnerRef(this)?.let { ownerRef ->
         PopupManager.popupMap[ownerRef]?.get(key)
     }
@@ -164,7 +164,7 @@ private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String,
         return existingPopup
     }
 
-    return object : PopupWindow(viewBinding.root, width, height, focusable) {
+    return object : PopupWindow(viewBinding.root, width, height) {
         override fun dismiss() {
             try {
                 super.dismiss()
@@ -179,17 +179,23 @@ private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String,
         }
     }.apply { // 初始化弹窗属性
         viewEventListener(this, viewBinding)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        // 适配Android 9及以下版本
+        if (Build.VERSION.SDK_INT <=Build.VERSION_CODES.Q) {
+            this.isOutsideTouchable = isOutsideTouchable
+            this.isFocusable = isOutsideTouchable
+        } else {
+            // Android 10+ 使用新API
             this.isTouchModal = isOutsideTouchable
         }
 
-        this.isOutsideTouchable = isOutsideTouchable
-        this.isFocusable = focusable
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            this.enterTransition = anim
-            this.exitTransition = anim
+
+            if (animatorStyle != android.R.style.Animation_Dialog) {
+                this.animationStyle = animatorStyle
+            } else {
+                this.enterTransition = transition
+                this.exitTransition = transition
+            }
             windowLayoutType = windowType
         }
 
@@ -233,23 +239,26 @@ fun PopupWindow.show(showAtLocation: (() -> ShowAtLocation)? = null, showAsDropD
         }
     }
 }
+
 fun PopupWindow.showAtCenter(relativeView: View, x: Int = 0, y: Int = 0) {
     showAtLocation(relativeView, Gravity.CENTER, x, y)
 }
+
 fun PopupWindow.showAtTop(relativeView: View, x: Int = 0, y: Int = 0) {
     showAtLocation(relativeView, Gravity.TOP, x, y)
 }
+
 fun PopupWindow.showAtBottom(relativeView: View, x: Int = 0, y: Int = 0) {
     showAtLocation(relativeView, Gravity.BOTTOM, x, y)
 }
+
 fun PopupWindow.showAtLeft(relativeView: View, x: Int = 0, y: Int = 0) {
     showAtLocation(relativeView, Gravity.LEFT, x, y)
 }
+
 fun PopupWindow.showAtRight(relativeView: View, x: Int = 0, y: Int = 0) {
     showAtLocation(relativeView, Gravity.RIGHT, x, y)
 }
-
-
 
 
 fun PopupWindow.showDropDown(anchor: View, gravity: Int = Gravity.TOP or Gravity.START, x: Int = 0, y: Int = 0) {

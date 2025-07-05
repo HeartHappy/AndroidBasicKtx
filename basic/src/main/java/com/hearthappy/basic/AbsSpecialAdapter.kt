@@ -40,6 +40,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var headerOffset = 0
     private var footerOffset = 0
 
+    private var headerView: IHeaderSupport<*>? = null
+    private var footerView: IFooterSupport<*>? = null
     private val customItems = mutableListOf<CustomItemView>()
     private val noCustomization = setOf(TYPE_HEADER, TYPE_FOOTER, TYPE_EMPTY, TYPE_ITEM) //  不包含自定义布局
     private val checkItemType = setOf(TYPE_HEADER, TYPE_FOOTER, TYPE_EMPTY)
@@ -86,7 +88,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
                 holder.viewBinding.apply {
                     setItemFull(root, isHeaderFull)
                     root.setOnClickListener { onHeaderClickListener?.onHeaderClick(it, position) }
-                    callBindMethod(this@AbsSpecialAdapter, this, BIND_HEAD)
+                    val header = getIHeaderSupport()
+                    callBindMethod(header, this, BIND_HEAD)
                 }
             }
 
@@ -120,7 +123,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
                 holder.viewBinding.apply {
                     setItemFull(root, isFooterFull)
                     root.setOnClickListener { onFooterClickListener?.onFooterClick(it, position) }
-                    callBindMethod(this@AbsSpecialAdapter, this, BIND_FOOTER)
+                    val iFooterSupport = getIFooterSupport()
+                    callBindMethod(iFooterSupport, this, BIND_FOOTER)
                 }
             }
 
@@ -146,6 +150,20 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         return realPosition + headerOffset
     }
 
+
+    fun addHeaderView(headerView: IHeaderSupport<*>) {
+        this.headerView = headerView
+        notifyItemRangeChanged(0, getItemSpecialCount())
+    }
+
+    fun addFooterView(footerView: IFooterSupport<*>) {
+        this.footerView = footerView //更新添加的最后一个的尾布局
+        notifyItemChanged(getItemSpecialCount())
+    }
+
+    fun addCustomItem(customItemView: CustomItemView) {
+        customItems.add(customItemView)
+    }
 
     fun addCustomItems(block: MutableList<CustomItemView>.() -> Unit) {
         block(customItems)
@@ -484,12 +502,12 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         }
     }
 
-    fun hasHeaderImpl() = this is IHeaderSupport<*>
-    fun hasFooterImpl() = this is IFooterSupport<*>
+    fun hasHeaderImpl() = this is IHeaderSupport<*> || headerView != null
+    fun hasFooterImpl() = this is IFooterSupport<*> || footerView != null
     fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
     fun hasCustomViewImpl() = this is ICustomItemSupper<*, *>
-    private fun getIHeaderSupport() = this as IHeaderSupport<ViewBinding>
-    private fun getIFooterSupport() = this as IFooterSupport<ViewBinding>
+    private fun getIHeaderSupport() = if (headerView != null) headerView as IHeaderSupport<ViewBinding> else this as IHeaderSupport<ViewBinding>
+    private fun getIFooterSupport() = if (footerView != null) footerView as IFooterSupport<ViewBinding> else this as IFooterSupport<ViewBinding>
     private fun getIEmptyViewSupport() = this as IEmptyViewSupport<ViewBinding>
     private fun getItemSpecialCount(): Int {
         return when {

@@ -16,7 +16,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
 
     override fun ActivityExample2Binding.initViewModelListener() {
         viewModel.ld.observe(this@Example2Activity) {
-            example2Adapter.initData(it) //            example2Adapter.setCustomItemLayout(listOf(CustomItemImpl(this@Example2Activity), CustomItemImpl2(this@Example2Activity), CustomItemImpl3(this@Example2Activity)), 4, 8, 12) //4,9,12
+            example2Adapter.initData(it)
         }
     }
 
@@ -31,8 +31,7 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         rvList.itemAnimator = null
     }
 
-    override fun ActivityExample2Binding.initListener() {
-        //新增lambda表达式
+    override fun ActivityExample2Binding.initListener() { //新增lambda表达式
 
         example2Adapter.setOnFooterClickListener { _, _ ->
             Toast.makeText(this@Example2Activity, "我是尾部", Toast.LENGTH_SHORT).show()
@@ -89,6 +88,4 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
     override fun ActivityExample2Binding.initData() {
         viewModel.getListData()
     }
-
-
 }

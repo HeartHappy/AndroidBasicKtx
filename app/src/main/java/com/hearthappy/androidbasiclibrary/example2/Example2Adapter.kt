@@ -3,6 +3,7 @@ package com.hearthappy.androidbasiclibrary.example2
 import android.content.Context
 import com.hearthappy.androidbasiclibrary.R
 import com.hearthappy.androidbasiclibrary.databinding.ItemEmptyViewBinding
+import com.hearthappy.androidbasiclibrary.databinding.ItemFooterBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemGridListBinding
 import com.hearthappy.androidbasiclibrary.databinding.ItemHeaderBinding
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl
@@ -10,6 +11,7 @@ import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl2
 import com.hearthappy.androidbasiclibrary.example1.CustomItemImpl3
 import com.hearthappy.basic.AbsSpecialAdapter
 import com.hearthappy.basic.interfaces.IEmptyViewSupport
+import com.hearthappy.basic.interfaces.IFooterSupport
 import com.hearthappy.basic.interfaces.IHeaderSupport
 import com.hearthappy.basic.model.CustomItemView
 
@@ -18,7 +20,7 @@ import com.hearthappy.basic.model.CustomItemView
  * @author ChenRui
  * ClassDescription：头、尾布局， 则AbsSpecialAdapter<ViewBinding类型,数据类型>()
  */
-class Example2Adapter(private val context : Context) : AbsSpecialAdapter<ItemGridListBinding, String>(),/* IFooterSupport<ItemFooterBinding>,*/ IHeaderSupport<ItemHeaderBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
+class Example2Adapter(private val context : Context) : AbsSpecialAdapter<ItemGridListBinding, String>(), IFooterSupport<ItemFooterBinding>, IHeaderSupport<ItemHeaderBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
     init {
         addCustomItems {
             add(CustomItemView(TYPE_CUSTOM1, CustomItemImpl(context)))
@@ -36,9 +38,9 @@ class Example2Adapter(private val context : Context) : AbsSpecialAdapter<ItemGri
     }
 
 
-    //    override fun ItemFooterBinding.bindFooterViewHolder() {
-    //        tvFooter.text = "我是尾部"
-    //    }
+        override fun ItemFooterBinding.bindFooterViewHolder() {
+            tvFooter.text = "我是尾部"
+        }
 
     override fun ItemEmptyViewBinding.bindEmptyViewHolder() {
         ivEmptyDefault.setImageResource(R.mipmap.nd_default)

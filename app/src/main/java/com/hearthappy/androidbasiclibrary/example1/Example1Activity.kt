@@ -22,7 +22,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
 
     override fun ActivityExample1Binding.initViewModelListener() {
         viewModel.ld.observe(this@Example1Activity) {
-            example1Adapter.initData(emptyList())
+            example1Adapter.initData(it)
         }
     }
 
@@ -61,9 +61,8 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
             popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), viewEventListener = {
                 it.apply {
                     btnInit.setOnClickListener {
-                        viewModel.ld.value?.let { it1 ->
-                            example1Adapter.initData(it1)
-                        }.also { dismiss() }
+                        viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }.also { dismiss() }
+                        dismiss()
                     }
                     btnInset.setOnClickListener {
                         example1Adapter.insertData("插入数据:${example1Adapter.list.size}").also { dismiss() }
@@ -73,7 +72,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
                         rvList.scrollToPosition(0)
                     }
                     btnMove.setOnClickListener {
-                        example1Adapter.moveData(0, 8,true).also { dismiss() }
+                        example1Adapter.moveData(0, 8, true).also { dismiss() }
                     }
                     btnAdd.setOnClickListener {
                         viewModel.ld.value?.let { it1 ->
