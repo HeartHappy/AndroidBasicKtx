@@ -1,7 +1,9 @@
 package com.hearthappy.androidbasiclibrary.example1
 
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample1Binding
@@ -14,6 +16,7 @@ import com.hearthappy.basic.interfaces.OnCustomItemClickListener
 import com.hearthappy.basic.interfaces.OnFooterClickListener
 import com.hearthappy.basic.interfaces.OnHeaderClickListener
 import com.hearthappy.basic.interfaces.OnItemClickListener
+import com.hearthappy.basic.tools.SlideDirection
 
 class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
     private lateinit var viewModel: MainViewModel
@@ -58,7 +61,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
             }
         })
         btnSettings.setOnClickListener {
-            popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), viewEventListener = {
+            popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), height = ConstraintLayout.LayoutParams.WRAP_CONTENT, isOutsideTouchable = false, slideDismiss = SlideDirection.VERTICAL, viewEventListener = {
                 it.apply {
                     btnInit.setOnClickListener {
                         viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }.also { dismiss() }

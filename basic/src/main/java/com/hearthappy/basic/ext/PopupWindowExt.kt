@@ -15,6 +15,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.viewbinding.ViewBinding
+import com.hearthappy.basic.tools.SlideDirection
+import com.hearthappy.basic.tools.SlideDismissPopupHelper
 import java.lang.ref.WeakReference
 import java.util.WeakHashMap
 
@@ -140,21 +142,21 @@ object PopupManager {
 /**
  * Activity扩展函数
  */
-fun <VB : ViewBinding> AppCompatActivity.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, transition: Transition = Fade(), animatorStyle:Int= android.R.style.Animation_Dialog,windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
-    return handlerPopupWindow(key, viewBinding, width, height, viewEventListener,  isOutsideTouchable, backgroundBlackAlpha, transition = transition, animatorStyle = animatorStyle, windowType = windowType)
+fun <VB : ViewBinding> AppCompatActivity.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, transition: Transition = Fade(), animatorStyle: Int = android.R.style.Animation_Dialog, slideDismiss: SlideDirection = SlideDirection.NONE, windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
+    return handlerPopupWindow(key, viewBinding, width, height, viewEventListener, isOutsideTouchable, backgroundBlackAlpha, transition = transition, animatorStyle = animatorStyle, slideDismiss = slideDismiss, windowType = windowType)
 }
 
 /**
  * Fragment扩展函数
  */
-fun <VB : ViewBinding> Fragment.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT,  isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, transition: Transition = Fade(),animatorStyle:Int= android.R.style.Animation_Dialog, windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
-    return (requireActivity() as AppCompatActivity).handlerPopupWindow(key, viewBinding, width, height, viewEventListener,  isOutsideTouchable, backgroundBlackAlpha, transition = transition, animatorStyle =animatorStyle, windowType)
+fun <VB : ViewBinding> Fragment.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, transition: Transition = Fade(), animatorStyle: Int = android.R.style.Animation_Dialog, slideDismiss: SlideDirection = SlideDirection.NONE, windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
+    return (requireActivity() as AppCompatActivity).handlerPopupWindow(key, viewBinding, width, height, viewEventListener, isOutsideTouchable, backgroundBlackAlpha, transition = transition, animatorStyle = animatorStyle, slideDismiss = slideDismiss, windowType)
 }
 
 /**
  * 处理弹窗创建和复用
  */
-private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String, viewBinding: VB, width: Int, height: Int, viewEventListener: PopupWindow.(VB) -> Unit, isOutsideTouchable: Boolean, backgroundBlackAlpha: Float, transition: Transition, animatorStyle: Int, windowType: Int): PopupWindow { // 尝试获取已存在的弹窗
+private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String, viewBinding: VB, width: Int, height: Int, viewEventListener: PopupWindow.(VB) -> Unit, isOutsideTouchable: Boolean, backgroundBlackAlpha: Float, transition: Transition, animatorStyle: Int, slideDismiss: SlideDirection, windowType: Int): PopupWindow { // 尝试获取已存在的弹窗
     val existingPopup = PopupManager.findOwnerRef(this)?.let { ownerRef ->
         PopupManager.popupMap[ownerRef]?.get(key)
     }
@@ -178,13 +180,11 @@ private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String,
             }
         }
     }.apply { // 初始化弹窗属性
-        viewEventListener(this, viewBinding)
-        // 适配Android 9及以下版本
-        if (Build.VERSION.SDK_INT <=Build.VERSION_CODES.Q) {
+        viewEventListener(this, viewBinding) // 适配Android 9及以下版本
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             this.isOutsideTouchable = isOutsideTouchable
             this.isFocusable = isOutsideTouchable
-        } else {
-            // Android 10+ 使用新API
+        } else { // Android 10+ 使用新API
             this.isTouchModal = isOutsideTouchable
         }
 
@@ -202,6 +202,11 @@ private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String,
         this.setBackgroundDrawable(null) // 设置背景透明度（仅在第一个弹窗显示时设置）
         if (shouldSetBackground()) {
             setBackgroundBlackAlpha(backgroundBlackAlpha)
+        }
+
+        //侧滑消失
+        if (slideDismiss != SlideDirection.NONE) {
+            SlideDismissPopupHelper(this, contentView, slideDismiss).attach()
         }
 
         // 注册到管理器
