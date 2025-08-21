@@ -1,7 +1,12 @@
 package com.hearthappy.basic.ext
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.graphics.RectF
 import android.view.View
+import android.view.ViewAnimationUtils
+import androidx.core.animation.addListener
+import kotlin.math.hypot
 
 /**
  * Created Date: 2024/12/24
@@ -75,5 +80,59 @@ fun View.findViewCoordinates(): Pair<Float, Float> {
     val centerX = (rect.left + rect.right) / 2
     val centerY = (rect.top + rect.bottom) / 2
     return Pair(centerX, centerY)
+}
+
+/**
+ * View 揭露动画显示
+ * @receiver View
+ * @param duration Int
+ * @param centerX Int
+ * @param centerY Int
+ */
+fun View.createViewCircularReveal(
+    duration: Int = 200,
+    centerX: Int,
+    centerY: Int,
+    onEndListener: () -> Unit
+) { //设置window背景透明
+    //decorView执行动画
+    post {
+        val widthPixels = resources.displayMetrics.widthPixels
+        val heightPixels = resources.displayMetrics.heightPixels
+        val endRadius = hypot(widthPixels.toDouble(), heightPixels.toDouble()).toFloat()
+        val circularReveal =
+            ViewAnimationUtils.createCircularReveal(this, centerX, centerY, 0f, endRadius)
+        circularReveal.addListener(onEnd = { onEndListener() })
+        circularReveal.setDuration(duration.toLong()).start()
+    }
+}
+
+/**
+ * View 揭露动画消失
+ * @receiver View
+ * @param duration Int
+ */
+fun View.disappearCircularReveal(
+    duration: Int = 200,
+    centerX: Int,
+    centerY: Int,
+    onEndListener: () -> Unit
+) {
+    post {
+        val widthPixels = resources.displayMetrics.widthPixels
+        val heightPixels = resources.displayMetrics.heightPixels
+        val startRadius = hypot(widthPixels.toDouble(), heightPixels.toDouble()).toFloat()
+        val circularReveal =
+            ViewAnimationUtils.createCircularReveal(this, centerX, centerY, startRadius, 0f)
+        circularReveal.duration = duration.toLong()
+        circularReveal.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                super.onAnimationEnd(animation)
+                this@disappearCircularReveal.visibility = View.GONE
+                onEndListener()
+            }
+        })
+        circularReveal.start()
+    }
 }
 

@@ -6,6 +6,8 @@ import com.hearthappy.androidbasiclibrary.MainViewModel
 import com.hearthappy.androidbasiclibrary.databinding.ActivityExample2Binding
 import com.hearthappy.androidbasiclibrary.databinding.PopSettingsBinding
 import com.hearthappy.basic.AbsBaseActivity
+import com.hearthappy.basic.ext.createActivityCircularReveal
+import com.hearthappy.basic.ext.disappearCircularReveal
 import com.hearthappy.basic.ext.popupWindow
 import com.hearthappy.basic.ext.setOccupySpace
 import com.hearthappy.basic.ext.showAtBottom
@@ -20,8 +22,9 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         }
     }
 
-    override fun ActivityExample2Binding.initView() { //        val coordinates = getCarryCoordinates()
-        //        createActivityCircularReveal(500, coordinates.first.toInt(), coordinates.second.toInt())
+    override fun ActivityExample2Binding.initView() {
+        val coordinates = getCarryCoordinates()
+        createActivityCircularReveal(500, coordinates.first.toInt(), coordinates.second.toInt()){}
         viewModel = getViewModel(MainViewModel::class.java)
         example2Adapter = Example2Adapter(this@Example2Activity)
         val gridLayoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL) //        val gridLayoutManager = GridLayoutManager(this@Example2Activity, 2, GridLayoutManager.VERTICAL, false)
@@ -39,7 +42,8 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
         example2Adapter.setOnItemClickListener { _, d, _, lp ->
             Toast.makeText(this@Example2Activity, "我是Item:$d,position:$lp", Toast.LENGTH_SHORT).show()
         }
-        example2Adapter.setOnHeaderClickListener { _, _ -> //            disappearCircularReveal(500)
+        example2Adapter.setOnHeaderClickListener {v, _ ->
+            disappearCircularReveal(500,v.width/2,v.height/2){}
             Toast.makeText(this@Example2Activity, "我是头部,更新列表", Toast.LENGTH_SHORT).show()
             viewModel.ld.value?.let { example2Adapter.initData(it.drop(10)) }
         }
