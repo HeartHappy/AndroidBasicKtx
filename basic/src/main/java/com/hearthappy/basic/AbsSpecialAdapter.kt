@@ -97,12 +97,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
                 val listPosition = getItemListPosition(position)
                 if (list.isEmpty()) return
                 holder.viewBinding.apply {
-                    root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition], position, listPosition) }
                     if (getItemSpecialCount() == itemCount) {
                         val realPosition = if (listPosition > list.size - 1) list.size - 1 else listPosition
+                        root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition], position, listPosition) }
                         (this as VB).bindViewHolder(list[realPosition], listPosition)
                     } else {
-                        (this as VB).bindViewHolder(list[listPosition % itemRealCount], listPosition % itemRealCount)
+                        root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition % itemRealCount], position, listPosition) }
+                        (this as VB).bindViewHolder(list[listPosition % itemRealCount], listPosition)
                     }
                 }
             }
@@ -387,7 +388,8 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
 
     }
 
-    @SuppressLint("NotifyDataSetChanged") fun notifyGlobalRefresh() {
+    @SuppressLint("NotifyDataSetChanged")
+    fun notifyGlobalRefresh() {
         notifyDataSetChanged()
     }
 
