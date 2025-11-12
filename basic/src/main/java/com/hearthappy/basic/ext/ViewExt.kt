@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter
 import android.graphics.RectF
 import android.view.View
 import android.view.ViewAnimationUtils
-import androidx.core.animation.addListener
 import kotlin.math.hypot
 
 /**
@@ -93,16 +92,22 @@ fun View.createViewCircularReveal(
     duration: Int = 200,
     centerX: Int,
     centerY: Int,
+    widthPixels: Float?=null,
+    heightPixels: Float?=null,
     onEndListener: () -> Unit
 ) { //设置window背景透明
     //decorView执行动画
     post {
-        val widthPixels = resources.displayMetrics.widthPixels
-        val heightPixels = resources.displayMetrics.heightPixels
-        val endRadius = hypot(widthPixels.toDouble(), heightPixels.toDouble()).toFloat()
-        val circularReveal =
-            ViewAnimationUtils.createCircularReveal(this, centerX, centerY, 0f, endRadius)
-        circularReveal.addListener(onEnd = { onEndListener() })
+        val widthP = widthPixels?.run { this }?:resources.displayMetrics.widthPixels
+        val heightP = heightPixels?.run { this }?:resources.displayMetrics.heightPixels
+        val endRadius = hypot(widthP.toDouble(), heightP.toDouble()).toFloat()
+        val circularReveal = ViewAnimationUtils.createCircularReveal(this, centerX, centerY, 0f, endRadius)
+        circularReveal.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator?, isReverse: Boolean) {
+                super.onAnimationEnd(animation, isReverse)
+                onEndListener()
+            }
+        })
         circularReveal.setDuration(duration.toLong()).start()
     }
 }
@@ -116,12 +121,14 @@ fun View.disappearCircularReveal(
     duration: Int = 200,
     centerX: Int,
     centerY: Int,
+    widthPixels: Float?=null,
+    heightPixels: Float?=null,
     onEndListener: () -> Unit
 ) {
     post {
-        val widthPixels = resources.displayMetrics.widthPixels
-        val heightPixels = resources.displayMetrics.heightPixels
-        val startRadius = hypot(widthPixels.toDouble(), heightPixels.toDouble()).toFloat()
+        val widthP = widthPixels?.run { this }?:resources.displayMetrics.widthPixels
+        val heightP = heightPixels?.run { this }?:resources.displayMetrics.heightPixels
+        val startRadius = hypot(widthP.toDouble(), heightP.toDouble()).toFloat()
         val circularReveal =
             ViewAnimationUtils.createCircularReveal(this, centerX, centerY, startRadius, 0f)
         circularReveal.duration = duration.toLong()
