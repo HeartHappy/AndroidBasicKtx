@@ -61,7 +61,7 @@ class Example1Activity : AbsBaseActivity<ActivityExample1Binding>() {
             }
         })
         btnSettings.setOnClickListener {
-            popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), height = ConstraintLayout.LayoutParams.WRAP_CONTENT, isOutsideTouchable = false, slideDismiss = SlideDirection.VERTICAL, viewEventListener = {
+            popupWindow(viewBinding = PopSettingsBinding.inflate(layoutInflater), height = ConstraintLayout.LayoutParams.WRAP_CONTENT, slideDismiss = SlideDirection.VERTICAL, viewEventListener = {
                 it.apply {
                     btnInit.setOnClickListener {
                         viewModel.ld.value?.let { it1 -> example1Adapter.initData(it1) }.also { dismiss() }

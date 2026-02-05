@@ -2,6 +2,8 @@ package com.hearthappy.basic.ext
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.RectF
 import android.view.View
 import android.view.ViewAnimationUtils
@@ -30,6 +32,16 @@ fun <T : View> T.show(conditions: Boolean, showBlock: T.() -> Unit = {}, hideBlo
     }
 }
 
+fun <T : View> T.showOrInvisible(conditions: Boolean, showBlock: T.() -> Unit = {}, hideBlock: T.() -> Unit = {}) {
+    if (conditions) {
+        showBlock()
+        visible()
+    } else {
+        hideBlock()
+        invisible()
+    }
+}
+
 fun View?.visible() {
     this?.let { if (visibility != View.VISIBLE) visibility = View.VISIBLE }
 }
@@ -45,9 +57,8 @@ fun View?.invisible() {
 /**
  * (x,y)是否在view的区域内
  *
- * @param view 控件范围
- * @param x    x坐标
- * @param y    y坐标
+ * @param x x坐标
+ * @param y y坐标
  * @return 返回true，代表在范围内
  */
 fun View?.isTouchPointInView(x: Int, y: Int): Boolean {
@@ -88,23 +99,16 @@ fun View.findViewCoordinates(): Pair<Float, Float> {
  * @param centerX Int
  * @param centerY Int
  */
-fun View.createViewCircularReveal(
-    duration: Int = 200,
-    centerX: Int,
-    centerY: Int,
-    widthPixels: Float?=null,
-    heightPixels: Float?=null,
-    onEndListener: () -> Unit
-) { //设置window背景透明
+fun View.createViewCircularReveal(duration: Int = 200, centerX: Int, centerY: Int, widthPixels: Float? = null, heightPixels: Float? = null, onEndListener: () -> Unit) { //设置window背景透明
     //decorView执行动画
     post {
-        val widthP = widthPixels?.run { this }?:resources.displayMetrics.widthPixels
-        val heightP = heightPixels?.run { this }?:resources.displayMetrics.heightPixels
+        val widthP = widthPixels?.run { widthPixels } ?: resources.displayMetrics.widthPixels
+        val heightP = heightPixels?.run { heightPixels } ?: resources.displayMetrics.heightPixels
         val endRadius = hypot(widthP.toDouble(), heightP.toDouble()).toFloat()
         val circularReveal = ViewAnimationUtils.createCircularReveal(this, centerX, centerY, 0f, endRadius)
         circularReveal.addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator?, isReverse: Boolean) {
-                super.onAnimationEnd(animation, isReverse)
+            override fun onAnimationEnd(animation: Animator?) {
+                super.onAnimationEnd(animation)
                 onEndListener()
             }
         })
@@ -117,20 +121,12 @@ fun View.createViewCircularReveal(
  * @receiver View
  * @param duration Int
  */
-fun View.disappearCircularReveal(
-    duration: Int = 200,
-    centerX: Int,
-    centerY: Int,
-    widthPixels: Float?=null,
-    heightPixels: Float?=null,
-    onEndListener: () -> Unit
-) {
+fun View.disappearCircularReveal(duration: Int = 200, centerX: Int, centerY: Int, widthPixels: Float? = null, heightPixels: Float? = null, onEndListener: () -> Unit) {
     post {
-        val widthP = widthPixels?.run { this }?:resources.displayMetrics.widthPixels
-        val heightP = heightPixels?.run { this }?:resources.displayMetrics.heightPixels
+        val widthP = widthPixels?.run { this } ?: resources.displayMetrics.widthPixels
+        val heightP = heightPixels?.run { this } ?: resources.displayMetrics.heightPixels
         val startRadius = hypot(widthP.toDouble(), heightP.toDouble()).toFloat()
-        val circularReveal =
-            ViewAnimationUtils.createCircularReveal(this, centerX, centerY, startRadius, 0f)
+        val circularReveal = ViewAnimationUtils.createCircularReveal(this, centerX, centerY, startRadius, 0f)
         circularReveal.duration = duration.toLong()
         circularReveal.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
@@ -141,5 +137,16 @@ fun View.disappearCircularReveal(
         })
         circularReveal.start()
     }
+}
+
+
+/**
+ * 渲染颜色滤镜
+ *
+ * @param contrast
+ * @return
+ */
+fun  View.renderColorMatrixFilter(contrast:Float=40f):ColorMatrixColorFilter{
+    return ColorMatrixColorFilter(floatArrayOf(1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 0f, contrast, -contrast * 128))
 }
 

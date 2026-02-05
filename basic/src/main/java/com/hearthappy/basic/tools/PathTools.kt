@@ -1,5 +1,6 @@
 package com.hearthappy.basic.tools
 
+import android.graphics.Matrix
 import android.graphics.Path
 import android.graphics.PathMeasure
 import android.graphics.PointF
@@ -193,5 +194,46 @@ object PathTools {
         val scaleY = viewSize.height.toFloat() / originalBounds.height() // 按高度缩放的比例
         val scale = kotlin.comparisons.minOf(scaleX, scaleY)     // 取较小的比例，保证路径完全显示
         return scale
+    }
+
+    /**
+     * 将 Path 缩放并居中到目标矩形区域内
+     * @param sourcePath 原始路径
+     * @param targetRect 目标区域（通常是 View 的内边距区域）
+     * @param strokeWidth 描边宽度（可选，如果 Path 是 Stroked，需要预留空间防止溢出）
+     * @return 变换后的 Path
+     */
+    fun fitCenter(sourcePath: Path, targetRect: RectF, strokeWidth: Float = 0f): Path {
+        val resultPath = Path(sourcePath)
+        val pathBounds = RectF()
+
+        // 1. 计算 Path 的原始边界
+        sourcePath.computeBounds(pathBounds, true)
+
+        // 2. 考虑描边宽度，收缩目标区域
+        val inset = strokeWidth / 2f
+        val safeTarget = RectF(targetRect).apply {
+            if (inset > 0) inset(inset, inset)
+        }
+
+        val matrix = Matrix()
+
+        // 3. 计算缩放比例：取宽高缩放比的最小值，确保 Path 能够完全包含在内
+        val scaleX = safeTarget.width() / pathBounds.width()
+        val scaleY = safeTarget.height() / pathBounds.height()
+        val scale = minOf(scaleX, scaleY)
+
+        // 4. 构建变换矩阵
+        // a. 将 Path 的几何中心移动到 (0,0)
+        matrix.postTranslate(-pathBounds.centerX(), -pathBounds.centerY())
+        // b. 执行等比缩放
+        matrix.postScale(scale, scale)
+        // c. 移动到目标区域的中心
+        matrix.postTranslate(safeTarget.centerX(), safeTarget.centerY())
+
+        // 5. 应用变换
+        resultPath.transform(matrix)
+
+        return resultPath
     }
 }

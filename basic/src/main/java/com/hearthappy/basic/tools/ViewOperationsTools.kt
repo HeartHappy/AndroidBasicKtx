@@ -49,6 +49,10 @@ object ViewOperationsTools {
         }
     }
 
+    fun isClickInRect(touchX: Float, touchY: Float, rect: RectF, includeBoundary: Boolean = true): Boolean {
+        return isClickInRect(touchX, touchY, rect.left, rect.top, rect.right, rect.bottom, includeBoundary)
+    }
+
     /**
      * 重载：通过矩形中心+宽高判断（更直观）
      * @param rectCenter 矩形中心坐标
