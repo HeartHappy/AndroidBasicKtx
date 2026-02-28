@@ -12,10 +12,6 @@ import android.text.TextPaint
 import android.view.View
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.withTranslation
-import kotlin.collections.map
-import kotlin.text.toInt
-import androidx.core.graphics.withSave
-import kotlin.collections.find
 import kotlin.math.abs
 
 
