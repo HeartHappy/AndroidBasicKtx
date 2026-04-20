@@ -46,7 +46,7 @@ afterEvaluate {
                 }
                 pom {
                     name = 'android-basic-ktx'
-                    description = '1：修复Android11以上,popupWindow点击屏幕外没有消失问\n2:新增向量、路径、视图操作工具类\n3:新增Canvas绘制多行文本扩展函数'
+                    description = '新增屏幕适配解决方案\n2:优化原转换dp和px的方案'
                     url = 'https://github.com/HeartHappy/AndroidBasicKtx'
 
                     licenses {
