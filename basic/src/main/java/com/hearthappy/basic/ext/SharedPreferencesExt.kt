@@ -33,9 +33,7 @@ infix fun SharedPreferences.toInt(key: String): Int {
 }
 
 infix fun SharedPreferences.toString(key: String): String {
-    this.getString(key, "")?.let {
-        return it
-    } ?: return ""
+   return this.getString(key, "")?:""
 }
 
 infix fun SharedPreferences.toLong(key: String): Long {
