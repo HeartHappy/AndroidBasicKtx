@@ -24,24 +24,13 @@ object ScreenAdaptHelper {
         appMetrics = application.resources.displayMetrics
         val displayMetrics = application.resources.displayMetrics
 
-        if (nonCompatDensity == 0f) {
-            nonCompatDensity = displayMetrics.density
-            nonCompatScaledDensity = displayMetrics.scaledDensity // 防止系统切换字体大小导致适配失效
-            application.registerComponentCallbacks(object: ComponentCallbacks {
-                override fun onConfigurationChanged(newConfig: Configuration) {
-                    if (newConfig.fontScale > 0) {
-                        nonCompatScaledDensity = application.resources.displayMetrics.scaledDensity
-                    }
-                }
-
-                override fun onLowMemory() {}
-            })
-        }
+        ensureInitialized(application, displayMetrics)
     }
 
     fun adapt(activity: Activity) {
         val appDisplayMetrics = activity.application.resources.displayMetrics
         val activityDisplayMetrics = activity.resources.displayMetrics
+        ensureInitialized(activity.application, appDisplayMetrics)
 
         // 1. 计算目标密度 (以宽度为基准进行适配)
         val targetDensity = appDisplayMetrics.widthPixels / designWidthDp
@@ -62,4 +51,20 @@ object ScreenAdaptHelper {
     // 提供给扩展函数使用的属性
     val displayMetrics: DisplayMetrics
         get() = appMetrics ?: Resources.getSystem().displayMetrics
+
+    private fun ensureInitialized(application: Application, displayMetrics: DisplayMetrics) {
+        appMetrics = displayMetrics
+        if (nonCompatDensity != 0f && nonCompatScaledDensity != 0f) return
+        nonCompatDensity = displayMetrics.density
+        nonCompatScaledDensity = displayMetrics.scaledDensity
+        application.registerComponentCallbacks(object : ComponentCallbacks {
+            override fun onConfigurationChanged(newConfig: Configuration) {
+                if (newConfig.fontScale > 0) {
+                    nonCompatScaledDensity = application.resources.displayMetrics.scaledDensity
+                }
+            }
+
+            override fun onLowMemory() {}
+        })
+    }
 }

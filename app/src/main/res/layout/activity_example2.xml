@@ -18,6 +18,7 @@
 
     <Button
         android:id="@+id/btnSettings"
+        style="@style/style_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/set_data"

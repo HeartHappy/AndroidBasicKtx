@@ -43,9 +43,9 @@ class Example2Activity : AbsBaseActivity<ActivityExample2Binding>() {
             Toast.makeText(this@Example2Activity, "我是Item:$d,position:$lp", Toast.LENGTH_SHORT).show()
         }
         example2Adapter.setOnHeaderClickListener {v, _ ->
-            disappearCircularReveal(500,v.width/2,v.height/2){}
+//            disappearCircularReveal(500,v.width/2,v.height/2){}
             Toast.makeText(this@Example2Activity, "我是头部,更新列表", Toast.LENGTH_SHORT).show()
-            viewModel.ld.value?.let { example2Adapter.initData(it.drop(10)) }
+//            viewModel.ld.value?.let { example2Adapter.initData(it.drop(10)) }
         }
 
         example2Adapter.setOnCustomItemClickListener { _, _, _, d ->

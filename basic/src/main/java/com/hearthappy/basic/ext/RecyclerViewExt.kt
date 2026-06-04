@@ -154,7 +154,7 @@ fun <T : ViewBinding> RecyclerView.findHeaderViewBinding(block: T.(AbsSpecialAda
             val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
             val headerPosition = absSpecialAdapter.getHeaderPosition()
             if (headerPosition != RecyclerView.NO_POSITION) {
-                val headerViewHolder = findViewHolderForAdapterPosition(headerPosition) as? AbsSpecialAdapter<*, *>.HeaderViewHolder
+                val headerViewHolder = findViewHolderForAdapterPosition(headerPosition) as? AbsSpecialAdapter.HeaderViewHolder
                 headerViewHolder ?: return
                 val vb = headerViewHolder.viewBinding as T
                 block(vb, absSpecialAdapter)
@@ -170,7 +170,7 @@ fun <T : ViewBinding> RecyclerView.findFooterViewBinding(block: T.(AbsSpecialAda
             val absSpecialAdapter = adapter as AbsSpecialAdapter<*, *>
             val footerPosition = absSpecialAdapter.getFooterPosition()
             if (footerPosition != RecyclerView.NO_POSITION) {
-                val footerViewHolder = findViewHolderForAdapterPosition(footerPosition) as? AbsSpecialAdapter<*, *>.FooterViewHolder
+                val footerViewHolder = findViewHolderForAdapterPosition(footerPosition) as? AbsSpecialAdapter.FooterViewHolder
                 footerViewHolder ?: return
                 val vb = footerViewHolder.viewBinding as T
                 block(vb, absSpecialAdapter)

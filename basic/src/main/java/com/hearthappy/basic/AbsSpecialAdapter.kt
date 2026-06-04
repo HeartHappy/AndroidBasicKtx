@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.viewbinding.ViewBinding
@@ -18,10 +19,10 @@ import com.hearthappy.basic.interfaces.OnCustomItemClickListener
 import com.hearthappy.basic.interfaces.OnEmptyViewClickListener
 import com.hearthappy.basic.interfaces.OnFooterClickListener
 import com.hearthappy.basic.interfaces.OnHeaderClickListener
+import com.hearthappy.basic.interfaces.OnItemClickListener
 import com.hearthappy.basic.model.CustomItemView
 import java.lang.reflect.Method
 import java.util.Collections
-
 
 /**
  * Created Date: 2025/3/7
@@ -29,21 +30,23 @@ import java.util.Collections
  * ClassDescription：特殊适配，支持头、尾、空、以及自定义布局。AbsSpecialAdapter<ViewBinding类型,数据类型>()
  * 根据需求实现：IHeaderSupport、IFooterSupport、IEmptyViewSupport、接口
  */
-
 @Suppress("UNCHECKED_CAST")
-abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() {
-    private var shouldShowEmptyView: Boolean = false
+abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
+    var list: MutableList<T> = mutableListOf()
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    internal var itemRealCount = -1 //真实数量，例如：无限列表，实际显示数量5个，进行轮播时使用
+    internal var onItemClickListener: OnItemClickListener<T>? = null
+
+    private var shouldShowEmptyView = false
     private var onHeaderClickListener: OnHeaderClickListener? = null
     private var onFooterClickListener: OnFooterClickListener? = null
     private var onEmptyViewClickListener: OnEmptyViewClickListener? = null
     private var onCustomItemClickListener: OnCustomItemClickListener<T>? = null
-    private var headerOffset = 0
-    private var footerOffset = 0
 
     private var headerView: IHeaderSupport<*>? = null
     private var footerView: IFooterSupport<*>? = null
     private val customItems = mutableListOf<CustomItemView>()
-    private val noCustomization = setOf(TYPE_HEADER, TYPE_FOOTER, TYPE_EMPTY, TYPE_ITEM) //  不包含自定义布局
+    private val noCustomization = setOf(TYPE_HEADER, TYPE_FOOTER, TYPE_EMPTY, TYPE_ITEM)
     private val checkItemType = setOf(TYPE_HEADER, TYPE_FOOTER, TYPE_EMPTY)
 
     private var isHeaderFull = false
@@ -52,13 +55,27 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     private var isEmptyFull = false
     private var showEmptyAndHeader = true //同时显示空布局和头布局
 
+    open fun initViewBinding(parent: ViewGroup, viewType: Int): VB? = null
+
+    abstract fun VB.bindViewHolder(data: T, position: Int)
+
+    fun initRealItemCount() {
+        itemRealCount = list.size
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         when (viewType) {
-            TYPE_HEADER -> if (hasHeaderImpl()) return HeaderViewHolder(getIHeaderSupport().javaClass.findInterfaceInflate(parent, IHeaderSupport::class.java))
+            TYPE_HEADER -> if (hasHeaderImpl()) {
+                return HeaderViewHolder(getIHeaderSupport().javaClass.findInterfaceInflate(parent, IHeaderSupport::class.java))
+            }
 
-            TYPE_EMPTY -> if (hasEmptyViewImpl()) return EmptyViewHolder(getIEmptyViewSupport().javaClass.findInterfaceInflate(parent, IEmptyViewSupport::class.java))
+            TYPE_EMPTY -> if (hasEmptyViewImpl()) {
+                return EmptyViewHolder(getIEmptyViewSupport().javaClass.findInterfaceInflate(parent, IEmptyViewSupport::class.java))
+            }
 
-            TYPE_FOOTER -> if (hasFooterImpl()) return FooterViewHolder(getIFooterSupport().javaClass.findInterfaceInflate(parent, IFooterSupport::class.java))
+            TYPE_FOOTER -> if (hasFooterImpl()) {
+                return FooterViewHolder(getIFooterSupport().javaClass.findInterfaceInflate(parent, IFooterSupport::class.java))
+            }
 
             else -> {
                 val customItem = customItems.firstOrNull { it.viewType == viewType }
@@ -66,213 +83,79 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
                     return CustomItemViewHolder(customItem.supper.javaClass.findInterfaceInflate(parent, ICustomItemSupper::class.java))
                 }
             }
-
         }
         return ItemViewHolder(initViewBinding(parent, viewType) ?: findAdapterInflate(LayoutInflater.from(parent.context), parent))
     }
 
-
+    @Suppress("UNCHECKED_CAST")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder) {
-            is AbsSpecialAdapter<*, *>.EmptyViewHolder -> {
-                holder.viewBinding.apply {
-                    setItemFull(root, isEmptyFull)
-                    root.setOnClickListener {
-                        onEmptyViewClickListener?.onEmptyViewClick(it, position)
-                    }
-                    callBindMethod(this@AbsSpecialAdapter, this, BIND_EMPTY)
+        when (holder.itemViewType) {
+            TYPE_EMPTY -> bindEmptyViewHolder(holder as EmptyViewHolder, position)
+            TYPE_HEADER -> bindHeaderViewHolder(holder as HeaderViewHolder, position)
+            TYPE_FOOTER -> bindFooterViewHolder(holder as FooterViewHolder, position)
+            else -> {
+                if (isCustomItemType(position)) {
+                    bindCustomItemViewHolder(holder as CustomItemViewHolder, position)
+                } else {
+                    bindItemViewHolder(holder as ItemViewHolder<VB>, position)
                 }
             }
-
-            is AbsSpecialAdapter<*, *>.HeaderViewHolder -> {
-                holder.viewBinding.apply {
-                    setItemFull(root, isHeaderFull)
-                    root.setOnClickListener { onHeaderClickListener?.onHeaderClick(it, position) }
-                    val header = getIHeaderSupport()
-                    callBindMethod(header, this, BIND_HEAD)
-                }
-            }
-
-            is AbsSpecialAdapter<*, *>.ItemViewHolder -> {
-                val listPosition = getItemListPosition(position)
-                if (list.isEmpty()) return
-                holder.viewBinding.apply {
-                    if (getItemSpecialCount() == itemCount) {
-                        val realPosition = if (listPosition > list.size - 1) list.size - 1 else listPosition
-                        root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition], position, listPosition) }
-                        (this as VB).bindViewHolder(list[realPosition], listPosition)
-                    } else {
-                        root.setOnClickListener { onItemClickListener?.onItemClick(it, list[listPosition % itemRealCount], position, listPosition) }
-                        (this as VB).bindViewHolder(list[listPosition % itemRealCount], listPosition)
-                    }
-                }
-            }
-
-            is AbsSpecialAdapter<*, *>.CustomItemViewHolder -> {
-                val listPosition = getItemListPosition(position)
-                val customItem = getCustomItemByPosition(position)
-                if (customItem != null) {
-                    holder.viewBinding.apply {
-                        setItemFull(root, isCustomFull)
-                        root.setOnClickListener { onCustomItemClickListener?.onCustomItemClick(it, list[listPosition], position, listPosition) }
-                        callCustomBindMethod(customItem.supper, this, list[listPosition], listPosition)
-                    }
-                }
-            }
-
-            is AbsSpecialAdapter<*, *>.FooterViewHolder -> {
-                holder.viewBinding.apply {
-                    setItemFull(root, isFooterFull)
-                    root.setOnClickListener { onFooterClickListener?.onFooterClick(it, position) }
-                    val iFooterSupport = getIFooterSupport()
-                    callBindMethod(iFooterSupport, this, BIND_FOOTER)
-                }
-            }
-
-            else -> Unit
         }
     }
 
-    private fun setItemFull(view: View, isFull: Boolean) {
-        if (isFull) {
-            val layoutParams = view.layoutParams as? StaggeredGridLayoutManager.LayoutParams
-            layoutParams ?: return
-            layoutParams.isFullSpan = true
-            view.layoutParams = layoutParams
-        }
-    }
-
-
-    private fun getItemListPosition(position: Int): Int {
-        return position - headerOffset
-    }
-
-    private fun getItemVirtualPosition(realPosition: Int): Int {
-        return realPosition + headerOffset
-    }
-
-
-    fun addHeaderView(headerView: IHeaderSupport<*>) {
-        this.headerView = headerView
-        notifyItemRangeChanged(0, getItemSpecialCount())
-    }
-
-    fun addFooterView(footerView: IFooterSupport<*>) {
-        this.footerView = footerView //更新添加的最后一个的尾布局
-        notifyItemChanged(getItemSpecialCount())
-    }
-
-    fun addCustomItem(customItemView: CustomItemView) {
-        customItems.add(customItemView)
-    }
-
-    fun addCustomItems(block: MutableList<CustomItemView>.() -> Unit) {
-        block(customItems)
-    }
-
-    open fun getCustomItemViewType(data: T, position: Int): Int = -1
-
-    private fun getCustomItemByPosition(position: Int): CustomItemView? {
-        val viewType = getItemViewType(position)
-        return customItems.firstOrNull { it.viewType == viewType }
-    }
-
+    override fun getItemCount(): Int = getItemSpecialCount()
 
     override fun getItemViewType(position: Int): Int {
-        val (customItemViewType: Int, isCustomLayout) = isCustomByPosition(position)
+        val (customItemViewType, isCustomLayout) = isCustomByPosition(position)
         return when {
             isHeaderPosition(position) -> TYPE_HEADER
-            isEmptyView() -> TYPE_EMPTY
+            isEmptyPosition(position) -> TYPE_EMPTY
             isFooterPosition(position) -> TYPE_FOOTER
             isCustomLayout -> customItemViewType
             else -> TYPE_ITEM
         }
     }
 
-    private fun isFooterPosition(position: Int) = hasFooterImpl() && position == getFooterPosition()
-    private fun isEmptyViewWithHeader() = isEmptyView() && showEmptyAndHeader
-    private fun isEmptyView() = hasEmptyViewImpl() && shouldShowEmptyView
-
-    private fun isHeaderPosition(position: Int) = hasHeaderImpl() && position == getHeaderPosition() && (!shouldShowEmptyView || showEmptyAndHeader)
-
-    private fun isCustomByPosition(position: Int): Pair<Int, Boolean> {
-        var customItemViewType: Int = -1
-        var isCustomLayout = false
-        if (customItems.isNotEmpty() && list.isNotEmpty()) {
-            customItemViewType = getCustomItemViewType(list[position.coerceIn(0, list.size - 1)], position)
-            when {
-                customItemViewType == -1 -> Log.e(TAG, "error: getCustomItemViewType method is not overridden")
-                checkItemType.contains(customItemViewType) -> Log.e(TAG, "error: The type of custom layout, it is not recommended to use $TYPE_HEADER, $TYPE_FOOTER,$TYPE_EMPTY these will conflict with the header, footer, and empty layout types . position:$position")
-                else -> isCustomLayout = true
-            }
-        }
-        return Pair(customItemViewType, isCustomLayout)
-    }
-
-    override fun getItemCount(): Int {
-        headerOffset = if (hasHeaderImpl()) 1 else 0
-        footerOffset = if (hasFooterImpl()) 1 else 0
-        return getItemSpecialCount()
-    }
-
-    /**
-     * 调用数据初始化，
-     * 1、如果先前数据与更新数据数量不一致或新数据数量为0，则会移除先移除先前数据
-     * 2、如果相同，将通知数据内容发生改变，但是位置没有改变
-     * @param list List<T>
-     */
     fun initData(list: List<T>, useDataSetChanged: Boolean) {
-        val oldSize = this.list.size
-        this.list.clear()
-        this.list.addAll(list)
-
-        if (useDataSetChanged) {
-            notifyGlobalRefresh()
-            return
+        updateDataSet(useDataSetChanged) {
+            this.list.clear()
+            this.list.addAll(list)
         }
-
-        // 移除旧数据（若有）
-        if (list.isEmpty() || oldSize != list.size) notifyItemRangeRemoved(0, oldSize)
-
-        // 插入新数据（若有）
-        shouldShowEmptyView = this.list.isEmpty() // 刷新头尾布局（数据变化可能影响空状态显示）
-        notifyItemRangeChanged(0, getItemSpecialCount())
-        initRealItemCount()
     }
 
-    override fun initData(list: List<T>) {
+    open fun initData(list: List<T>) {
         initData(list, false)
     }
 
-    override fun insertData(data: T) {
+    open fun insertData(data: T) {
         insertData(data, false)
     }
 
-    override fun insertData(data: T, position: Int) {
+    open fun insertData(data: T, position: Int) {
         insertData(data, position, false)
     }
 
-    override fun removeData(position: Int): T? {
+    open fun removeData(position: Int): T? {
         return removeData(position, false)
     }
 
-    override fun removeAll() {
+    open fun removeAll() {
         removeAll(false)
     }
 
-    override fun addData(list: List<T>) {
+    open fun addData(list: List<T>) {
         addData(list, false)
     }
 
-    override fun addData(list: List<T>, position: Int) {
+    open fun addData(list: List<T>, position: Int) {
         addData(list, position, false)
     }
 
-    override fun updateData(data: T, position: Int) {
+    open fun updateData(data: T, position: Int) {
         updateData(data, position, false)
     }
 
-    override fun moveData(fromPosition: Int, toPosition: Int) {
+    open fun moveData(fromPosition: Int, toPosition: Int) {
         moveData(fromPosition, toPosition, false)
     }
 
@@ -281,141 +164,127 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     }
 
     fun insertData(data: T, position: Int, useDataSetChanged: Boolean) {
-        if (position < 0 || position > list.size) {
+        if (position !in 0..list.size) {
             throw IndexOutOfBoundsException("insert position out of bounds: position=$position, list.size=${list.size}")
         }
-
-        list.add(position, data)
-        shouldShowEmptyView = false
-        if (useDataSetChanged) {
-            notifyGlobalRefresh()
-            return
+        updateDataSet(useDataSetChanged) {
+            list.add(position, data)
         }
-
-        // 实际列表中的位置 = 头布局数量 + 数据中的位置
-        val actualPosition = getItemVirtualPosition(position)
-        notifyItemInserted(actualPosition)
-
-        // 若插入位置在数据中间，后续数据项位置变化，需刷新Footer
-        notifyItemRangeChanged(actualPosition + 1, list.size - position)
     }
 
     fun removeData(position: Int, useDataSetChanged: Boolean): T? {
-        if (position < 0 || position >= list.size) {
-            return null
+        if (position !in list.indices) return null
+        var removedData: T? = null
+        updateDataSet(useDataSetChanged) {
+            removedData = list.removeAt(position)
         }
-
-        val removedData = list.removeAt(position)
-        shouldShowEmptyView = list.isEmpty()
-        if (useDataSetChanged) {
-            notifyGlobalRefresh()
-            return removedData
-        }
-
-        // 实际列表中的位置 = 头布局数量 + 数据中的位置
-        val actualPosition = getItemVirtualPosition(position)
-        notifyItemRemoved(actualPosition)
-
-        // 若删除位置在数据中间，后续数据项位置变化，需刷新Footer
-        notifyItemRangeChanged(actualPosition, list.size - position)
-
         return removedData
     }
 
-
     fun removeAll(useDataSetChanged: Boolean) {
-        val oldSize = list.size
-        list.clear()
-
-        if (useDataSetChanged) {
-            notifyGlobalRefresh()
-            return
+        if (list.isEmpty() && !isEmptyView()) return
+        updateDataSet(useDataSetChanged) {
+            list.clear()
         }
-
-        // 移除所有数据项（起始位置为头布局之后）
-        if (oldSize > 0) {
-            if (hasHeaderImpl() && !showEmptyAndHeader) notifyItemRemoved(0)
-            notifyItemRangeRemoved(headerOffset, oldSize)
-            if (hasFooterImpl()) notifyItemRemoved(footerOffset)
-        }
-        shouldShowEmptyView = true
-        notifyItemRangeChanged(0, getItemSpecialCount())
     }
 
     fun addData(list: List<T>, useDataSetChanged: Boolean) {
         addData(list, this.list.size, useDataSetChanged)
-
     }
 
     fun addData(list: List<T>, position: Int, useDataSetChanged: Boolean) {
         if (list.isEmpty()) return
-        if (position < 0 || position > this.list.size) {
+        if (position !in 0..this.list.size) {
             throw IndexOutOfBoundsException("Add position out of bounds: position=$position, list.size=${this.list.size}")
         }
-        val realPosition = getItemVirtualPosition(position)
-        this.list.addAll(position, list)
-        shouldShowEmptyView = this.list.isEmpty()
-        if (useDataSetChanged) notifyGlobalRefresh()
-        else {
-            notifyItemRangeInserted(realPosition, list.size)
-            notifyItemRangeChanged(realPosition + list.size, getItemSpecialCount())
+        updateDataSet(useDataSetChanged) {
+            this.list.addAll(position, list)
         }
     }
 
     fun updateData(data: T, position: Int, useDataSetChanged: Boolean) {
         if (position !in this.list.indices) return
-        this.list[position] = data
-        shouldShowEmptyView = false
-        val virtualPosition = getItemVirtualPosition(position)
-        if (useDataSetChanged) notifyGlobalRefresh()
-        else notifyItemChanged(virtualPosition)
-
+        updateDataSet(useDataSetChanged) {
+            this.list[position] = data
+        }
     }
 
     fun moveData(fromPosition: Int, toPosition: Int, useDataSetChanged: Boolean) {
-        if (fromPosition !in this.list.indices || toPosition !in 0..this.list.size) return
+        if (fromPosition !in this.list.indices || toPosition !in this.list.indices) return
         if (fromPosition == toPosition) return
-        Collections.swap(this.list, fromPosition, toPosition)
-        if (useDataSetChanged) notifyGlobalRefresh()
-        else {
-            val virtualFromPosition = getItemVirtualPosition(fromPosition)
-            val virtualToPosition = getItemVirtualPosition(toPosition)
-            notifyItemMoved(virtualFromPosition, virtualToPosition)
-            val start = minOf(virtualFromPosition, virtualToPosition)
-            val end = maxOf(virtualFromPosition, virtualToPosition)
-            notifyItemRangeChanged(start, end - start - 1)
+        updateDataSet(useDataSetChanged) {
+            Collections.swap(this.list, fromPosition, toPosition)
         }
-
     }
+
+    fun addHeaderView(headerView: IHeaderSupport<*>) {
+        updateStructure {
+            this.headerView = headerView
+        }
+    }
+
+    fun addFooterView(footerView: IFooterSupport<*>) {
+        updateStructure {
+            this.footerView = footerView
+        }
+    }
+
+    fun addCustomItem(customItemView: CustomItemView) {
+        updateStructure {
+            customItems.add(customItemView)
+        }
+    }
+
+    fun addCustomItems(block: MutableList<CustomItemView>.() -> Unit) {
+        updateStructure {
+            block(customItems)
+        }
+    }
+
+    open fun getCustomItemViewType(data: T, position: Int): Int = -1
 
     @SuppressLint("NotifyDataSetChanged")
     fun notifyGlobalRefresh() {
         notifyDataSetChanged()
     }
 
+    fun setOnItemClickListener(onItemClickListener: OnItemClickListener<T>?) {
+        this.onItemClickListener = onItemClickListener
+    }
+
+    fun setOnItemClickListener(block: (view: View, data: T, position: Int, listPosition: Int) -> Unit) {
+        this.onItemClickListener = object : OnItemClickListener<T> {
+            override fun onItemClick(view: View, data: T, position: Int, listPosition: Int) {
+                block(view, data, position, listPosition)
+            }
+        }
+    }
+
     fun isCustomItemType(position: Int): Boolean {
         return !noCustomization.contains(getItemViewType(position))
     }
 
-    //获取尾部局的Position，如果没有实现尾部局，则返回-1
+    //获取尾布局的Position，如果没有实现尾布局或者当前不显示，则返回-1
     fun getFooterPosition(): Int {
-        return if (hasFooterImpl()) headerOffset + list.size else -1
+        return if (hasDisplayedFooter()) getDisplayedHeaderCount() + list.size else -1
     }
 
-
     fun getHeaderPosition(): Int {
-        return if (hasHeaderImpl()) 0 else -1
+        return if (hasDisplayedHeader()) 0 else -1
     }
 
     fun getEmptyPosition(): Int {
-        return if (shouldShowEmptyView && hasEmptyViewImpl()) {
-            if (showEmptyAndHeader) headerOffset else 0
-        } else 0
-
+        return if (isEmptyView()) getDisplayedHeaderCount() else -1
     }
 
     fun getItemRealCount() = if (itemRealCount == itemCount) -1 else itemRealCount
-    fun setOccupySpace(isHeaderFull: Boolean = true, isFooterFull: Boolean = true, isCustomFull: Boolean = true, isEmptyFull: Boolean) {
+
+    fun setOccupySpace(
+        isHeaderFull: Boolean = true,
+        isFooterFull: Boolean = true,
+        isCustomFull: Boolean = true,
+        isEmptyFull: Boolean
+    ) {
         this.isHeaderFull = isHeaderFull
         this.isFooterFull = isFooterFull
         this.isCustomFull = isCustomFull
@@ -423,9 +292,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     }
 
     fun setShowEmptyAndHeader(isSimultaneously: Boolean) {
-        showEmptyAndHeader = isSimultaneously
+        updateStructure {
+            showEmptyAndHeader = isSimultaneously
+        }
     }
-
 
     fun setOnHeaderClickListener(onHeaderClickListener: OnHeaderClickListener?) {
         this.onHeaderClickListener = onHeaderClickListener
@@ -475,16 +345,198 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         }
     }
 
+    class HeaderViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
-    inner class HeaderViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
+    class FooterViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
-    inner class FooterViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
+    class EmptyViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
-    inner class EmptyViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
+    class CustomItemViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
 
-    inner class CustomItemViewHolder(val viewBinding: ViewBinding) : RecyclerView.ViewHolder(viewBinding.root)
+    class ItemViewHolder<VB : ViewBinding>(val viewBinding: VB) : RecyclerView.ViewHolder(viewBinding.root)
 
-    inner class ItemViewHolder(val viewBinding: VB) : RecyclerView.ViewHolder(viewBinding.root)
+    private fun bindEmptyViewHolder(holder: EmptyViewHolder, position: Int) {
+        holder.viewBinding.apply {
+            setItemFull(root, isEmptyFull)
+            root.setOnClickListener { onEmptyViewClickListener?.onEmptyViewClick(it, position) }
+            callBindMethod(this@AbsSpecialAdapter, this, BIND_EMPTY)
+        }
+    }
+
+    private fun bindHeaderViewHolder(holder: HeaderViewHolder, position: Int) {
+        holder.viewBinding.apply {
+            setItemFull(root, isHeaderFull)
+            root.setOnClickListener { onHeaderClickListener?.onHeaderClick(it, position) }
+            callBindMethod(getIHeaderSupport(), this, BIND_HEAD)
+        }
+    }
+
+    private fun bindFooterViewHolder(holder: FooterViewHolder, position: Int) {
+        holder.viewBinding.apply {
+            setItemFull(root, isFooterFull)
+            root.setOnClickListener { onFooterClickListener?.onFooterClick(it, position) }
+            callBindMethod(getIFooterSupport(), this, BIND_FOOTER)
+        }
+    }
+
+    private fun bindItemViewHolder(holder: ItemViewHolder<VB>, position: Int) {
+        val listPosition = getItemListPosition(position)
+        val itemData = list.getOrNull(listPosition) ?: return
+        holder.viewBinding.apply {
+            root.setOnClickListener { onItemClickListener?.onItemClick(it, itemData, position, listPosition) }
+            bindViewHolder(itemData, listPosition)
+        }
+    }
+
+    private fun bindCustomItemViewHolder(holder: CustomItemViewHolder, position: Int) {
+        val listPosition = getItemListPosition(position)
+        val itemData = list.getOrNull(listPosition) ?: return
+        val customItem = getCustomItemByViewType(getItemViewType(position)) ?: return
+        holder.viewBinding.apply {
+            setItemFull(root, isCustomFull)
+            root.setOnClickListener { onCustomItemClickListener?.onCustomItemClick(it, itemData, position, listPosition) }
+            callCustomBindMethod(customItem.supper, this, itemData, listPosition)
+        }
+    }
+
+    private fun setItemFull(view: View, isFull: Boolean) {
+        if (!isFull) return
+        val layoutParams = view.layoutParams as? StaggeredGridLayoutManager.LayoutParams ?: return
+        layoutParams.isFullSpan = true
+        view.layoutParams = layoutParams
+    }
+
+    private fun getItemListPosition(position: Int): Int {
+        return position - getDisplayedHeaderCount()
+    }
+
+    private fun getCustomItemByViewType(viewType: Int): CustomItemView? {
+        return customItems.firstOrNull { it.viewType == viewType }
+    }
+
+    private fun isFooterPosition(position: Int) = position == getFooterPosition()
+
+    private fun isEmptyViewWithHeader() = isEmptyView() && hasDisplayedHeader()
+
+    private fun isEmptyView() = hasEmptyViewImpl() && shouldShowEmptyView
+
+    private fun isEmptyPosition(position: Int) = position == getEmptyPosition()
+
+    private fun isHeaderPosition(position: Int) = position == getHeaderPosition()
+
+    private fun isCustomByPosition(position: Int): Pair<Int, Boolean> {
+        if (customItems.isEmpty() || isHeaderPosition(position) || isEmptyPosition(position) || isFooterPosition(position)) {
+            return Pair(-1, false)
+        }
+        val listPosition = getItemListPosition(position)
+        val itemData = list.getOrNull(listPosition) ?: return Pair(-1, false)
+        val customItemViewType = getCustomItemViewType(itemData, listPosition)
+        val isCustomLayout = when {
+            customItemViewType == -1 -> {
+                Log.e(TAG, "error: getCustomItemViewType method is not overridden")
+                false
+            }
+
+            checkItemType.contains(customItemViewType) -> {
+                Log.e(
+                    TAG,
+                    "error: The type of custom layout, it is not recommended to use $TYPE_HEADER, $TYPE_FOOTER, $TYPE_EMPTY these will conflict with the header, footer, and empty layout types . position:$listPosition"
+                )
+                false
+            }
+
+            customItemViewType == TYPE_ITEM -> false
+            else -> true
+        }
+        return Pair(customItemViewType, isCustomLayout)
+    }
+
+    private fun hasDisplayedHeader(): Boolean {
+        return hasHeaderImpl() && (!isEmptyView() || showEmptyAndHeader)
+    }
+
+    private fun hasDisplayedFooter(): Boolean {
+        return hasFooterImpl() && !isEmptyView()
+    }
+
+    private fun getDisplayedHeaderCount(): Int {
+        return if (hasDisplayedHeader()) 1 else 0
+    }
+
+    private fun getDisplayedFooterCount(): Int {
+        return if (hasDisplayedFooter()) 1 else 0
+    }
+
+    private fun getItemSpecialCount(): Int {
+        return when {
+            isEmptyViewWithHeader() -> getDisplayedHeaderCount() + 1
+            isEmptyView() -> 1
+            else -> getDisplayedHeaderCount() + list.size + getDisplayedFooterCount()
+        }
+    }
+
+    private fun syncDisplayState() {
+        shouldShowEmptyView = list.isEmpty()
+        initRealItemCount()
+    }
+
+    private inline fun updateDataSet(useDataSetChanged: Boolean, action: () -> Unit) {
+        val oldDisplayItems = buildDisplayItems()
+        action()
+        syncDisplayState()
+        if (useDataSetChanged) {
+            notifyGlobalRefresh()
+            return
+        }
+        dispatchDisplayDiff(oldDisplayItems, buildDisplayItems())
+    }
+
+    private inline fun updateStructure(action: () -> Unit) {
+        val oldDisplayItems = buildDisplayItems()
+        action()
+        syncDisplayState()
+        dispatchDisplayDiff(oldDisplayItems, buildDisplayItems())
+    }
+
+    private fun dispatchDisplayDiff(
+        oldDisplayItems: List<DisplayItem<T>>,
+        newDisplayItems: List<DisplayItem<T>>
+    ) {
+        DiffUtil.calculateDiff(DisplayDiffCallback(oldDisplayItems, newDisplayItems), true)
+            .dispatchUpdatesTo(this)
+    }
+
+    private fun buildDisplayItems(): List<DisplayItem<T>> {
+        val displayItems = mutableListOf<DisplayItem<T>>()
+        if (hasDisplayedHeader()) {
+            displayItems += DisplayItem.Header
+        }
+        if (isEmptyView()) {
+            displayItems += DisplayItem.Empty
+            return displayItems
+        }
+        list.forEachIndexed { index, data ->
+            displayItems += DisplayItem.Item(
+                data = data,
+                listPosition = index,
+                viewType = resolveDisplayItemViewType(data, index)
+            )
+        }
+        if (hasDisplayedFooter()) {
+            displayItems += DisplayItem.Footer
+        }
+        return displayItems
+    }
+
+    private fun resolveDisplayItemViewType(data: T, position: Int): Int {
+        if (customItems.isEmpty()) return TYPE_ITEM
+        val customItemViewType = getCustomItemViewType(data, position)
+        return when {
+            customItemViewType == -1 -> TYPE_ITEM
+            checkItemType.contains(customItemViewType) -> TYPE_ITEM
+            else -> customItemViewType
+        }
+    }
 
     private fun callBindMethod(support: Any, viewBinding: ViewBinding, methodName: String) {
         try {
@@ -495,7 +547,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         }
     }
 
-    private fun callCustomBindMethod(support: ICustomItemSupper<*, *>, viewBinding: ViewBinding, data: T, customPosition: Int, methodName: String = BIND_CUSTOM) {
+    private fun callCustomBindMethod(
+        support: ICustomItemSupper<*, *>,
+        viewBinding: ViewBinding,
+        data: T,
+        customPosition: Int,
+        methodName: String = BIND_CUSTOM
+    ) {
         try {
             val method = support.javaClass.declaredMethods.first { it.name == methodName }
             method.invoke(support, viewBinding, data, customPosition)
@@ -505,23 +563,66 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
     }
 
     fun hasHeaderImpl() = this is IHeaderSupport<*> || headerView != null
+
     fun hasFooterImpl() = this is IFooterSupport<*> || footerView != null
+
     fun hasEmptyViewImpl() = this is IEmptyViewSupport<*>
-    fun hasCustomViewImpl() = this is ICustomItemSupper<*, *>
-    private fun getIHeaderSupport() = if (headerView != null) headerView as IHeaderSupport<ViewBinding> else this as IHeaderSupport<ViewBinding>
-    private fun getIFooterSupport() = if (footerView != null) footerView as IFooterSupport<ViewBinding> else this as IFooterSupport<ViewBinding>
+
+    fun hasCustomViewImpl() = customItems.isNotEmpty() || this is ICustomItemSupper<*, *>
+
+    private fun getIHeaderSupport() =
+        if (headerView != null) headerView as IHeaderSupport<ViewBinding> else this as IHeaderSupport<ViewBinding>
+
+    private fun getIFooterSupport() =
+        if (footerView != null) footerView as IFooterSupport<ViewBinding> else this as IFooterSupport<ViewBinding>
+
     private fun getIEmptyViewSupport() = this as IEmptyViewSupport<ViewBinding>
-    private fun getItemSpecialCount(): Int {
-        return when {
-            isEmptyViewWithHeader() -> headerOffset + 1
-            isEmptyView() -> 1
-            else -> headerOffset + list.size + footerOffset
-        }
+
+    private sealed class DisplayItem<out T> {
+        object Header : DisplayItem<Nothing>()
+        object Footer : DisplayItem<Nothing>()
+        object Empty : DisplayItem<Nothing>()
+        data class Item<T>(val data: T, val listPosition: Int, val viewType: Int) : DisplayItem<T>()
     }
 
+    private class DisplayDiffCallback<T>(
+        private val oldItems: List<DisplayItem<T>>,
+        private val newItems: List<DisplayItem<T>>
+    ) : DiffUtil.Callback() {
+        override fun getOldListSize(): Int = oldItems.size
 
-    private fun Int.convertInsetItemPosition(): Int = if (this > list.size) list.size else this
+        override fun getNewListSize(): Int = newItems.size
 
+        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            val oldItem = oldItems[oldItemPosition]
+            val newItem = newItems[newItemPosition]
+            return when {
+                oldItem is DisplayItem.Header && newItem is DisplayItem.Header -> true
+                oldItem is DisplayItem.Footer && newItem is DisplayItem.Footer -> true
+                oldItem is DisplayItem.Empty && newItem is DisplayItem.Empty -> true
+                oldItem is DisplayItem.Item<*> && newItem is DisplayItem.Item<*> ->
+                    oldItem.viewType == newItem.viewType && oldItem.data == newItem.data
+
+                else -> false
+            }
+        }
+
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+            val oldItem = oldItems[oldItemPosition]
+            val newItem = newItems[newItemPosition]
+            return when {
+                oldItem is DisplayItem.Header && newItem is DisplayItem.Header -> true
+                oldItem is DisplayItem.Footer && newItem is DisplayItem.Footer -> true
+                oldItem is DisplayItem.Empty && newItem is DisplayItem.Empty -> true
+                oldItem is DisplayItem.Item<*> && newItem is DisplayItem.Item<*> ->
+                    oldItem.viewType == newItem.viewType &&
+                        oldItem.data == newItem.data &&
+                        oldItem.listPosition == newItem.listPosition
+
+                else -> false
+            }
+        }
+    }
 
     companion object {
         private const val TAG = "AbsSpecialAdapter"
@@ -534,5 +635,4 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T> : AbsBaseAdapter<VB, T>() 
         const val BIND_EMPTY = "bindEmptyViewHolder"
         const val BIND_CUSTOM = "bindCustomViewHolder"
     }
-
 }
