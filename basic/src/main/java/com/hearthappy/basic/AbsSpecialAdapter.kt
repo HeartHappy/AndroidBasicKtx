@@ -34,8 +34,10 @@ import java.util.Collections
 abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
     var list: MutableList<T> = mutableListOf()
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    internal var itemRealCount = -1 //真实数量，例如：无限列表，实际显示数量5个，进行轮播时使用
+    internal var itemRealCount = -1 //真实数量，例如：轮播真实5条，展示列表7条（首尾补位）时用于记录真实数量
     internal var onItemClickListener: OnItemClickListener<T>? = null
+    private var infiniteLoopEnabled = false
+    private var isRealItemCountOverridden = false
 
     private var shouldShowEmptyView = false
     private var onHeaderClickListener: OnHeaderClickListener? = null
@@ -60,7 +62,41 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
     abstract fun VB.bindViewHolder(data: T, position: Int)
 
     fun initRealItemCount() {
+        isRealItemCountOverridden = false
         itemRealCount = list.size
+    }
+
+    fun setRealItemCount(realCount: Int) {
+        isRealItemCountOverridden = true
+        itemRealCount = realCount.coerceAtLeast(0)
+    }
+
+    fun clearRealItemCountOverride() {
+        initRealItemCount()
+    }
+
+    fun setInfiniteLoopEnabled(enabled: Boolean, notifyImmediately: Boolean = true) {
+        if (infiniteLoopEnabled == enabled) return
+        infiniteLoopEnabled = enabled
+        if (notifyImmediately) {
+            syncDisplayState()
+            notifyGlobalRefresh()
+        }
+    }
+
+    fun getInfiniteLoopStartPosition(): Int {
+        if (!isInfiniteLoopMode()) return 0
+        val anchor = Int.MAX_VALUE / 2
+        return anchor - Math.floorMod(anchor, list.size)
+    }
+
+    fun getRealPosition(adapterPosition: Int): Int {
+        if (list.isEmpty()) return -1
+        return if (isInfiniteLoopMode()) {
+            Math.floorMod(adapterPosition, list.size)
+        } else {
+            adapterPosition - getDisplayedHeaderCount()
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -103,9 +139,14 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
         }
     }
 
-    override fun getItemCount(): Int = getItemSpecialCount()
+    override fun getItemCount(): Int = if (isInfiniteLoopMode()) Int.MAX_VALUE else getItemSpecialCount()
 
     override fun getItemViewType(position: Int): Int {
+        if (isInfiniteLoopMode()) {
+            val listPosition = getItemListPosition(position)
+            val itemData = list.getOrNull(listPosition) ?: return TYPE_ITEM
+            return resolveDisplayItemViewType(itemData, listPosition)
+        }
         val (customItemViewType, isCustomLayout) = isCustomByPosition(position)
         return when {
             isHeaderPosition(position) -> TYPE_HEADER
@@ -266,15 +307,15 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
 
     //获取尾布局的Position，如果没有实现尾布局或者当前不显示，则返回-1
     fun getFooterPosition(): Int {
-        return if (hasDisplayedFooter()) getDisplayedHeaderCount() + list.size else -1
+        return if (hasDisplayedFooter() && !isInfiniteLoopMode()) getDisplayedHeaderCount() + list.size else -1
     }
 
     fun getHeaderPosition(): Int {
-        return if (hasDisplayedHeader()) 0 else -1
+        return if (hasDisplayedHeader() && !isInfiniteLoopMode()) 0 else -1
     }
 
     fun getEmptyPosition(): Int {
-        return if (isEmptyView()) getDisplayedHeaderCount() else -1
+        return if (isEmptyView() && !isInfiniteLoopMode()) getDisplayedHeaderCount() else -1
     }
 
     fun getItemRealCount() = if (itemRealCount == itemCount) -1 else itemRealCount
@@ -407,7 +448,12 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
     }
 
     private fun getItemListPosition(position: Int): Int {
-        return position - getDisplayedHeaderCount()
+        if (list.isEmpty()) return -1
+        return if (isInfiniteLoopMode()) {
+            Math.floorMod(position, list.size)
+        } else {
+            position - getDisplayedHeaderCount()
+        }
     }
 
     private fun getCustomItemByViewType(viewType: Int): CustomItemView? {
@@ -475,16 +521,26 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
         }
     }
 
+    private fun isInfiniteLoopMode(): Boolean {
+        return infiniteLoopEnabled &&
+            list.size > 1 &&
+            !isEmptyView() &&
+            !hasDisplayedHeader() &&
+            !hasDisplayedFooter()
+    }
+
     private fun syncDisplayState() {
         shouldShowEmptyView = list.isEmpty()
-        initRealItemCount()
+        if (!isRealItemCountOverridden) {
+            initRealItemCount()
+        }
     }
 
     private inline fun updateDataSet(useDataSetChanged: Boolean, action: () -> Unit) {
         val oldDisplayItems = buildDisplayItems()
         action()
         syncDisplayState()
-        if (useDataSetChanged) {
+        if (useDataSetChanged || infiniteLoopEnabled) {
             notifyGlobalRefresh()
             return
         }
@@ -495,6 +551,10 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
         val oldDisplayItems = buildDisplayItems()
         action()
         syncDisplayState()
+        if (infiniteLoopEnabled) {
+            notifyGlobalRefresh()
+            return
+        }
         dispatchDisplayDiff(oldDisplayItems, buildDisplayItems())
     }
 
