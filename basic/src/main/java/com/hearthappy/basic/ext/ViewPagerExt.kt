@@ -125,11 +125,6 @@ fun ViewPager2.findCurrentItemViewHolder(): RecyclerView.ViewHolder? {
     return getRecyclerView().findViewHolderForAdapterPosition(currentItem)
 }
 
-fun ViewPager2.getInfiniteLoopStartPosition(realCount: Int): Int {
-    if (realCount <= 1) return 0
-    val anchor = Int.MAX_VALUE / 2
-    return anchor - Math.floorMod(anchor, realCount)
-}
 
 fun getInfiniteLoopRealPosition(adapterPosition: Int, realCount: Int): Int {
     if (realCount <= 0) return -1

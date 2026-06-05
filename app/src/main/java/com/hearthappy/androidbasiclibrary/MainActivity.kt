@@ -7,6 +7,7 @@ import com.hearthappy.androidbasiclibrary.databinding.ActivityMainBinding
 import com.hearthappy.androidbasiclibrary.example1.Example1Activity
 import com.hearthappy.androidbasiclibrary.example2.Example2Activity
 import com.hearthappy.basic.AbsBaseActivity
+import com.hearthappy.basic.ext.addListener
 import com.hearthappy.basic.ext.findViewCoordinates
 import com.hearthappy.basic.ext.getInfiniteLoopRealPosition
 import com.hearthappy.basic.ext.scrollAnimator

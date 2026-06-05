@@ -46,7 +46,7 @@ afterEvaluate {
                 }
                 pom {
                     name = 'android-basic-ktx'
-                    description = '新增屏幕适配解决方案\n2:优化原转换dp和px的方案'
+                    description = '1、使用Diff优化AbsSpecialAdapter和AbsBaseAdapter'
                     url = 'https://github.com/HeartHappy/AndroidBasicKtx'
 
                     licenses {
