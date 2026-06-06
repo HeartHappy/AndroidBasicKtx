@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.viewbinding.ViewBinding
 import com.hearthappy.androidbasicktx.R
 import com.hearthappy.basic.ext.findActivityInflate
+import com.hearthappy.basic.tools.screenadaptation.ScreenAdaptHelper
 import com.hearthappy.basic.widget.LoadingPopupWindow
 
 
@@ -45,6 +46,7 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
     /** 等待对话框 */
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ScreenAdaptHelper.adapt(this)
         super.onCreate(savedInstanceState)
         viewBinding = initViewBinding() ?: findActivityInflate()
         setContentView(viewBinding.root)

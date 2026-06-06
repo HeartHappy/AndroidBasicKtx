@@ -2,7 +2,7 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.AndroidBasicLibrary" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+         <item name="colorPrimary">@color/design_default_color_primary_dark</item>
     </style>
 
     <style name="AndroidBasicKtxTheme" parent="Base.Theme.AndroidBasicLibrary" />

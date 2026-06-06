@@ -18,6 +18,7 @@
 
     <Button
         android:id="@+id/btnSettings"
+        style="@style/style_button"
         android:text="@string/set_data"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_width="match_parent"

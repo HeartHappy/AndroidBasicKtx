@@ -1,5 +1,6 @@
 package com.hearthappy.basic.ext
 
+import android.graphics.Color
 import java.util.Locale
 
 enum class FormatType {
@@ -52,4 +53,15 @@ fun Int.showTextOrNumber(hintText: String, limitNumber: Int = 99): String {
     } else {
         this.toString()
     }
+}
+
+/**
+ * 辅助扩展：调整颜色透明度
+ *
+ * @param factor 0.5
+ * @return 返回透明颜色
+ */
+private fun Int.adjustAlpha(factor: Float): Int {
+    val alpha = (Color.alpha(this) * factor).toInt()
+    return Color.argb(alpha, Color.red(this), Color.green(this), Color.blue(this))
 }

@@ -20,7 +20,7 @@ import com.hearthappy.basic.model.CustomItemView
  * @author ChenRui
  * ClassDescription：头、尾布局， 则AbsSpecialAdapter<ViewBinding类型,数据类型>()
  */
-class Example2Adapter(private val context : Context) : AbsSpecialAdapter<ItemGridListBinding, String>(), IFooterSupport<ItemFooterBinding>, IHeaderSupport<ItemHeaderBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
+class Example2Adapter(private val context: Context): AbsSpecialAdapter<ItemGridListBinding, String>(), IFooterSupport<ItemFooterBinding>, IHeaderSupport<ItemHeaderBinding>, IEmptyViewSupport<ItemEmptyViewBinding> {
     init {
         addCustomItems {
             add(CustomItemView(TYPE_CUSTOM1, CustomItemImpl(context)))
@@ -29,7 +29,7 @@ class Example2Adapter(private val context : Context) : AbsSpecialAdapter<ItemGri
         }
     }
 
-    override fun ItemGridListBinding.bindViewHolder(data : String, position : Int) {
+    override fun ItemGridListBinding.bindViewHolder(data: String, position: Int) {
         tvTitle.text = data.plus("\nlistPosition:$position")
     }
 
@@ -38,16 +38,16 @@ class Example2Adapter(private val context : Context) : AbsSpecialAdapter<ItemGri
     }
 
 
-        override fun ItemFooterBinding.bindFooterViewHolder() {
-            tvFooter.text = "我是尾部"
-        }
+    override fun ItemFooterBinding.bindFooterViewHolder() {
+        tvFooter.text = "我是尾部"
+    }
 
     override fun ItemEmptyViewBinding.bindEmptyViewHolder() {
         ivEmptyDefault.setImageResource(R.mipmap.nd_default)
     }
 
 
-    override fun getCustomItemViewType(data : String, position : Int) : Int {
+    override fun getCustomItemViewType(data: String, position: Int): Int {
         return when (position) {
             5 -> TYPE_CUSTOM1
             8 -> TYPE_CUSTOM2

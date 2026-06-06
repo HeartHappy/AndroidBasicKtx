@@ -46,7 +46,7 @@ afterEvaluate {
                 }
                 pom {
                     name = 'android-basic-ktx'
-                    description = 'Android basic framework packaging and extension library'
+                    description = '1、使用Diff优化AbsSpecialAdapter和AbsBaseAdapter'
                     url = 'https://github.com/HeartHappy/AndroidBasicKtx'
 
                     licenses {

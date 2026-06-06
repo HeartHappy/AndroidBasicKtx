@@ -1,6 +1,8 @@
 package com.hearthappy.basic.ext
 
 import android.app.Activity
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.transition.Fade
 import android.transition.Transition
@@ -19,6 +21,7 @@ import com.hearthappy.basic.tools.SlideDirection
 import com.hearthappy.basic.tools.SlideDismissPopupHelper
 import java.lang.ref.WeakReference
 import java.util.WeakHashMap
+import androidx.core.graphics.drawable.toDrawable
 
 /**
  * @Author ChenRui
@@ -141,6 +144,21 @@ object PopupManager {
 
 /**
  * Activity扩展函数
+ *
+ * @param VB
+ * @param viewBinding
+ * @param viewEventListener
+ * @param width
+ * @param height
+ * @param isOutsideTouchable
+ * @param backgroundBlackAlpha
+ * @param transition
+ * @param animatorStyle
+ * @param slideDismiss
+ * @param windowType
+ * @param key
+ * @receiver
+ * @return
  */
 fun <VB : ViewBinding> AppCompatActivity.popupWindow(viewBinding: VB, viewEventListener: PopupWindow.(VB) -> Unit, width: Int = ViewGroup.LayoutParams.MATCH_PARENT, height: Int = ViewGroup.LayoutParams.MATCH_PARENT, isOutsideTouchable: Boolean = true, backgroundBlackAlpha: Float = 0.4f, transition: Transition = Fade(), animatorStyle: Int = android.R.style.Animation_Dialog, slideDismiss: SlideDirection = SlideDirection.NONE, windowType: Int = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL, key: String = "default"): PopupWindow {
     return handlerPopupWindow(key, viewBinding, width, height, viewEventListener, isOutsideTouchable, backgroundBlackAlpha, transition = transition, animatorStyle = animatorStyle, slideDismiss = slideDismiss, windowType = windowType)
@@ -183,11 +201,10 @@ private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String,
         viewEventListener(this, viewBinding) // 适配Android 9及以下版本
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
             this.isOutsideTouchable = isOutsideTouchable
-            this.isFocusable = isOutsideTouchable
         } else { // Android 10+ 使用新API
             this.isTouchModal = isOutsideTouchable
         }
-
+        this.isFocusable = isOutsideTouchable
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
             if (animatorStyle != android.R.style.Animation_Dialog) {
@@ -199,7 +216,7 @@ private fun <VB : ViewBinding> AppCompatActivity.handlerPopupWindow(key: String,
             windowLayoutType = windowType
         }
 
-        this.setBackgroundDrawable(null) // 设置背景透明度（仅在第一个弹窗显示时设置）
+        this.setBackgroundDrawable(Color.TRANSPARENT.toDrawable()) // 设置背景透明度（仅在第一个弹窗显示时设置）
         if (shouldSetBackground()) {
             setBackgroundBlackAlpha(backgroundBlackAlpha)
         }

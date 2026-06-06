@@ -46,20 +46,28 @@ fun Class<*>.findInterfaceInflate(container: ViewGroup?, interfaceClazz: Class<*
 
 
 @Suppress("UNCHECKED_CAST")
-fun <VB : ViewBinding> Fragment.findFragmentInflate(inflater: LayoutInflater, container: ViewGroup?): VB {
-    val type = javaClass.genericSuperclass
-    if (type is ParameterizedType) {
-        val clazz = type.actualTypeArguments[0] as Class<VB>
-        try {
-            val inflateMethod = clazz.getMethod("inflate", LayoutInflater::class.java, ViewGroup::class.java, Boolean::class.java)
-            return inflateMethod.invoke(null, inflater, container, false) as VB
-        } catch (e: IllegalAccessException) {
-            e.printStackTrace()
-        } catch (e: InvocationTargetException) {
-            e.printStackTrace()
+fun <VB : ViewBinding> Any.findFragmentInflate(inflater: LayoutInflater, container: ViewGroup?): VB {
+    var clazz: Class<*>? = javaClass
+    while (clazz != null) {
+        val type = clazz.genericSuperclass
+        if (type is ParameterizedType) {
+            // 遍历所有泛型参数，找到实现了 ViewBinding 的那个
+            val actualTypeArguments = type.actualTypeArguments
+            for (actualType in actualTypeArguments) {
+                val tClass = actualType as? Class<VB> ?: continue
+                if (ViewBinding::class.java.isAssignableFrom(tClass)) {
+                    try {
+                        val inflateMethod = tClass.getMethod("inflate", LayoutInflater::class.java, ViewGroup::class.java, Boolean::class.java)
+                        return inflateMethod.invoke(null, inflater, container, false) as VB
+                    } catch (e: Exception) {
+                        continue // 如果这个泛型不是我们要的，继续找下一个
+                    }
+                }
+            }
         }
+        clazz = clazz.superclass // 向上查找
     }
-    throw IllegalArgumentException("Failed to get ViewBinding instance.")
+    throw IllegalArgumentException("Failed to get ViewBinding instance for ${javaClass.simpleName}")
 }
 
 @Suppress("UNCHECKED_CAST")
