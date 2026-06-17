@@ -125,17 +125,13 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
 
     @Suppress("UNCHECKED_CAST")
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder.itemViewType) {
-            TYPE_EMPTY -> bindEmptyViewHolder(holder as EmptyViewHolder, position)
-            TYPE_HEADER -> bindHeaderViewHolder(holder as HeaderViewHolder, position)
-            TYPE_FOOTER -> bindFooterViewHolder(holder as FooterViewHolder, position)
-            else -> {
-                if (isCustomItemType(position)) {
-                    bindCustomItemViewHolder(holder as CustomItemViewHolder, position)
-                } else {
-                    bindItemViewHolder(holder as ItemViewHolder<VB>, position)
-                }
-            }
+        when (holder) {
+            is EmptyViewHolder -> bindEmptyViewHolder(holder, position)
+            is HeaderViewHolder -> bindHeaderViewHolder(holder, position)
+            is FooterViewHolder -> bindFooterViewHolder(holder, position)
+            is CustomItemViewHolder -> bindCustomItemViewHolder(holder, position)
+            is ItemViewHolder<*> -> bindItemViewHolder(holder as ItemViewHolder<VB>, position)
+            else -> error("Unsupported ViewHolder type: ${holder::class.java.name}")
         }
     }
 
@@ -594,6 +590,7 @@ abstract class AbsSpecialAdapter<VB : ViewBinding, T>(
         return when {
             customItemViewType == -1 -> TYPE_ITEM
             checkItemType.contains(customItemViewType) -> TYPE_ITEM
+            getCustomItemByViewType(customItemViewType) == null -> TYPE_ITEM
             else -> customItemViewType
         }
     }
