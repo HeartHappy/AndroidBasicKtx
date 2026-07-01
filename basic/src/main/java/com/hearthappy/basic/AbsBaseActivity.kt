@@ -30,7 +30,7 @@ import com.hearthappy.basic.widget.LoadingPopupWindow
  * @author ChenRui
  * ClassDescription： Activity基类
  */
-abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
+abstract class AbsBaseActivity<VB: ViewBinding>: AppCompatActivity() {
 
     protected lateinit var viewBinding: VB
     private var alertDialog: AlertDialog? = null
@@ -39,7 +39,7 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
     /**
      * 获取ViewModel
      */
-    fun <VM : ViewModel> getViewModel(c: Class<VM>, factory: ViewModelProvider.Factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application)): VM { //        ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+    fun <VM: ViewModel> getViewModel(c: Class<VM>, factory: ViewModelProvider.Factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application)): VM { //        ViewModelProvider.AndroidViewModelFactory.getInstance(application)
         return ViewModelProvider(this, factory).get(c)
     }
 
@@ -120,20 +120,20 @@ abstract class AbsBaseActivity<VB : ViewBinding> : AppCompatActivity() {
     abstract fun VB.initData()
 
 
-    fun startActivity(clazz: Class<*>) {
-        startActivity(Intent(this, clazz))
+    fun startActivity(clazz: Class<*>, scope: (Intent.() -> Unit)? = null) {
+        startActivity(Intent(this, clazz).apply { scope?.invoke(this) })
     }
 
-    fun startActivityOptions(clazz: Class<*>) {
-        startActivity(Intent(this, clazz::class.java), ActivityOptions.makeSceneTransitionAnimation(this).toBundle())
+    fun startActivityOptions(clazz: Class<*>, scope: (Intent.() -> Unit)? = null) {
+        startActivity(Intent(this, clazz::class.java).apply { scope?.invoke(this) }, ActivityOptions.makeSceneTransitionAnimation(this).toBundle())
     }
 
     fun startActivityOptions(intent: Intent) {
         startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(this).toBundle())
     }
 
-    fun startActivityForClear(clazz: Class<*>) {
-        startActivity(Intent.makeRestartActivityTask(ComponentName(this, clazz)))
+    fun startActivityForClear(clazz: Class<*>, scope: (Intent.() -> Unit)? = null) {
+        startActivity(Intent.makeRestartActivityTask(ComponentName(this, clazz)).apply { scope?.invoke(this) })
     }
 
     fun startActivityCarryCoordinates(clazz: Class<*>, coordinates: Pair<Float, Float>) {

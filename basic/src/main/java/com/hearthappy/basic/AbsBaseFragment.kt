@@ -98,20 +98,20 @@ abstract class AbsBaseFragment<VB : ViewBinding> : Fragment() {
         }
     }
 
-    fun startActivity(clazz: Class<*>) {
-        startActivity(Intent(context, clazz))
+    fun startActivity(clazz: Class<*>, scope: (Intent.() -> Unit)? = null) {
+        startActivity(Intent(context, clazz).apply { scope?.invoke(this) })
     }
 
-    fun startActivityOptions(clazz: Class<*>) {
-        startActivity(Intent(context, clazz::class.java), ActivityOptions.makeSceneTransitionAnimation(context as Activity?).toBundle())
+    fun startActivityOptions(clazz: Class<*>, scope: (Intent.() -> Unit)? = null) {
+        startActivity(Intent(context, clazz::class.java).apply { scope?.invoke(this) }, ActivityOptions.makeSceneTransitionAnimation(context as Activity?).toBundle())
     }
 
     fun startActivityOptions(intent: Intent) {
         startActivity(intent, ActivityOptions.makeSceneTransitionAnimation(context as Activity?).toBundle())
     }
 
-    fun startActivityForClear(clazz: Class<*>) {
-        startActivity(Intent.makeRestartActivityTask(context?.let { ComponentName(it, clazz) }))
+    fun startActivityForClear(clazz: Class<*>, scope: (Intent.() -> Unit)? = null) {
+        startActivity(Intent.makeRestartActivityTask(context?.let { ComponentName(it, clazz) }).apply { scope?.invoke(this) })
     }
 
     override fun onDestroy() {

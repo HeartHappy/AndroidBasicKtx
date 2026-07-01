@@ -46,7 +46,7 @@ afterEvaluate {
                 }
                 pom {
                     name = 'android-basic-ktx'
-                    description = '1、使用Diff优化AbsSpecialAdapter和AbsBaseAdapter'
+                    description = '1、修复自定义布局的VIewBinding问题 2、修复更新指定数据未更新问题'
                     url = 'https://github.com/HeartHappy/AndroidBasicKtx'
 
                     licenses {
